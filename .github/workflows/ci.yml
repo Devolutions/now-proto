@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+
+env:
+  # Disable incremental compilation. CI builds are often closer to from-scratch builds, as changes
+  # are typically bigger than from a local edit-compile cycle.
+  # Incremental compilation also significantly increases the amount of IO and the size of ./target
+  # folder, which makes caching less effective.
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  RUST_BACKTRACE: short
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  # Cache should never takes more than a few seconds to get downloaded.
+  # If it does, let’s just rebuild from scratch instead of hanging "forever".
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+  # Disabling debug info so compilation is faster and ./target folder is smaller.
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+jobs:
+  formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting (Rust)
+        run: cargo xtask rust fmt -v
+
+      - name: Check formatting (.NET)
+        run: cargo xtask dotnet fmt -v
+
+  typos:
+    name: Check typos
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Binary cache
+        uses: actions/cache@v4
+        with:
+          path: ./.cargo/local_root/bin
+          key: ${{ runner.os }}-bin-${{ github.job }}-${{ hashFiles('xtask/src/bin_version.rs') }}
+
+      - name: typos (prepare)
+        run: cargo xtask check install -v
+
+      - name: typos (check)
+        run: cargo xtask check typos -v
+
+  rust-checks:
+    name: Rust checks [${{ matrix.os }}]
+    runs-on: ${{ matrix.runner }}
+    needs: formatting
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows, linux, macos ]
+        include:
+          - os: windows
+            runner: windows-latest
+          - os: linux
+            runner: ubuntu-latest
+          - os: macos
+            runner: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2.7.3
+
+      - name: Binary cache
+        uses: actions/cache@v4
+        with:
+          path: ./.cargo/local_root/bin
+          key: ${{ runner.os }}-bin-${{ github.job }}-${{ hashFiles('xtask/src/bin_version.rs') }}
+
+      # Compilation is separated from execution so we know exactly the time for each step.
+      - name: Tests (compile)
+        run: cargo xtask rust tests --no-run -v
+      - name: Tests (run)
+        run: cargo xtask rust tests -v
+
+      - name: Lints
+        run: cargo xtask rust lints -v
+
+      - name: Lock files
+        run: cargo xtask check locks -v
+
+  dotnet-checks:
+    name: .NET checks [${{ matrix.os }}]
+    runs-on: ${{ matrix.runner }}
+    needs: formatting
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows, linux, macos ]
+        include:
+          - os: windows
+            runner: windows-latest
+          - os: linux
+            runner: ubuntu-latest
+          - os: macos
+            runner: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tests
+        run: cargo xtask dotnet tests -v
+
+      - name: Lints
+        run: cargo xtask dotnet build -v
+
+      - name: Lock files
+        run: cargo xtask check locks -v
+
+  success:
+    name: Success
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs:
+      - formatting
+      - typos
+      - rust-checks
+      - dotnet-checks
+
+    steps:
+      - name: Check success
+        shell: pwsh
+        run: |
+          $results = '${{ toJSON(needs.*.result) }}' | ConvertFrom-Json
+          $succeeded = $($results | Where { $_ -Ne "success" }).Count -Eq 0
+          exit $(if ($succeeded) { 0 } else { 1 })

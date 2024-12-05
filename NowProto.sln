@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nugets", "nugets", "{BD6154A5-8825-4023-A6AE-CE9FCC4B073B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devolutions.NowProto", "nugets\Devolutions.NowProto\Devolutions.NowProto.csproj", "{2EB02FFB-DC42-4217-8520-93F06E17BFC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devolutions.NowProto.Tests", "nugets\Devolutions.NowProto.Tests\Devolutions.NowProto.Tests.csproj", "{34912761-E8CB-4D88-A4B4-365F6DB88985}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2EB02FFB-DC42-4217-8520-93F06E17BFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EB02FFB-DC42-4217-8520-93F06E17BFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EB02FFB-DC42-4217-8520-93F06E17BFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EB02FFB-DC42-4217-8520-93F06E17BFC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34912761-E8CB-4D88-A4B4-365F6DB88985}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34912761-E8CB-4D88-A4B4-365F6DB88985}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34912761-E8CB-4D88-A4B4-365F6DB88985}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34912761-E8CB-4D88-A4B4-365F6DB88985}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2EB02FFB-DC42-4217-8520-93F06E17BFC4} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
+		{34912761-E8CB-4D88-A4B4-365F6DB88985} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
+	EndGlobalSection
+EndGlobal

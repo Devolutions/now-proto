@@ -1,0 +1,19 @@
+[package]
+name = "now-proto-testsuite"
+version = "0.0.0"
+edition = "2021"
+description = "NOW protocol test suite"
+publish = false
+autotests = false
+
+[lib]
+doctest = false
+test = false
+
+[[test]]
+name = "integration_tests"
+path = "tests/main.rs"
+harness = true
+
+[lints]
+workspace = true

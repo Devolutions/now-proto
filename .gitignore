@@ -1,0 +1,16 @@
+# Build artifacts
+/target
+
+# Local cargo root
+/.cargo/local_root
+
+# Editor/IDE files
+*~
+/tags
+.idea
+.vscode
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sw?
