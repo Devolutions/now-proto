@@ -42,7 +42,7 @@ impl Encode for VarU16 {
         let mut bytes = [0u8; 2];
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((self.0 >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((self.0 >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always 8 or 16
             #[allow(clippy::arithmetic_side_effects)]
@@ -53,7 +53,7 @@ impl Encode for VarU16 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 7;
 
         dst.write_slice(&bytes[..encoded_size]);
@@ -161,7 +161,7 @@ impl Encode for VarI16 {
         let abs_value = self.0.unsigned_abs();
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((abs_value >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((abs_value >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always 8 or 16
             #[allow(clippy::arithmetic_side_effects)]
@@ -172,7 +172,7 @@ impl Encode for VarI16 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 7;
         if self.0 < 0 {
             // set sign bit
@@ -291,7 +291,7 @@ impl Encode for VarU32 {
         let mut bytes = [0u8; 4];
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((self.0 >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((self.0 >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always 8, 16, 24
             #[allow(clippy::arithmetic_side_effects)]
@@ -302,7 +302,7 @@ impl Encode for VarU32 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 6;
 
         dst.write_slice(&bytes[..encoded_size]);
@@ -413,7 +413,7 @@ impl Encode for VarI32 {
         let abs_value = self.0.unsigned_abs();
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((abs_value >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((abs_value >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always 8, 16, 24
             #[allow(clippy::arithmetic_side_effects)]
@@ -424,7 +424,7 @@ impl Encode for VarI32 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 6;
         if self.0 < 0 {
             // set sign bit
@@ -545,7 +545,7 @@ impl Encode for VarU64 {
         let mut bytes = [0u8; 8];
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((self.0 >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((self.0 >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always >= 8
             #[allow(clippy::arithmetic_side_effects)]
@@ -556,7 +556,7 @@ impl Encode for VarU64 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 5;
 
         dst.write_slice(&bytes[..encoded_size]);
@@ -668,7 +668,7 @@ impl Encode for VarI64 {
         let abs_value = self.0.unsigned_abs();
 
         for byte in bytes.iter_mut().take(encoded_size) {
-            *byte = ((abs_value >> shift) & 0xFF).try_into().unwrap();
+            *byte = ((abs_value >> shift) & 0xFF).try_into().expect("always <= 0xFF");
 
             // LINTS: as per code above, shift is always >= 8
             #[allow(clippy::arithmetic_side_effects)]
@@ -679,7 +679,7 @@ impl Encode for VarI64 {
 
         // LINTS: encoded_size is always >= 1
         #[allow(clippy::arithmetic_side_effects)]
-        let c: u8 = (encoded_size - 1).try_into().unwrap();
+        let c: u8 = (encoded_size - 1).try_into().expect("always fits into u8");
         bytes[0] |= c << 5;
         if self.0 < 0 {
             // set sign bit

@@ -98,7 +98,7 @@ impl NowSessionMsgBoxRspMsg {
 impl Encode for NowSessionMsgBoxRspMsg {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
-            size: u32::try_from(Self::FIXED_PART_SIZE).unwrap(),
+            size: u32::try_from(Self::FIXED_PART_SIZE).expect("always fits in u32"),
             class: NowMessageClass::SESSION,
             kind: NowSessionMessageKind::MSGBOX_RSP.0,
             flags: 0,

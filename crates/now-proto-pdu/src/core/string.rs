@@ -167,7 +167,9 @@ impl Encode for NowVarStr {
     // LINTS: Use of VarU32 ensures that the overall size value is within the bounds of usize.
     #[allow(clippy::arithmetic_side_effects)]
     fn size(&self) -> usize {
-        VarU32::new(self.0.len().try_into().unwrap()).unwrap().size() /* variable-length size */
+        VarU32::new(self.0.len().try_into().expect("buffer size always fits into u32"))
+            .expect("buffer size is validated in constructor and should not overflow")
+            .size() /* variable-length size */
             + self.0.len() /* utf-8 bytes */
             + 1 /* null terminator */
     }

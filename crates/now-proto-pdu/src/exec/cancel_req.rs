@@ -36,7 +36,7 @@ impl NowExecCancelReqMsg {
 impl Encode for NowExecCancelReqMsg {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
-            size: u32::try_from(Self::FIXED_PART_SIZE).unwrap(),
+            size: u32::try_from(Self::FIXED_PART_SIZE).expect("always fits in u32"),
             class: NowMessageClass::EXEC,
             kind: NowExecMsgKind::CANCEL_REQ.0,
             flags: 0,

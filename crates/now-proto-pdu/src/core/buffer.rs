@@ -148,8 +148,8 @@ impl Encode for NowVarBuf {
     fn size(&self) -> usize {
         // <variable-length size> + <data bytes>
         // NOTE: Wrapping add will not overflow because the size is limited by VarU32::MAX
-        VarU32::new(self.0.len().try_into().unwrap())
-            .unwrap()
+        VarU32::new(self.0.len().try_into().expect("buffer size always fits into u32"))
+            .expect("buffer size is validated in constructor and should not overflow")
             .size()
             .wrapping_add(self.0.len())
     }

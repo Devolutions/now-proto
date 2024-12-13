@@ -83,7 +83,7 @@ impl NowSessionMsgBoxReqMsg {
             request_id,
             style: NowMessageBoxStyle::OK,
             timeout: 0,
-            title: NowVarStr::new(String::new()).unwrap(),
+            title: NowVarStr::new(String::new()).expect("empty string construction always succeeds"),
             message,
         };
 
