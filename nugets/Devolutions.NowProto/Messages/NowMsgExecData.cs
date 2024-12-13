@@ -1,4 +1,6 @@
-﻿using Devolutions.NowProto.Exceptions;
+﻿using System.Drawing;
+
+using Devolutions.NowProto.Exceptions;
 using Devolutions.NowProto.Types;
 
 namespace Devolutions.NowProto.Messages
@@ -15,12 +17,12 @@ namespace Devolutions.NowProto.Messages
         public static byte TypeMessageClass => NowMessage.ClassExec;
         public static byte TypeMessageKind => 0x05; // NOW-PROTO: NOW_EXEC_DATA_MSG_ID
 
-        public byte MessageClass => NowMessage.ClassExec;
-        public byte MessageKind => 0x05;
+        byte INowMessage.MessageClass => NowMessage.ClassExec;
+        byte INowMessage.MessageKind => 0x05;
 
         // -- INowDeserialize --
 
-        public static NowMsgExecData Deserialize(ushort flags, NowReadCursor cursor)
+        static NowMsgExecData INowDeserialize<NowMsgExecData>.Deserialize(ushort flags, NowReadCursor cursor)
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
             var msgFlags = (MsgFlags)flags;

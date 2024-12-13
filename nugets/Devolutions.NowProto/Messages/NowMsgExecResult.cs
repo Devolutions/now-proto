@@ -13,8 +13,8 @@ namespace Devolutions.NowProto.Messages
     {
         // -- INowMessage --
 
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassExec;
-        static byte INowMessage.TypeMessageKind => 0x04; // NOW-PROTO: NOW_EXEC_RESULT_MSG_ID
+        public static byte TypeMessageClass => NowMessage.ClassExec;
+        public static byte TypeMessageKind => 0x04; // NOW-PROTO: NOW_EXEC_RESULT_MSG_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassExec;
         byte INowMessage.MessageKind => 0x04;
@@ -26,7 +26,7 @@ namespace Devolutions.NowProto.Messages
         void INowSerialize.SerializeBody(NowWriteCursor cursor)
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
-            cursor.WriteUint32Le(RequestId);
+            cursor.WriteUint32Le(SessionId);
             cursor.WriteUint32Le(_exitCode);
             _status.Serialize(cursor);
         }
@@ -48,24 +48,24 @@ namespace Devolutions.NowProto.Messages
 
         // -- impl --
 
-        private const uint FixedPartSize = 8; // u32 requestId, u32 exitCode
+        private const uint FixedPartSize = 8; // u32 sessionId, u32 exitCode
 
-        internal NowMsgExecResult(uint requestId, uint exitCode, NowStatus status)
+        internal NowMsgExecResult(uint sessionId, uint exitCode, NowStatus status)
         {
-            RequestId = requestId;
+            SessionId = sessionId;
             _exitCode = exitCode;
             _status = status;
         }
 
-        public static NowMsgExecResult Success(uint requestId, uint exitCode)
+        public static NowMsgExecResult Success(uint sessionId, uint exitCode)
         {
-            return new NowMsgExecResult(requestId, exitCode, NowStatus.Success());
+            return new NowMsgExecResult(sessionId, exitCode, NowStatus.Success());
         }
 
-        public static NowMsgExecResult Error(uint requestId, NowStatusException exception)
+        public static NowMsgExecResult Error(uint sessionId, NowStatusException exception)
         {
             return new NowMsgExecResult(
-                requestId,
+                sessionId,
                 0,
                 NowStatus.Error(exception)
             );
@@ -79,7 +79,7 @@ namespace Devolutions.NowProto.Messages
             return _exitCode;
         }
 
-        public uint RequestId { get; private init; }
+        public uint SessionId { get; private init; }
 
         private readonly NowStatus _status;
         private readonly uint _exitCode;

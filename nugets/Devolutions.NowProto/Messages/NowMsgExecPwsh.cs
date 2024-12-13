@@ -12,8 +12,8 @@ namespace Devolutions.NowProto.Messages
     {
         // -- INowMessage --
 
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassExec;
-        static byte INowMessage.TypeMessageKind => 0x15; // NOW-PROTO: NOW_EXEC_PWSH_MSG_ID
+        public static byte TypeMessageClass => NowMessage.ClassExec;
+        public static byte TypeMessageKind => 0x15; // NOW-PROTO: NOW_EXEC_PWSH_MSG_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassExec;
         byte INowMessage.MessageKind => 0x15;

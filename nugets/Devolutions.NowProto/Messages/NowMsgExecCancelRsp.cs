@@ -12,10 +12,8 @@ namespace Devolutions.NowProto.Messages
     {
         // -- INowMessage --
 
-
-
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassExec;
-        static byte INowMessage.TypeMessageKind => 0x03; // NOW-PROTO: NOW_EXEC_RESULT_MSG_ID
+        public static byte TypeMessageClass => NowMessage.ClassExec;
+        public static byte TypeMessageKind => 0x03; // NOW-PROTO: NOW_EXEC_RESULT_MSG_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassExec;
         byte INowMessage.MessageKind => 0x03;
@@ -27,7 +25,7 @@ namespace Devolutions.NowProto.Messages
         void INowSerialize.SerializeBody(NowWriteCursor cursor)
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
-            cursor.WriteUint32Le(RequestId);
+            cursor.WriteUint32Le(SessionId);
             _status.Serialize(cursor);
         }
 
@@ -47,23 +45,23 @@ namespace Devolutions.NowProto.Messages
 
         // -- impl --
 
-        private const uint FixedPartSize = 4; // u32 requestId
+        private const uint FixedPartSize = 4; // u32 sessionId
 
-        internal NowMsgExecCancelRsp(uint requestId, NowStatus status)
+        internal NowMsgExecCancelRsp(uint sessionId, NowStatus status)
         {
-            RequestId = requestId;
+            SessionId = sessionId;
             _status = status;
         }
 
-        public static NowMsgExecCancelRsp Success(uint requestId)
+        public static NowMsgExecCancelRsp Success(uint sessionId)
         {
-            return new NowMsgExecCancelRsp(requestId, NowStatus.Success());
+            return new NowMsgExecCancelRsp(sessionId, NowStatus.Success());
         }
 
-        public static NowMsgExecCancelRsp Error(uint requestId, NowStatusException exception)
+        public static NowMsgExecCancelRsp Error(uint sessionId, NowStatusException exception)
         {
             return new NowMsgExecCancelRsp(
-                requestId,
+                sessionId,
                 NowStatus.Error(exception)
             );
         }
@@ -75,7 +73,7 @@ namespace Devolutions.NowProto.Messages
             _status.ThrowIfError();
         }
 
-        public uint RequestId { get; private init; }
+        public uint SessionId { get; private init; }
 
         private readonly NowStatus _status;
     }

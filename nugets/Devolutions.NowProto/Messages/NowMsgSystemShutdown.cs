@@ -11,8 +11,8 @@ namespace Devolutions.NowProto.Messages
     {
         // -- INowMessage --
 
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassSystem;
-        static byte INowMessage.TypeMessageKind => 0x03; // NOW-PROTO: NOW_SYSTEM_SHUTDOWN_ID
+        public static byte TypeMessageClass => NowMessage.ClassSystem;
+        public static byte TypeMessageKind => 0x03; // NOW-PROTO: NOW_SYSTEM_SHUTDOWN_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassSystem;
         byte INowMessage.MessageKind => 0x03;

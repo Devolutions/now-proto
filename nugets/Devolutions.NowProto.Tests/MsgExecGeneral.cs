@@ -48,7 +48,7 @@
 
             var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-            Assert.Equal(msg.RequestId, decoded.RequestId);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
             Assert.True(msg.IsSuccess);
             msg.ThrowIfError();
         }
@@ -66,7 +66,7 @@
 
             var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-            Assert.Equal(msg.RequestId, decoded.RequestId);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
             Assert.False(msg.IsSuccess);
             Assert.Throws<NowGenericException>(() => msg.ThrowIfError());
         }
@@ -85,7 +85,7 @@
 
             var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-            Assert.Equal(msg.RequestId, decoded.RequestId);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
             Assert.True(msg.IsSuccess);
             Assert.Equal((uint)42, msg.GetExitCodeOrThrow());
         }
@@ -107,7 +107,7 @@
 
             var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-            Assert.Equal(msg.RequestId, decoded.RequestId);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
             Assert.False(msg.IsSuccess);
             Assert.Throws<NowGenericException>(() => msg.GetExitCodeOrThrow());
         }

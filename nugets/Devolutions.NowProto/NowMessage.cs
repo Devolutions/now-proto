@@ -10,16 +10,16 @@ namespace Devolutions.NowProto
     public class NowMessage
     {
         // NOW-PROTO: NOW_CHANNEL_MSG_CLASS_ID
-        internal const byte ClassChannel = 0x10;
+        public const byte ClassChannel = 0x10;
 
         // NOW-PROTO: NOW_SYSTEM_MSG_CLASS_ID
-        internal const byte ClassSystem = 0x11;
+        public const byte ClassSystem = 0x11;
 
         // NOW-PROTO: NOW_SESSION_MSG_CLASS_ID
-        internal const byte ClassSession = 0x12;
+        public const byte ClassSession = 0x12;
 
         // NOW-PROTO: NOW_EXEC_MSG_CLASS_ID
-        internal const byte ClassExec = 0x13;
+        public const byte ClassExec = 0x13;
 
         /// <summary>
         /// Immutable message view. Allows to read message header and body without deserialization
