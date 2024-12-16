@@ -17,6 +17,7 @@ categories = ["network-programming"]
 [workspace.dependencies]
 now-proto-pdu = { version = "0.1", path = "crates/now-proto-pdu" }
 now-proto-fuzzing = { version = "0.1", path = "crates/now-proto-fuzzing" }
+ironrdp-core = { version = "0.1.2", features = ["alloc"] }
 
 [profile.test.package.proptest]
 opt-level = 3

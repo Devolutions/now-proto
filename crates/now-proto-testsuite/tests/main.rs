@@ -11,4 +11,4 @@
 //! Cargo will run all tests from a single binary in parallel, but
 //! binaries themselves are run sequentally.
 
-// mod now_proto;
+mod proto;
