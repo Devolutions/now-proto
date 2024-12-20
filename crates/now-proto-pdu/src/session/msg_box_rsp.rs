@@ -1,6 +1,10 @@
-use ironrdp_core::{ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeResult, ReadCursor, WriteCursor};
+use ironrdp_core::{
+    ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor,
+};
 
-use crate::{NowHeader, NowMessage, NowMessageClass, NowSessionMessage, NowSessionMessageKind};
+use crate::{
+    NowHeader, NowMessage, NowMessageClass, NowSessionMessage, NowSessionMessageKind, NowStatus, NowStatusError,
+};
 
 /// Message box response; Directly maps to the WinAPI MessageBox function response.
 ///
@@ -64,38 +68,72 @@ impl NowMsgBoxResponse {
 ///
 /// NOW_PROTO: NOW_SESSION_MSGBOX_RSP_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowSessionMsgBoxRspMsg {
+pub struct NowSessionMsgBoxRspMsg<'a> {
     request_id: u32,
     response: NowMsgBoxResponse,
+    status: NowStatus<'a>,
 }
 
-impl NowSessionMsgBoxRspMsg {
+impl_pdu_borrowing!(NowSessionMsgBoxRspMsg<'_>, OwnedNowSessionMsgBoxRspMsg);
+
+impl IntoOwned for NowSessionMsgBoxRspMsg<'_> {
+    type Owned = OwnedNowSessionMsgBoxRspMsg;
+
+    fn into_owned(self) -> Self::Owned {
+        OwnedNowSessionMsgBoxRspMsg {
+            request_id: self.request_id,
+            response: self.response,
+            status: self.status.into_owned(),
+        }
+    }
+}
+
+impl<'a> NowSessionMsgBoxRspMsg<'a> {
     const NAME: &'static str = "NOW_SESSION_MSGBOX_RSP_MSG";
     const FIXED_PART_SIZE: usize = 8;
 
-    pub fn new(request_id: u32, response: NowMsgBoxResponse) -> Self {
-        Self { request_id, response }
+    pub fn new_success(request_id: u32, response: NowMsgBoxResponse) -> Self {
+        Self {
+            request_id,
+            response,
+            status: NowStatus::new_success(),
+        }
+    }
+
+    pub fn new_error(request_id: u32, error: impl Into<NowStatusError>) -> Self {
+        Self {
+            request_id,
+            response: NowMsgBoxResponse(0),
+            status: NowStatus::new_error(error),
+        }
     }
 
     pub fn request_id(&self) -> u32 {
         self.request_id
     }
 
-    pub fn response(&self) -> NowMsgBoxResponse {
-        self.response
+    /// Get the response from the message box dialog. Returns (Err(_) if the request has failed).
+    pub fn to_result(&self) -> Result<NowMsgBoxResponse, NowStatusError> {
+        self.status.to_result().map(|_| self.response)
     }
 
-    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
         let request_id = src.read_u32();
         let response = NowMsgBoxResponse(src.read_u32());
 
-        Ok(Self { request_id, response })
+        let status = NowStatus::decode(src)?;
+
+        Ok(Self {
+            request_id,
+            response,
+            status,
+        })
     }
 }
 
-impl Encode for NowSessionMsgBoxRspMsg {
+impl Encode for NowSessionMsgBoxRspMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: u32::try_from(Self::FIXED_PART_SIZE).expect("always fits in u32"),
@@ -122,8 +160,8 @@ impl Encode for NowSessionMsgBoxRspMsg {
     }
 }
 
-impl Decode<'_> for NowSessionMsgBoxRspMsg {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowSessionMsgBoxRspMsg<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowSessionMessageKind(header.kind)) {
@@ -133,8 +171,8 @@ impl Decode<'_> for NowSessionMsgBoxRspMsg {
     }
 }
 
-impl From<NowSessionMsgBoxRspMsg> for NowMessage {
-    fn from(val: NowSessionMsgBoxRspMsg) -> Self {
+impl<'a> From<NowSessionMsgBoxRspMsg<'a>> for NowMessage<'a> {
+    fn from(val: NowSessionMsgBoxRspMsg<'a>) -> Self {
         NowMessage::Session(NowSessionMessage::MsgBoxRsp(val))
     }
 }

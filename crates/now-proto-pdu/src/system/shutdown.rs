@@ -1,16 +1,17 @@
 use bitflags::bitflags;
 use ironrdp_core::{
-    cast_length, ensure_fixed_part_size, invalid_field_err, Decode as _, DecodeResult, Encode, EncodeResult,
+    cast_length, ensure_fixed_part_size, invalid_field_err, Decode as _, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
 };
 
 use crate::system::NowSystemMessageKind;
 use crate::{NowHeader, NowMessage, NowMessageClass, NowSystemMessage, NowVarStr};
+use alloc::borrow::Cow;
 
 bitflags! {
     /// NOW_PROTO: NOW_SYSTEM_SHUTDOWN_FLAG_* constants.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub struct NowSystemShutdownFlags: u16 {
+    struct NowSystemShutdownFlags: u16 {
         /// Force shutdown
         ///
         /// NOW-PROTO: NOW_SHUTDOWN_FLAG_FORCE
@@ -26,23 +27,37 @@ bitflags! {
 ///
 /// NOW_PROTO: NOW_SYSTEM_SHUTDOWN_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowSystemShutdownMsg {
+pub struct NowSystemShutdownMsg<'a> {
     flags: NowSystemShutdownFlags,
     /// This system shutdown timeout, in seconds.
     timeout: u32,
     /// Optional shutdown message.
-    message: NowVarStr,
+    message: NowVarStr<'a>,
 }
 
-impl NowSystemShutdownMsg {
+pub type OwnedNowSystemShutdownMsg = NowSystemShutdownMsg<'static>;
+
+impl IntoOwned for NowSystemShutdownMsg<'_> {
+    type Owned = OwnedNowSystemShutdownMsg;
+
+    fn into_owned(self) -> Self::Owned {
+        OwnedNowSystemShutdownMsg {
+            flags: self.flags,
+            timeout: self.timeout,
+            message: self.message.into_owned(),
+        }
+    }
+}
+
+impl<'a> NowSystemShutdownMsg<'a> {
     const NAME: &'static str = "NOW_SYSTEM_SHUTDOWN_MSG";
     const FIXED_PART_SIZE: usize = 4 /* u32 timeout */;
 
-    pub fn new(flags: NowSystemShutdownFlags, timeout: u32, message: NowVarStr) -> DecodeResult<Self> {
+    pub fn new(timeout: u32, message: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         let msg = Self {
-            flags,
+            flags: NowSystemShutdownFlags::empty(),
             timeout,
-            message,
+            message: NowVarStr::new(message)?,
         };
 
         msg.ensure_message_size()?;
@@ -50,7 +65,27 @@ impl NowSystemShutdownMsg {
         Ok(msg)
     }
 
-    fn ensure_message_size(&self) -> DecodeResult<()> {
+    #[must_use]
+    pub fn with_force_shutdown(mut self) -> Self {
+        self.flags |= NowSystemShutdownFlags::FORCE;
+        self
+    }
+
+    #[must_use]
+    pub fn with_reboot(mut self) -> Self {
+        self.flags |= NowSystemShutdownFlags::REBOOT;
+        self
+    }
+
+    pub fn is_force_shutdown(&self) -> bool {
+        self.flags.contains(NowSystemShutdownFlags::FORCE)
+    }
+
+    pub fn is_reboot(&self) -> bool {
+        self.flags.contains(NowSystemShutdownFlags::REBOOT)
+    }
+
+    fn ensure_message_size(&self) -> EncodeResult<()> {
         let _message_size = Self::FIXED_PART_SIZE
             .checked_add(self.message.size())
             .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
@@ -64,7 +99,7 @@ impl NowSystemShutdownMsg {
         Self::FIXED_PART_SIZE + self.message.size()
     }
 
-    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
         let timeout = src.read_u32();
@@ -76,13 +111,11 @@ impl NowSystemShutdownMsg {
             message,
         };
 
-        msg.ensure_message_size()?;
-
         Ok(msg)
     }
 }
 
-impl Encode for NowSystemShutdownMsg {
+impl Encode for NowSystemShutdownMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: cast_length!("size", self.body_size())?,
@@ -111,8 +144,8 @@ impl Encode for NowSystemShutdownMsg {
     }
 }
 
-impl From<NowSystemShutdownMsg> for NowMessage {
-    fn from(msg: NowSystemShutdownMsg) -> Self {
+impl<'a> From<NowSystemShutdownMsg<'a>> for NowMessage<'a> {
+    fn from(msg: NowSystemShutdownMsg<'a>) -> Self {
         NowMessage::System(NowSystemMessage::Shutdown(msg))
     }
 }

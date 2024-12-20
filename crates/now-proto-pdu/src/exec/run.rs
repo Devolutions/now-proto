@@ -1,6 +1,8 @@
+use alloc::borrow::Cow;
+
 use ironrdp_core::{
-    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, ReadCursor,
-    WriteCursor,
+    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
+    ReadCursor, WriteCursor,
 };
 
 use crate::{NowExecMessage, NowExecMsgKind, NowHeader, NowMessage, NowMessageClass, NowVarStr};
@@ -12,24 +14,40 @@ use crate::{NowExecMessage, NowExecMsgKind, NowHeader, NowMessage, NowMessageCla
 ///
 /// NOW_PROTO: NOW_EXEC_RUN_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowExecRunMsg {
+pub struct NowExecRunMsg<'a> {
     session_id: u32,
-    command: NowVarStr,
+    command: NowVarStr<'a>,
 }
 
-impl NowExecRunMsg {
+impl_pdu_borrowing!(NowExecRunMsg<'_>, OwnedNowExecRunMsg);
+
+impl IntoOwned for NowExecRunMsg<'_> {
+    type Owned = OwnedNowExecRunMsg;
+
+    fn into_owned(self) -> Self::Owned {
+        OwnedNowExecRunMsg {
+            session_id: self.session_id,
+            command: self.command.into_owned(),
+        }
+    }
+}
+
+impl<'a> NowExecRunMsg<'a> {
     const NAME: &'static str = "NOW_EXEC_RUN_MSG";
     const FIXED_PART_SIZE: usize = 4;
 
-    pub fn new(session_id: u32, command: NowVarStr) -> DecodeResult<Self> {
-        let msg = Self { session_id, command };
+    pub fn new(session_id: u32, command: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+        let msg = Self {
+            session_id,
+            command: NowVarStr::new(command)?,
+        };
 
         msg.ensure_message_size()?;
 
         Ok(msg)
     }
 
-    fn ensure_message_size(&self) -> DecodeResult<()> {
+    fn ensure_message_size(&self) -> EncodeResult<()> {
         let _message_size = Self::FIXED_PART_SIZE
             .checked_add(self.command.size())
             .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
@@ -41,7 +59,7 @@ impl NowExecRunMsg {
         self.session_id
     }
 
-    pub fn command(&self) -> &NowVarStr {
+    pub fn command(&self) -> &str {
         &self.command
     }
 
@@ -51,7 +69,7 @@ impl NowExecRunMsg {
         Self::FIXED_PART_SIZE + self.command.size()
     }
 
-    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
         let session_id = src.read_u32();
@@ -59,13 +77,11 @@ impl NowExecRunMsg {
 
         let msg = Self { session_id, command };
 
-        msg.ensure_message_size()?;
-
         Ok(msg)
     }
 }
 
-impl Encode for NowExecRunMsg {
+impl Encode for NowExecRunMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: cast_length!("size", self.body_size())?,
@@ -94,8 +110,8 @@ impl Encode for NowExecRunMsg {
     }
 }
 
-impl Decode<'_> for NowExecRunMsg {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowExecRunMsg<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowExecMsgKind(header.kind)) {
@@ -105,8 +121,8 @@ impl Decode<'_> for NowExecRunMsg {
     }
 }
 
-impl From<NowExecRunMsg> for NowMessage {
-    fn from(msg: NowExecRunMsg) -> Self {
+impl<'a> From<NowExecRunMsg<'a>> for NowMessage<'a> {
+    fn from(msg: NowExecRunMsg<'a>) -> Self {
         NowMessage::Exec(NowExecMessage::Run(msg))
     }
 }

@@ -1,9 +1,10 @@
-use alloc::string::String;
+use alloc::borrow::Cow;
 
 use bitflags::bitflags;
+
 use ironrdp_core::{
-    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, ReadCursor,
-    WriteCursor,
+    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
+    ReadCursor, WriteCursor,
 };
 
 use crate::{NowHeader, NowMessage, NowMessageClass, NowSessionMessage, NowSessionMessageKind, NowVarStr};
@@ -64,27 +65,44 @@ bitflags! {
 ///
 /// NOW_PROTO: NOW_SESSION_MSGBOX_REQ_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowSessionMsgBoxReqMsg {
+pub struct NowSessionMsgBoxReqMsg<'a> {
     flags: NowSessionMessageBoxFlags,
     request_id: u32,
     style: NowMessageBoxStyle,
     timeout: u32,
-    title: NowVarStr,
-    message: NowVarStr,
+    title: NowVarStr<'a>,
+    message: NowVarStr<'a>,
 }
 
-impl NowSessionMsgBoxReqMsg {
+impl_pdu_borrowing!(NowSessionMsgBoxReqMsg<'_>, OwnedNowSessionMsgBoxReqMsg);
+
+impl IntoOwned for NowSessionMsgBoxReqMsg<'_> {
+    type Owned = OwnedNowSessionMsgBoxReqMsg;
+
+    fn into_owned(self) -> Self::Owned {
+        OwnedNowSessionMsgBoxReqMsg {
+            flags: self.flags,
+            request_id: self.request_id,
+            style: self.style,
+            timeout: self.timeout,
+            title: self.title.into_owned(),
+            message: self.message.into_owned(),
+        }
+    }
+}
+
+impl<'a> NowSessionMsgBoxReqMsg<'a> {
     const NAME: &'static str = "NOW_SESSION_MSGBOX_REQ_MSG";
     const FIXED_PART_SIZE: usize = 12;
 
-    pub fn new(request_id: u32, message: NowVarStr) -> DecodeResult<Self> {
+    pub fn new(request_id: u32, message: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         let msg = Self {
             flags: NowSessionMessageBoxFlags::empty(),
             request_id,
             style: NowMessageBoxStyle::OK,
             timeout: 0,
-            title: NowVarStr::new(String::new()).expect("empty string construction always succeeds"),
-            message,
+            title: NowVarStr::default(),
+            message: NowVarStr::new(message)?,
         };
 
         msg.ensure_message_size()?;
@@ -92,7 +110,7 @@ impl NowSessionMsgBoxReqMsg {
         Ok(msg)
     }
 
-    fn ensure_message_size(&self) -> DecodeResult<()> {
+    fn ensure_message_size(&self) -> EncodeResult<()> {
         let _message_size = Self::FIXED_PART_SIZE
             .checked_add(self.title.size())
             .and_then(|size| size.checked_add(self.message.size()))
@@ -101,17 +119,9 @@ impl NowSessionMsgBoxReqMsg {
         Ok(())
     }
 
-    pub fn with_title(mut self, title: NowVarStr) -> DecodeResult<Self> {
+    pub fn with_title(mut self, title: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         self.flags |= NowSessionMessageBoxFlags::TITLE;
-        self.title = title;
-
-        self.ensure_message_size()?;
-
-        Ok(self)
-    }
-
-    pub fn with_message(mut self, message: NowVarStr) -> DecodeResult<Self> {
-        self.message = message;
+        self.title = NowVarStr::new(title)?;
 
         self.ensure_message_size()?;
 
@@ -158,7 +168,7 @@ impl NowSessionMsgBoxReqMsg {
         }
     }
 
-    pub fn title(&self) -> Option<&NowVarStr> {
+    pub fn title(&self) -> Option<&str> {
         if self.flags.contains(NowSessionMessageBoxFlags::TITLE) {
             Some(&self.title)
         } else {
@@ -166,7 +176,7 @@ impl NowSessionMsgBoxReqMsg {
         }
     }
 
-    pub fn message(&self) -> &NowVarStr {
+    pub fn message(&self) -> &str {
         &self.message
     }
 
@@ -180,7 +190,7 @@ impl NowSessionMsgBoxReqMsg {
         Self::FIXED_PART_SIZE + self.title.size() + self.message.size()
     }
 
-    pub(super) fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub(super) fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
         let flags = NowSessionMessageBoxFlags::from_bits_retain(header.flags);
@@ -199,13 +209,11 @@ impl NowSessionMsgBoxReqMsg {
             message,
         };
 
-        msg.ensure_message_size()?;
-
         Ok(msg)
     }
 }
 
-impl Encode for NowSessionMsgBoxReqMsg {
+impl Encode for NowSessionMsgBoxReqMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: cast_length!("size", self.body_size())?,
@@ -237,8 +245,8 @@ impl Encode for NowSessionMsgBoxReqMsg {
     }
 }
 
-impl Decode<'_> for NowSessionMsgBoxReqMsg {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowSessionMsgBoxReqMsg<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowSessionMessageKind(header.kind)) {
@@ -248,8 +256,8 @@ impl Decode<'_> for NowSessionMsgBoxReqMsg {
     }
 }
 
-impl From<NowSessionMsgBoxReqMsg> for NowMessage {
-    fn from(val: NowSessionMsgBoxReqMsg) -> Self {
+impl<'a> From<NowSessionMsgBoxReqMsg<'a>> for NowMessage<'a> {
+    fn from(val: NowSessionMsgBoxReqMsg<'a>) -> Self {
         NowMessage::Session(NowSessionMessage::MsgBoxReq(val))
     }
 }

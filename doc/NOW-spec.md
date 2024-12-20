@@ -179,8 +179,8 @@ Operation status code.
 
 | Value | Meaning |
 |-------|---------|
-| NOW_NOW_STATUS_ERROR<br>0x0001 | This flag set for all error statuses. If flag is not set, operation was successful. |
-| NOW_NOW_STATUS_ERROR_MESSAGE<br>0x0002 | `errorMessage` contains optional error message. |
+| NOW_STATUS_ERROR<br>0x0001 | This flag set for all error statuses. If flag is not set, operation was successful. |
+| NOW_STATUS_ERROR_MESSAGE<br>0x0002 | `errorMessage` contains optional error message. |
 
 **kind (1 byte)**: The status kind.
 When `NOW_STATUS_ERROR` is set, this field represents error kind.
@@ -214,11 +214,12 @@ For successful operation this field value is operation specific.
         | NOW_CODE_ACCESS_DENIED<br>0x0005 | Resource can't be accessed. |
         | NOW_CODE_INTERNAL<br>0x0006 | Internal error. |
         | NOW_CODE_NOT_IMPLEMENTED<br>0x0007 | Operation is not implemented on current platform. |
+        | NOW_CODE_PROTOCOL_VERSION<br>0x0008 | Incompatible protocol versions. |
 
     - `NOW_STATUS_ERROR_KIND_WINAPI`: code contains standard WinAPI error.
     - `NOW_STATUS_ERROR_KIND_UNIX`: code contains standard UNIX error code.
 
-**errorMessage(variable, optional)**: this value contains either optional error message if
+**errorMessage(variable)**: this value contains either optional error message if
 `NOW_STATUS_ERROR_MESSAGE` flag is set, or empty sting if the flag is not set.
 
 ### Channel Messages
@@ -257,6 +258,7 @@ Channel negotiation and life cycle messages.
 |---------------------------------|----------------------|
 | NOW_CHANNEL_CAPSET_MSG_ID<br>0x01 | NOW_CHANNEL_CAPSET_MSG |
 | NOW_CHANNEL_HEARTBEAT_MSG_ID<br>0x02 | NOW_CHANNEL_HEARTBEAT_MSG |
+| NOW_CHANNEL_TERMINATE_MSG_ID<br>0x03 | NOW_CHANNEL_TERMINATE_MSG |
 
 #### NOW_CHANNEL_CAPSET_MSG
 
@@ -329,8 +331,8 @@ increment major version; Protocol implementations with different major version a
 
 | Flag | Meaning |
 |-------|---------|
-| NOW_CAP_SESSION_LOCK<br>0x00000001 | Lock command support. |
-| NOW_CAP_SESSION_LOGOFF<br>0x00000002 | Logoff command support. |
+| NOW_CAP_SESSION_LOCK<br>0x00000001 | Session lock command support. |
+| NOW_CAP_SESSION_LOGOFF<br>0x00000002 | Session logoff command support. |
 | NOW_CAP_SESSION_MSGBOX<br>0x00000004 | Message box command support. |
 
 **execCapset (4 bytes)**: Remote execution capabilities set.
@@ -384,6 +386,45 @@ the specified interval, it should consider the connection as lost.
 **msgType (1 byte)**: The message type (NOW_CHANNEL_HEARTBEAT_MSG_ID).
 
 **msgFlags (2 bytes)**: The message flags.
+
+#### NOW_CHANNEL_TERMINATE_MSG
+
+Channel termination notice, could be sent by either parties at any moment of communication to gracefully
+close DVC channel.
+
+<table class="byte-layout">
+    <thead>
+        <tr>
+            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
+            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="32">msgSize</td>
+        </tr>
+        <tr>
+            <td colspan="8">msgClass</td>
+            <td colspan="8">msgType</td>
+            <td colspan="16">msgFlags</td>
+        </tr>
+        <tr>
+            <td colspan="32">status (variable)</td>
+        </tr>
+    </tbody>
+</table>
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_CHANNEL_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_CHANNEL_TERMINATE_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**status (variable)**: Channel termination status represented as NOW_STATUS structure.
 
 ### System Messages
 
@@ -743,13 +784,12 @@ The NOW_EXEC_MSG message is used to execute remote commands or scripts.
 
 | Value | Meaning |
 |-------|---------|
-| NOW_EXEC_CAPSET_MSG_ID<br>0x00 | NOW_EXEC_CAPSET_MSG |
-| NOW_EXEC_ABORT_MSG_ID<br>0x01 | NOW_EXEC_ABORT_MSG |
-| NOW_EXEC_CANCEL_REQ_MSG_ID<br>0x02 | NOW_EXEC_CANCEL_REQ_MSG |
-| NOW_EXEC_CANCEL_RSP_MSG_ID<br>0x03 | NOW_EXEC_CANCEL_RSP_MSG |
-| NOW_EXEC_RESULT_MSG_ID<br>0x04 | NOW_EXEC_RESULT_MSG |
-| NOW_EXEC_DATA_MSG_ID<br>0x05 | NOW_EXEC_DATA_MSG |
-| NOW_EXEC_STARTED_MSG_ID<br>0x06 | NOW_EXEC_STARTED_MSG |
+| NOW_EXEC_ABORT_MSG_ID<br>0x00 | NOW_EXEC_ABORT_MSG |
+| NOW_EXEC_CANCEL_REQ_MSG_ID<br>0x01 | NOW_EXEC_CANCEL_REQ_MSG |
+| NOW_EXEC_CANCEL_RSP_MSG_ID<br>0x02 | NOW_EXEC_CANCEL_RSP_MSG |
+| NOW_EXEC_RESULT_MSG_ID<br>0x03 | NOW_EXEC_RESULT_MSG |
+| NOW_EXEC_DATA_MSG_ID<br>0x04 | NOW_EXEC_DATA_MSG |
+| NOW_EXEC_STARTED_MSG_ID<br>0x05 | NOW_EXEC_STARTED_MSG |
 | NOW_EXEC_RUN_MSG_ID<br>0x10 | NOW_EXEC_RUN_MSG |
 | NOW_EXEC_PROCESS_MSG_ID<br>0x11 | NOW_EXEC_PROCESS_MSG |
 | NOW_EXEC_SHELL_MSG_ID<br>0x12 | NOW_EXEC_SHELL_MSG |
@@ -761,7 +801,8 @@ The NOW_EXEC_MSG message is used to execute remote commands or scripts.
 
 #### NOW_EXEC_ABORT_MSG
 
-The NOW_EXEC_ABORT_MSG message is used to abort a remote execution immediately due to an unrecoverable error. This message can be sent at any time without an explicit response message. The session is considered aborted as soon as this message is sent.
+The NOW_EXEC_ABORT_MSG message is used to abort a remote execution immediately. See NOW_EXEC_CANCEL_REQ if
+the graceful session cancellation is needed instead. This message can be sent by the client at any point of session lifetime. The session is considered aborted as soon as this message is sent.
 
 <table class="byte-layout">
     <thead>
@@ -973,16 +1014,12 @@ The NOW_EXEC_DATA_MSG message is used to send input/output data as part of a rem
 
 | Flag                                   | Meaning                         |
 |----------------------------------------|---------------------------------|
-| NOW_EXEC_FLAG_DATA_FIRST<br>0x00000001 | This is the first data message. |
-| NOW_EXEC_FLAG_DATA_LAST<br>0x00000002 | This is the last data message, the command completed execution. |
-| NOW_EXEC_FLAG_DATA_STDIN<br>0x00000004 | The data is from the standard input. |
-| NOW_EXEC_FLAG_DATA_STDOUT<br>0x00000008 | The data is from the standard output. |
-| NOW_EXEC_FLAG_DATA_STDERR<br>0x00000010 | The data is from the standard error. |
+| NOW_EXEC_FLAG_DATA_LAST<br>0x00000001 | This is the last data message, the command completed execution. |
+| NOW_EXEC_FLAG_DATA_STDIN<br>0x00000002 | The data is from the standard input. |
+| NOW_EXEC_FLAG_DATA_STDOUT<br>0x00000004 | The data is from the standard output. |
+| NOW_EXEC_FLAG_DATA_STDERR<br>0x00000008 | The data is from the standard error. |
 
 Message should contain exactly one of `NOW_EXEC_FLAG_DATA_STDIN`, `NOW_EXEC_FLAG_DATA_STDOUT` or `NOW_EXEC_FLAG_DATA_STDERR` flags set.
-
-First stream message should always contain `NOW_EXEC_FLAG_DATA_FIRST`
-flag.
 
 `NOW_EXEC_FLAG_DATA_LAST` should indicate EOF for a stream, all consecutive messages for the given stream will be ignored by either party (client or sever).
 
@@ -1120,8 +1157,8 @@ The NOW_EXEC_PROCESS_MSG message is used to send a Windows [CreateProcess()](htt
 
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
-| NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x00000001 | `parameters` field contains non-default value. |
-| NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x00000002 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x0001 | `parameters` field contains non-default value. |
+| NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value. |
 
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
@@ -1274,6 +1311,9 @@ The NOW_EXEC_WINPS_MSG message is used to execute a remote Windows PowerShell (p
             <td colspan="32">command (variable)</td>
         </tr>
         <tr>
+            <td colspan="32">directory (variable)</td>
+        </tr>
+        <tr>
             <td colspan="32">executionPolicy (variable)</td>
         </tr>
         <tr>
@@ -1300,10 +1340,13 @@ The NOW_EXEC_WINPS_MSG message is used to execute a remote Windows PowerShell (p
 | NOW_EXEC_FLAG_PS_NON_INTERACTIVE<br>0x00000020 | PowerShell -NonInteractive option |
 | NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x00000040 | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter |
 | NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x00000080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
+| NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x00000100 | `directory` field contains non-default value and specifies command working directory |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
 **command (variable)**: A NOW_VARSTR structure containing the command to execute.
+
+**directory (variable)**: A NOW_VARSTR structure containing the command working directory. Corresponds to the lpCurrentDirectory parameter. Ignored if NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET is not set.
 
 **executionPolicy (variable)**: A NOW_VARSTR structure containing the execution policy (-ExecutionPolicy) parameter value. Ignored if NOW_EXEC_FLAG_PS_EXECUTION_POLICY is not set.
 
@@ -1338,6 +1381,9 @@ The NOW_EXEC_PWSH_MSG message is used to execute a remote PowerShell 7 (pwsh) co
             <td colspan="32">command (variable)</td>
         </tr>
         <tr>
+            <td colspan="32">directory (variable)</td>
+        </tr>
+        <tr>
             <td colspan="32">executionPolicy (variable)</td>
         </tr>
         <tr>
@@ -1357,6 +1403,8 @@ The NOW_EXEC_PWSH_MSG message is used to execute a remote PowerShell 7 (pwsh) co
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
 **command (variable)**: A NOW_VARSTR structure containing the command to execute.
+
+**directory (variable)**: A NOW_VARSTR structure containing the command working directory. Corresponds to the lpCurrentDirectory parameter. Ignored if NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET is not set.
 
 **executionPolicy (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
 

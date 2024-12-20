@@ -1,9 +1,7 @@
 //! Variable-length number types.
 use ironrdp_core::{
-    ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeError, EncodeResult, ReadCursor,
-    WriteCursor,
+    ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeError, EncodeResult, ReadCursor, WriteCursor,
 };
-
 
 /// Variable-length encoded u32.
 /// Value range: `[0..0x3FFFFFFF]`

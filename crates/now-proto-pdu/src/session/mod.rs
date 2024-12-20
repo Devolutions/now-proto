@@ -3,11 +3,11 @@ mod logoff;
 mod msg_box_req;
 mod msg_box_rsp;
 
-use ironrdp_core::{DecodeResult, Encode, EncodeResult, ReadCursor, WriteCursor};
+use ironrdp_core::{DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
 pub use lock::NowSessionLockMsg;
 pub use logoff::NowSessionLogoffMsg;
-pub use msg_box_req::{NowMessageBoxStyle, NowSessionMsgBoxReqMsg};
-pub use msg_box_rsp::{NowMsgBoxResponse, NowSessionMsgBoxRspMsg};
+pub use msg_box_req::{NowMessageBoxStyle, NowSessionMsgBoxReqMsg, OwnedNowSessionMsgBoxReqMsg};
+pub use msg_box_rsp::{NowMsgBoxResponse, NowSessionMsgBoxRspMsg, OwnedNowSessionMsgBoxRspMsg};
 
 use crate::NowHeader;
 
@@ -28,17 +28,32 @@ impl NowSessionMessageKind {
 
 // Wrapper for the `NOW_SESSION_MSG_CLASS_ID` message class.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NowSessionMessage {
+pub enum NowSessionMessage<'a> {
     Lock(NowSessionLockMsg),
     Logoff(NowSessionLogoffMsg),
-    MsgBoxReq(NowSessionMsgBoxReqMsg),
-    MsgBoxRsp(NowSessionMsgBoxRspMsg),
+    MsgBoxReq(NowSessionMsgBoxReqMsg<'a>),
+    MsgBoxRsp(NowSessionMsgBoxRspMsg<'a>),
 }
 
-impl NowSessionMessage {
+pub type OwnedNowSessionMessage = NowSessionMessage<'static>;
+
+impl IntoOwned for NowSessionMessage<'_> {
+    type Owned = OwnedNowSessionMessage;
+
+    fn into_owned(self) -> Self::Owned {
+        match self {
+            Self::Lock(msg) => OwnedNowSessionMessage::Lock(msg),
+            Self::Logoff(msg) => OwnedNowSessionMessage::Logoff(msg),
+            Self::MsgBoxReq(msg) => OwnedNowSessionMessage::MsgBoxReq(msg.into_owned()),
+            Self::MsgBoxRsp(msg) => OwnedNowSessionMessage::MsgBoxRsp(msg.into_owned()),
+        }
+    }
+}
+
+impl<'a> NowSessionMessage<'a> {
     const NAME: &'static str = "NOW_SESSION_MSG";
 
-    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         match NowSessionMessageKind(header.kind) {
             NowSessionMessageKind::LOCK => Ok(Self::Lock(NowSessionLockMsg::default())),
             NowSessionMessageKind::LOGOFF => Ok(Self::Logoff(NowSessionLogoffMsg::default())),
@@ -53,7 +68,7 @@ impl NowSessionMessage {
     }
 }
 
-impl Encode for NowSessionMessage {
+impl Encode for NowSessionMessage<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         match self {
             Self::Lock(msg) => msg.encode(dst),

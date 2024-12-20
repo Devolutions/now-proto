@@ -6,8 +6,8 @@ mod number;
 mod status;
 mod string;
 
-pub use buffer::NowVarBuf;
+pub use buffer::{NowVarBuf, OwnedNowVarBuf};
 pub use header::{NowHeader, NowMessageClass};
 pub use number::VarU32;
-pub use status::{NowSeverity, NowStatus, NowStatusCode};
-pub use string::NowVarStr;
+pub use status::{NowProtoError, NowStatus, NowStatusError, NowStatusErrorKind, OwnedNowStatus};
+pub use string::{NowVarStr, OwnedNowVarStr};

@@ -1,10 +1,11 @@
 //! String types
 
-use alloc::string::String;
+use alloc::borrow::Cow;
+use core::{ops::Deref, str};
 
 use ironrdp_core::{
-    cast_length, ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult,
-    ReadCursor, WriteCursor,
+    cast_length, ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor,
+    WriteCursor,
 };
 
 use crate::VarU32;
@@ -12,21 +13,26 @@ use crate::VarU32;
 /// String value up to 2^31 bytes long (Length has compact variable length encoding).
 ///
 /// NOW-PROTO: NOW_VARSTR
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowVarStr(String);
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct NowVarStr<'a>(Cow<'a, str>);
 
-impl NowVarStr {
+impl_pdu_borrowing!(NowVarStr<'_>, OwnedNowVarStr);
+
+impl IntoOwned for NowVarStr<'_> {
+    type Owned = OwnedNowVarStr;
+
+    fn into_owned(self) -> Self::Owned {
+        NowVarStr(Cow::Owned(self.0.into_owned()))
+    }
+}
+
+impl<'a> NowVarStr<'a> {
     pub const MAX_SIZE: usize = VarU32::MAX as usize;
 
     const NAME: &'static str = "NOW_VARSTR";
 
-    /// Returns empty string.
-    pub fn empty() -> Self {
-        Self(String::new())
-    }
-
     /// Creates `NowVarStr` from std string. Returns error if string is too big for the protocol.
-    pub fn new(value: impl Into<String>) -> EncodeResult<Self> {
+    pub fn new(value: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         let value = value.into();
         // IMPORTANT: we need to check for encoded UTF-8 size, not the string length.
 
@@ -46,7 +52,7 @@ impl NowVarStr {
     }
 }
 
-impl Encode for NowVarStr {
+impl Encode for NowVarStr<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let encoded_size = self.size();
         ensure_size!(in: dst, size: encoded_size);
@@ -75,8 +81,8 @@ impl Encode for NowVarStr {
     }
 }
 
-impl Decode<'_> for NowVarStr {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowVarStr<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let len_u32 = VarU32::decode(src)?.value();
         let len: usize = cast_length!("len", len_u32)?;
 
@@ -85,15 +91,21 @@ impl Decode<'_> for NowVarStr {
         ensure_size!(in: src, size: 1);
         let _null = src.read_u8();
 
-        let string =
-            String::from_utf8(bytes.to_vec()).map_err(|_| invalid_field_err!("string value", "invalid utf-8"))?;
+        // Avoid owned vector allocation for empty strings.
+        if bytes.is_empty() {
+            return Ok(NowVarStr::default());
+        }
 
-        Ok(NowVarStr(string))
+        let borrowed = str::from_utf8(bytes).map_err(|_| invalid_field_err!("string value", "invalid utf-8"))?;
+
+        Ok(NowVarStr(borrowed.into()))
     }
 }
 
-impl From<NowVarStr> for String {
-    fn from(value: NowVarStr) -> Self {
-        value.0
+impl Deref for NowVarStr<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

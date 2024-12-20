@@ -1,10 +1,11 @@
 //! Buffer types for NOW protocol.
 
-use alloc::vec::Vec;
+use alloc::borrow::Cow;
+use core::ops::Deref;
 
 use ironrdp_core::{
-    cast_length, ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult,
-    ReadCursor, WriteCursor,
+    cast_length, ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor,
+    WriteCursor,
 };
 
 use crate::VarU32;
@@ -12,14 +13,24 @@ use crate::VarU32;
 /// Buffer up to 2^31 bytes long (Length has compact variable length encoding).
 ///
 /// NOW-PROTO: NOW_VARBUF
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowVarBuf(Vec<u8>);
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct NowVarBuf<'a>(Cow<'a, [u8]>);
 
-impl NowVarBuf {
+impl_pdu_borrowing!(NowVarBuf<'_>, OwnedNowVarBuf);
+
+impl IntoOwned for NowVarBuf<'_> {
+    type Owned = OwnedNowVarBuf;
+
+    fn into_owned(self) -> Self::Owned {
+        NowVarBuf(Cow::Owned(self.0.into_owned()))
+    }
+}
+
+impl<'a> NowVarBuf<'a> {
     const NAME: &'static str = "NOW_VARBUF";
 
     /// Create a new `NowVarBuf` instance. Returns an error if the provided value is too large.
-    pub fn new(value: impl Into<Vec<u8>>) -> DecodeResult<Self> {
+    pub fn new(value: impl Into<Cow<'a, [u8]>>) -> EncodeResult<Self> {
         let value = value.into();
 
         let _: u32 = value
@@ -34,11 +45,11 @@ impl NowVarBuf {
 
     /// Get the buffer value.
     pub fn value(&self) -> &[u8] {
-        self.0.as_slice()
+        &self.0
     }
 }
 
-impl Encode for NowVarBuf {
+impl Encode for NowVarBuf<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let encoded_size = self.size();
         ensure_size!(in: dst, size: encoded_size);
@@ -46,7 +57,7 @@ impl Encode for NowVarBuf {
         let len: u32 = self.0.len().try_into().expect("BUG: validated in constructor");
 
         VarU32::new(len)?.encode(dst)?;
-        dst.write_slice(self.0.as_slice());
+        dst.write_slice(&self.0);
 
         Ok(())
     }
@@ -65,20 +76,22 @@ impl Encode for NowVarBuf {
     }
 }
 
-impl Decode<'_> for NowVarBuf {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowVarBuf<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let len_u32 = VarU32::decode(src)?.value();
         let len: usize = cast_length!("len", len_u32)?;
 
         ensure_size!(in: src, size: len);
         let bytes = src.read_slice(len);
 
-        Ok(NowVarBuf(bytes.to_vec()))
+        Ok(NowVarBuf(Cow::Borrowed(bytes)))
     }
 }
 
-impl From<NowVarBuf> for Vec<u8> {
-    fn from(buf: NowVarBuf) -> Self {
-        buf.0
+impl Deref for NowVarBuf<'_> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

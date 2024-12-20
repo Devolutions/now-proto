@@ -5,49 +5,42 @@ use ironrdp_core::{
 
 use crate::{NowExecMessage, NowExecMsgKind, NowHeader, NowMessage, NowMessageClass};
 
-/// The NOW_EXEC_ABORT_MSG message is used to abort a remote execution immediately due to an
-/// unrecoverable error. This message can be sent at any time without an explicit response message.
-/// The session is considered aborted as soon as this message is sent.
+/// The NOW_EXEC_STARTED_MSG message is sent by the server after the execution session has been
+/// successfully started.
 ///
-/// NOW-PROTO: NOW_EXEC_ABORT_MSG
+/// NOW-PROTO: NOW_EXEC_STARTED_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowExecAbortMsg {
+pub struct NowExecStartedMsg {
     session_id: u32,
-    exit_code: u32,
 }
 
-impl NowExecAbortMsg {
-    const NAME: &'static str = "NOW_EXEC_ABORT_MSG";
-    const FIXED_PART_SIZE: usize = 8;
+impl NowExecStartedMsg {
+    const NAME: &'static str = "NOW_EXEC_STARTED_MSG";
+    const FIXED_PART_SIZE: usize = 4;
 
-    pub fn new(session_id: u32, exit_code: u32) -> Self {
-        Self { session_id, exit_code }
+    pub fn new(session_id: u32) -> Self {
+        Self { session_id }
     }
 
     pub fn session_id(&self) -> u32 {
         self.session_id
     }
 
-    pub fn exit_code(&self) -> u32 {
-        self.exit_code
-    }
-
     pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
         let session_id = src.read_u32();
-        let exit_code = src.read_u32();
 
-        Ok(Self { session_id, exit_code })
+        Ok(Self { session_id })
     }
 }
 
-impl Encode for NowExecAbortMsg {
+impl Encode for NowExecStartedMsg {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: cast_length!("size", Self::FIXED_PART_SIZE)?,
             class: NowMessageClass::EXEC,
-            kind: NowExecMsgKind::ABORT.0,
+            kind: NowExecMsgKind::STARTED.0,
             flags: 0,
         };
 
@@ -55,7 +48,6 @@ impl Encode for NowExecAbortMsg {
 
         ensure_fixed_part_size!(in: dst);
         dst.write_u32(self.session_id);
-        dst.write_u32(self.exit_code);
 
         Ok(())
     }
@@ -71,19 +63,19 @@ impl Encode for NowExecAbortMsg {
     }
 }
 
-impl Decode<'_> for NowExecAbortMsg {
+impl Decode<'_> for NowExecStartedMsg {
     fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowExecMsgKind(header.kind)) {
-            (NowMessageClass::EXEC, NowExecMsgKind::ABORT) => Self::decode_from_body(header, src),
+            (NowMessageClass::EXEC, NowExecMsgKind::STARTED) => Self::decode_from_body(header, src),
             _ => Err(invalid_field_err!("type", "invalid message type")),
         }
     }
 }
 
-impl From<NowExecAbortMsg> for NowMessage<'_> {
-    fn from(msg: NowExecAbortMsg) -> Self {
-        NowMessage::Exec(NowExecMessage::Abort(msg))
+impl From<NowExecStartedMsg> for NowMessage<'_> {
+    fn from(msg: NowExecStartedMsg) -> Self {
+        NowMessage::Exec(NowExecMessage::Started(msg))
     }
 }

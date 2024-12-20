@@ -1,36 +1,69 @@
+use alloc::borrow::Cow;
+
+use bitflags::bitflags;
+
 use ironrdp_core::{
-    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, ReadCursor,
-    WriteCursor,
+    cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
+    ReadCursor, WriteCursor,
 };
 
 use crate::{NowExecMessage, NowExecMsgKind, NowHeader, NowMessage, NowMessageClass, NowVarStr};
+
+bitflags! {
+    /// NOW-PROTO: NOW_EXEC_PROCESS_MSG msgFlags field.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    struct NowExecProcessFlags: u16 {
+        /// Set if parameters field contains non-default value.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET
+        const PARAMETERS_SET = 0x0001;
+
+        /// Set if directory field contains non-default value.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET
+        const DIRECTORY_SET = 0x0002;
+    }
+}
 
 /// The NOW_EXEC_PROCESS_MSG message is used to send a Windows CreateProcess() request.
 ///
 /// NOW-PROTO: NOW_EXEC_PROCESS_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowExecProcessMsg {
+pub struct NowExecProcessMsg<'a> {
+    flags: NowExecProcessFlags,
     session_id: u32,
-    filename: NowVarStr,
-    parameters: NowVarStr,
-    directory: NowVarStr,
+    filename: NowVarStr<'a>,
+    parameters: NowVarStr<'a>,
+    directory: NowVarStr<'a>,
 }
 
-impl NowExecProcessMsg {
+impl_pdu_borrowing!(NowExecProcessMsg<'_>, OwnedNowExecProcessMsg);
+
+impl IntoOwned for NowExecProcessMsg<'_> {
+    type Owned = OwnedNowExecProcessMsg;
+
+    fn into_owned(self) -> Self::Owned {
+        OwnedNowExecProcessMsg {
+            flags: self.flags,
+            session_id: self.session_id,
+            filename: self.filename.into_owned(),
+            parameters: self.parameters.into_owned(),
+            directory: self.directory.into_owned(),
+        }
+    }
+}
+
+impl<'a> NowExecProcessMsg<'a> {
     const NAME: &'static str = "NOW_EXEC_PROCESS_MSG";
     const FIXED_PART_SIZE: usize = 4;
 
-    pub fn new(
-        session_id: u32,
-        filename: NowVarStr,
-        parameters: NowVarStr,
-        directory: NowVarStr,
-    ) -> DecodeResult<Self> {
+    pub fn new(session_id: u32, filename: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         let msg = Self {
+            flags: NowExecProcessFlags::empty(),
             session_id,
-            filename,
-            parameters,
-            directory,
+            filename: NowVarStr::new(filename)?,
+            parameters: NowVarStr::default(),
+            directory: NowVarStr::default(),
         };
 
         msg.ensure_message_size()?;
@@ -38,7 +71,25 @@ impl NowExecProcessMsg {
         Ok(msg)
     }
 
-    fn ensure_message_size(&self) -> DecodeResult<()> {
+    pub fn with_parameters(mut self, parameters: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+        self.flags |= NowExecProcessFlags::PARAMETERS_SET;
+        self.parameters = NowVarStr::new(parameters)?;
+
+        self.ensure_message_size()?;
+
+        Ok(self)
+    }
+
+    pub fn with_directory(mut self, directory: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+        self.flags |= NowExecProcessFlags::DIRECTORY_SET;
+        self.directory = NowVarStr::new(directory)?;
+
+        self.ensure_message_size()?;
+
+        Ok(self)
+    }
+
+    fn ensure_message_size(&self) -> EncodeResult<()> {
         let _message_size = Self::FIXED_PART_SIZE
             .checked_add(self.filename.size())
             .and_then(|size| size.checked_add(self.parameters.size()))
@@ -52,16 +103,24 @@ impl NowExecProcessMsg {
         self.session_id
     }
 
-    pub fn filename(&self) -> &NowVarStr {
+    pub fn filename(&self) -> &str {
         &self.filename
     }
 
-    pub fn parameters(&self) -> &NowVarStr {
-        &self.parameters
+    pub fn parameters(&self) -> Option<&str> {
+        if self.flags.contains(NowExecProcessFlags::PARAMETERS_SET) {
+            Some(&self.parameters)
+        } else {
+            None
+        }
     }
 
-    pub fn directory(&self) -> &NowVarStr {
-        &self.directory
+    pub fn directory(&self) -> Option<&str> {
+        if self.flags.contains(NowExecProcessFlags::DIRECTORY_SET) {
+            Some(&self.directory)
+        } else {
+            None
+        }
     }
 
     // LINTS: Overall message size is validated in the constructor/decode method
@@ -70,34 +129,34 @@ impl NowExecProcessMsg {
         Self::FIXED_PART_SIZE + self.filename.size() + self.parameters.size() + self.directory.size()
     }
 
-    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub(super) fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
+        let flags = NowExecProcessFlags::from_bits_retain(header.flags);
         let session_id = src.read_u32();
         let filename = NowVarStr::decode(src)?;
         let parameters = NowVarStr::decode(src)?;
         let directory = NowVarStr::decode(src)?;
 
         let msg = Self {
+            flags,
             session_id,
             filename,
             parameters,
             directory,
         };
 
-        msg.ensure_message_size()?;
-
         Ok(msg)
     }
 }
 
-impl Encode for NowExecProcessMsg {
+impl Encode for NowExecProcessMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: cast_length!("size", self.body_size())?,
             class: NowMessageClass::EXEC,
             kind: NowExecMsgKind::PROCESS.0,
-            flags: 0,
+            flags: self.flags.bits(),
         };
 
         header.encode(dst)?;
@@ -122,8 +181,8 @@ impl Encode for NowExecProcessMsg {
     }
 }
 
-impl Decode<'_> for NowExecProcessMsg {
-    fn decode(src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+impl<'de> Decode<'de> for NowExecProcessMsg<'de> {
+    fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowExecMsgKind(header.kind)) {
@@ -133,8 +192,8 @@ impl Decode<'_> for NowExecProcessMsg {
     }
 }
 
-impl From<NowExecProcessMsg> for NowMessage {
-    fn from(msg: NowExecProcessMsg) -> Self {
+impl<'a> From<NowExecProcessMsg<'a>> for NowMessage<'a> {
+    fn from(msg: NowExecProcessMsg<'a>) -> Self {
         NowMessage::Exec(NowExecMessage::Process(msg))
     }
 }

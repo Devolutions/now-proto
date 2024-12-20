@@ -70,7 +70,7 @@ impl Decode<'_> for NowExecCancelReqMsg {
     }
 }
 
-impl From<NowExecCancelReqMsg> for NowMessage {
+impl From<NowExecCancelReqMsg> for NowMessage<'_> {
     fn from(msg: NowExecCancelReqMsg) -> Self {
         NowMessage::Exec(NowExecMessage::CancelReq(msg))
     }
