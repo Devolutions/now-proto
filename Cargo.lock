@@ -16,16 +16,18 @@ checksum = "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de"
 
 [[package]]
 name = "ironrdp-core"
-version = "0.1.1"
-source = "git+https://github.com/Devolutions/IronRDP.git#a6b694b7b858ab887d7917b985ee18f9bacf7ca8"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "886b53e18b6a5c7add31d3ac2c55a7587054c9856b3166e565c325617a9969f8"
 dependencies = [
  "ironrdp-error",
 ]
 
 [[package]]
 name = "ironrdp-error"
-version = "0.1.0"
-source = "git+https://github.com/Devolutions/IronRDP.git#a6b694b7b858ab887d7917b985ee18f9bacf7ca8"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c42594b1f8ec9490dcbc33128fd4400235bab4942a59b99b36b0041259963492"
 
 [[package]]
 name = "now-proto-fuzzing"
