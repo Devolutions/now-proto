@@ -20,7 +20,7 @@ workspace = true
 
 [dependencies]
 bitflags = "2"
-ironrdp-core = { version = "0.1.1", features = ["alloc"], git = "https://github.com/Devolutions/IronRDP.git" }
+ironrdp-core = { version = "0.1.2", features = ["alloc"] }
 
 [features]
 default = []
