@@ -2,62 +2,82 @@ mod abort;
 mod batch;
 mod cancel_req;
 mod cancel_rsp;
-mod capset;
-mod cmd;
 mod data;
 mod process;
 mod pwsh;
 mod result;
 mod run;
 mod shell;
+mod started;
 mod win_ps;
 
 pub use abort::NowExecAbortMsg;
-pub use batch::NowExecBatchMsg;
+pub use batch::{NowExecBatchMsg, OwnedNowExecBatchMsg};
 pub use cancel_req::NowExecCancelReqMsg;
-pub use cancel_rsp::NowExecCancelRspMsg;
-pub use capset::{NowExecCapsetFlags, NowExecCapsetMsg};
-pub use data::{NowExecDataFlags, NowExecDataMsg};
-use ironrdp_core::{invalid_field_err, DecodeResult, Encode, EncodeResult, ReadCursor, WriteCursor};
-pub use process::NowExecProcessMsg;
-pub use pwsh::NowExecPwshMsg;
-pub use result::NowExecResultMsg;
-pub use run::NowExecRunMsg;
-pub use shell::NowExecShellMsg;
-pub use win_ps::{NowExecWinPsFlags, NowExecWinPsMsg};
+pub use cancel_rsp::{NowExecCancelRspMsg, OwnedNowExecCancelRspMsg};
+pub use data::{NowExecDataMsg, NowExecDataStreamKind, OwnedNowExecDataMsg};
+use ironrdp_core::{invalid_field_err, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
+pub use process::{NowExecProcessMsg, OwnedNowExecProcessMsg};
+pub use pwsh::{NowExecPwshMsg, OwnedNowExecPwshMsg};
+pub use result::{NowExecResultMsg, OwnedNowExecResultMsg};
+pub use run::{NowExecRunMsg, OwnedNowExecRunMsg};
+pub use shell::{NowExecShellMsg, OwnedNowExecShellMsg};
+pub use started::NowExecStartedMsg;
+pub(crate) use win_ps::NowExecWinPsFlags;
+pub use win_ps::{ComApartmentStateKind, NowExecWinPsMsg, OwnedNowExecWinPsMsg};
 
 use crate::NowHeader;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NowExecMessage {
-    Capset(NowExecCapsetMsg),
+pub enum NowExecMessage<'a> {
     Abort(NowExecAbortMsg),
     CancelReq(NowExecCancelReqMsg),
-    CancelRsp(NowExecCancelRspMsg),
-    Result(NowExecResultMsg),
-    Data(NowExecDataMsg),
-    Run(NowExecRunMsg),
-    // TODO: Define `Cmd` message in specification
-    Process(NowExecProcessMsg),
-    Shell(NowExecShellMsg),
-    Batch(NowExecBatchMsg),
-    WinPs(NowExecWinPsMsg),
-    Pwsh(NowExecPwshMsg),
+    CancelRsp(NowExecCancelRspMsg<'a>),
+    Result(NowExecResultMsg<'a>),
+    Data(NowExecDataMsg<'a>),
+    Started(NowExecStartedMsg),
+    Run(NowExecRunMsg<'a>),
+    Process(NowExecProcessMsg<'a>),
+    Shell(NowExecShellMsg<'a>),
+    Batch(NowExecBatchMsg<'a>),
+    WinPs(NowExecWinPsMsg<'a>),
+    Pwsh(NowExecPwshMsg<'a>),
 }
 
-impl NowExecMessage {
+pub type OwnedNowExecMessage = NowExecMessage<'static>;
+
+impl IntoOwned for NowExecMessage<'_> {
+    type Owned = OwnedNowExecMessage;
+
+    fn into_owned(self) -> Self::Owned {
+        match self {
+            Self::Abort(msg) => OwnedNowExecMessage::Abort(msg),
+            Self::CancelReq(msg) => OwnedNowExecMessage::CancelReq(msg),
+            Self::CancelRsp(msg) => OwnedNowExecMessage::CancelRsp(msg.into_owned()),
+            Self::Result(msg) => OwnedNowExecMessage::Result(msg.into_owned()),
+            Self::Data(msg) => OwnedNowExecMessage::Data(msg.into_owned()),
+            Self::Started(msg) => OwnedNowExecMessage::Started(msg),
+            Self::Run(msg) => OwnedNowExecMessage::Run(msg.into_owned()),
+            Self::Process(msg) => OwnedNowExecMessage::Process(msg.into_owned()),
+            Self::Shell(msg) => OwnedNowExecMessage::Shell(msg.into_owned()),
+            Self::Batch(msg) => OwnedNowExecMessage::Batch(msg.into_owned()),
+            Self::WinPs(msg) => OwnedNowExecMessage::WinPs(msg.into_owned()),
+            Self::Pwsh(msg) => OwnedNowExecMessage::Pwsh(msg.into_owned()),
+        }
+    }
+}
+
+impl<'a> NowExecMessage<'a> {
     const NAME: &'static str = "NOW_EXEC_MSG";
 
-    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         match NowExecMsgKind(header.kind) {
-            NowExecMsgKind::CAPSET => Ok(Self::Capset(NowExecCapsetMsg::new(
-                NowExecCapsetFlags::from_bits_retain(header.flags),
-            ))),
             NowExecMsgKind::ABORT => Ok(Self::Abort(NowExecAbortMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::CANCEL_REQ => Ok(Self::CancelReq(NowExecCancelReqMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::CANCEL_RSP => Ok(Self::CancelRsp(NowExecCancelRspMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::RESULT => Ok(Self::Result(NowExecResultMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::DATA => Ok(Self::Data(NowExecDataMsg::decode_from_body(header, src)?)),
+            NowExecMsgKind::STARTED => Ok(Self::Started(NowExecStartedMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::RUN => Ok(Self::Run(NowExecRunMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::PROCESS => Ok(Self::Process(NowExecProcessMsg::decode_from_body(header, src)?)),
             NowExecMsgKind::SHELL => Ok(Self::Shell(NowExecShellMsg::decode_from_body(header, src)?)),
@@ -69,15 +89,15 @@ impl NowExecMessage {
     }
 }
 
-impl Encode for NowExecMessage {
+impl Encode for NowExecMessage<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         match self {
-            Self::Capset(msg) => msg.encode(dst),
             Self::Abort(msg) => msg.encode(dst),
             Self::CancelReq(msg) => msg.encode(dst),
             Self::CancelRsp(msg) => msg.encode(dst),
             Self::Result(msg) => msg.encode(dst),
             Self::Data(msg) => msg.encode(dst),
+            Self::Started(msg) => msg.encode(dst),
             Self::Run(msg) => msg.encode(dst),
             Self::Process(msg) => msg.encode(dst),
             Self::Shell(msg) => msg.encode(dst),
@@ -93,12 +113,12 @@ impl Encode for NowExecMessage {
 
     fn size(&self) -> usize {
         match self {
-            Self::Capset(msg) => msg.size(),
             Self::Abort(msg) => msg.size(),
             Self::CancelReq(msg) => msg.size(),
             Self::CancelRsp(msg) => msg.size(),
             Self::Result(msg) => msg.size(),
             Self::Data(msg) => msg.size(),
+            Self::Started(msg) => msg.size(),
             Self::Run(msg) => msg.size(),
             Self::Process(msg) => msg.size(),
             Self::Shell(msg) => msg.size(),
@@ -113,8 +133,6 @@ impl Encode for NowExecMessage {
 pub struct NowExecMsgKind(pub u8);
 
 impl NowExecMsgKind {
-    /// NOW-PROTO: NOW_EXEC_CAPSET_MSG_ID
-    pub const CAPSET: Self = Self(0x00);
     /// NOW-PROTO: NOW_EXEC_ABORT_MSG_ID
     pub const ABORT: Self = Self(0x01);
     /// NOW-PROTO: NOW_EXEC_CANCEL_REQ_MSG_ID
@@ -125,18 +143,18 @@ impl NowExecMsgKind {
     pub const RESULT: Self = Self(0x04);
     /// NOW-PROTO: NOW_EXEC_DATA_MSG_ID
     pub const DATA: Self = Self(0x05);
+    /// NOW-PROTO: NOW_EXEC_STARTED_MSG_ID
+    pub const STARTED: Self = Self(0x06);
     /// NOW-PROTO: NOW_EXEC_RUN_MSG_ID
     pub const RUN: Self = Self(0x10);
-    // /// NOW-PROTO: NOW_EXEC_CMD_MSG_ID
-    // pub const CMD: Self = Self(0x11);
     /// NOW-PROTO: NOW_EXEC_PROCESS_MSG_ID
-    pub const PROCESS: Self = Self(0x12);
+    pub const PROCESS: Self = Self(0x11);
     /// NOW-PROTO: NOW_EXEC_SHELL_MSG_ID
-    pub const SHELL: Self = Self(0x13);
+    pub const SHELL: Self = Self(0x12);
     /// NOW-PROTO: NOW_EXEC_BATCH_MSG_ID
-    pub const BATCH: Self = Self(0x14);
+    pub const BATCH: Self = Self(0x13);
     /// NOW-PROTO: NOW_EXEC_WINPS_MSG_ID
-    pub const WINPS: Self = Self(0x15);
+    pub const WINPS: Self = Self(0x14);
     /// NOW-PROTO: NOW_EXEC_PWSH_MSG_ID
-    pub const PWSH: Self = Self(0x16);
+    pub const PWSH: Self = Self(0x15);
 }

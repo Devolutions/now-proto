@@ -4,6 +4,9 @@ use ironrdp_core::{ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeR
 pub struct NowMessageClass(pub u8);
 
 impl NowMessageClass {
+    /// NOW-PROTO: NOW_CHANNEL_MSG_CLASS_ID
+    pub const CHANNEL: Self = Self(0x10);
+
     /// NOW-PROTO: NOW_SYSTEM_MSG_CLASS_ID
     pub const SYSTEM: Self = Self(0x11);
 
