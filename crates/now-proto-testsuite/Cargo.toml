@@ -20,7 +20,6 @@ workspace = true
 
 [dependencies]
 now-proto-pdu = { path = "../now-proto-pdu" }
-ironrdp-core = { workspace = true }
 expect-test = "1"
 
 [dev-dependencies]

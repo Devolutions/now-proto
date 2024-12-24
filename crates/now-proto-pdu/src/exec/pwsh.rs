@@ -6,7 +6,7 @@ use ironrdp_core::{
 };
 
 use crate::{
-    ApartmentStateKind, NowExecMessage, NowExecMsgKind, NowExecWinPsFlags, NowHeader, NowMessage, NowMessageClass,
+    ComApartmentStateKind, NowExecMessage, NowExecMsgKind, NowExecWinPsFlags, NowHeader, NowMessage, NowMessageClass,
     NowVarStr,
 };
 
@@ -105,7 +105,7 @@ impl<'a> NowExecPwshMsg<'a> {
     }
 
     #[must_use]
-    pub fn with_apartment_state(mut self, apartment_state: ApartmentStateKind) -> Self {
+    pub fn with_apartment_state(mut self, apartment_state: ComApartmentStateKind) -> Self {
         self.flags |= apartment_state.to_flags();
         self
     }
@@ -165,8 +165,8 @@ impl<'a> NowExecPwshMsg<'a> {
         self.flags.contains(NowExecWinPsFlags::NO_PROFILE)
     }
 
-    pub fn apartment_state(&self) -> DecodeResult<Option<ApartmentStateKind>> {
-        ApartmentStateKind::from_flags(self.flags)
+    pub fn apartment_state(&self) -> DecodeResult<Option<ComApartmentStateKind>> {
+        ComApartmentStateKind::from_flags(self.flags)
     }
 
     // LINTS: Overall message size is validated in the constructor/decode method

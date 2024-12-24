@@ -54,17 +54,18 @@ bitflags! {
     }
 }
 
+/// COM apartment state ([MSDN](https://learn.microsoft.com/en-us/dotnet/api/system.threading.apartmentstate)).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ApartmentStateKind {
+pub enum ComApartmentStateKind {
     Sta,
     Mta,
 }
 
-impl ApartmentStateKind {
+impl ComApartmentStateKind {
     pub(crate) fn to_flags(self) -> NowExecWinPsFlags {
         match self {
-            ApartmentStateKind::Sta => NowExecWinPsFlags::STA,
-            ApartmentStateKind::Mta => NowExecWinPsFlags::MTA,
+            ComApartmentStateKind::Sta => NowExecWinPsFlags::STA,
+            ComApartmentStateKind::Mta => NowExecWinPsFlags::MTA,
         }
     }
 
@@ -80,8 +81,8 @@ impl ApartmentStateKind {
         }
 
         match flags {
-            NowExecWinPsFlags::STA => Ok(Some(ApartmentStateKind::Sta)),
-            NowExecWinPsFlags::MTA => Ok(Some(ApartmentStateKind::Mta)),
+            NowExecWinPsFlags::STA => Ok(Some(ComApartmentStateKind::Sta)),
+            NowExecWinPsFlags::MTA => Ok(Some(ComApartmentStateKind::Mta)),
             _ => unreachable!("validated by code above"),
         }
     }
@@ -182,7 +183,7 @@ impl<'a> NowExecWinPsMsg<'a> {
     }
 
     #[must_use]
-    pub fn with_apartment_state(mut self, apartment_state: ApartmentStateKind) -> Self {
+    pub fn with_apartment_state(mut self, apartment_state: ComApartmentStateKind) -> Self {
         self.flags |= apartment_state.to_flags();
         self
     }
@@ -243,8 +244,8 @@ impl<'a> NowExecWinPsMsg<'a> {
         self.flags.contains(NowExecWinPsFlags::NO_PROFILE)
     }
 
-    pub fn apartment_state(&self) -> DecodeResult<Option<ApartmentStateKind>> {
-        ApartmentStateKind::from_flags(self.flags)
+    pub fn apartment_state(&self) -> DecodeResult<Option<ComApartmentStateKind>> {
+        ComApartmentStateKind::from_flags(self.flags)
     }
 
     // LINTS: Overall message size is validated in the constructor/decode method

@@ -24,7 +24,7 @@ pub use run::{NowExecRunMsg, OwnedNowExecRunMsg};
 pub use shell::{NowExecShellMsg, OwnedNowExecShellMsg};
 pub use started::NowExecStartedMsg;
 pub(crate) use win_ps::NowExecWinPsFlags;
-pub use win_ps::{ApartmentStateKind, NowExecWinPsMsg, OwnedNowExecWinPsMsg};
+pub use win_ps::{ComApartmentStateKind, NowExecWinPsMsg, OwnedNowExecWinPsMsg};
 
 use crate::NowHeader;
 

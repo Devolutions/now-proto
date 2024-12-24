@@ -31,6 +31,7 @@ bitflags! {
     }
 }
 
+/// Redirected std stream kind for the NOW_EXEC_DATA_MSG message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NowExecDataStreamKind {
     Stdin,

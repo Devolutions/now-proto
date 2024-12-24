@@ -152,6 +152,20 @@ fn roundtrip_exec_data_empty() {
 }
 
 #[test]
+fn roundtrip_exec_started() {
+    let msg = NowExecStartedMsg::new(0x12345678);
+
+    let decoded = now_msg_roundtrip(msg, expect!["[04, 00, 00, 00, 13, 06, 00, 00, 78, 56, 34, 12]"]);
+
+    let actual = match decoded {
+        NowMessage::Exec(NowExecMessage::Started(msg)) => msg,
+        _ => panic!("Expected NowExecStartedMsg"),
+    };
+
+    assert_eq!(actual.session_id(), 0x12345678);
+}
+
+#[test]
 fn roundtrip_exec_run() {
     let msg = NowExecRunMsg::new(0x1234567, "hello").unwrap();
 
@@ -304,7 +318,7 @@ fn roundtrip_exec_batch_simple() {
 fn roundtrip_exec_ps() {
     let msg = NowExecWinPsMsg::new(0x12345678, "a")
         .unwrap()
-        .with_apartment_state(ApartmentStateKind::Mta)
+        .with_apartment_state(ComApartmentStateKind::Mta)
         .set_no_profile()
         .set_no_logo()
         .with_directory("d")
@@ -326,7 +340,7 @@ fn roundtrip_exec_ps() {
 
     assert!(actual.is_no_profile());
     assert!(actual.is_no_logo());
-    assert_eq!(actual.apartment_state().unwrap(), Some(ApartmentStateKind::Mta));
+    assert_eq!(actual.apartment_state().unwrap(), Some(ComApartmentStateKind::Mta));
     assert_eq!(actual.session_id(), 0x12345678);
     assert_eq!(actual.command(), "a");
     assert_eq!(actual.directory().unwrap(), "d");
@@ -362,7 +376,7 @@ fn roundtrip_exec_ps_simple() {
 fn roundtrip_exec_pwsh() {
     let msg = NowExecPwshMsg::new(0x12345678, "a")
         .unwrap()
-        .with_apartment_state(ApartmentStateKind::Mta)
+        .with_apartment_state(ComApartmentStateKind::Mta)
         .set_no_profile()
         .set_no_logo()
         .with_directory("d")
@@ -384,7 +398,7 @@ fn roundtrip_exec_pwsh() {
 
     assert!(actual.is_no_profile());
     assert!(actual.is_no_logo());
-    assert_eq!(actual.apartment_state().unwrap(), Some(ApartmentStateKind::Mta));
+    assert_eq!(actual.apartment_state().unwrap(), Some(ComApartmentStateKind::Mta));
     assert_eq!(actual.session_id(), 0x12345678);
     assert_eq!(actual.command(), "a");
     assert_eq!(actual.directory().unwrap(), "d");
