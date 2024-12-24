@@ -1,7 +1,8 @@
-use alloc::{borrow::Cow, fmt};
+use alloc::borrow::Cow;
+use alloc::fmt;
+use core::ops::Deref;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor,
 };
@@ -216,13 +217,41 @@ impl NowStatusErrorKind {
 }
 
 /// Wrapper type around NOW_STATUS errors. Provides rust-friendly interface for error handling.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NowStatusError {
     kind: NowStatusErrorKind,
     message: NowVarStr<'static>,
 }
 
 impl NowStatusError {
+    pub fn new_generic(code: u32) -> Self {
+        Self {
+            kind: NowStatusErrorKind::Generic(code),
+            message: Default::default(),
+        }
+    }
+
+    pub fn new_proto(error: NowProtoError) -> Self {
+        Self {
+            kind: NowStatusErrorKind::Now(error),
+            message: Default::default(),
+        }
+    }
+
+    pub fn new_winapi(code: u32) -> Self {
+        Self {
+            kind: NowStatusErrorKind::WinApi(code),
+            message: Default::default(),
+        }
+    }
+
+    pub fn new_unix(code: u32) -> Self {
+        Self {
+            kind: NowStatusErrorKind::Unix(code),
+            message: Default::default(),
+        }
+    }
+
     pub fn kind(&self) -> NowStatusErrorKind {
         self.kind
     }
@@ -230,9 +259,7 @@ impl NowStatusError {
     pub fn message(&self) -> &str {
         &self.message
     }
-}
 
-impl NowStatusError {
     /// Attach optional message to NOW_STATUS error.
     pub fn with_message(self, message: impl Into<Cow<'static, str>>) -> EncodeResult<Self> {
         Ok(Self {
@@ -248,7 +275,7 @@ impl core::fmt::Display for NowStatusError {
 
         // Write optional message if provided.
         if !self.message.is_empty() {
-            write!(f, " ({})", self.message.value())?;
+            write!(f, " ({})", self.message.deref())?;
         }
 
         Ok(())
@@ -276,20 +303,18 @@ impl core::error::Error for NowStatusError {}
 ///
 /// NOW-PROTO: NOW_STATUS
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowStatus<'a> {
+pub(crate) struct NowStatus<'a> {
     flags: NowStatusFlags,
     kind: RawNowStatusKind,
     code: u32,
     message: NowVarStr<'a>,
 }
 
-impl_pdu_borrowing!(NowStatus<'_>, OwnedNowStatus);
-
 impl IntoOwned for NowStatus<'_> {
-    type Owned = OwnedNowStatus;
+    type Owned = NowStatus<'static>;
 
     fn into_owned(self) -> Self::Owned {
-        OwnedNowStatus {
+        Self::Owned {
             flags: self.flags,
             kind: self.kind,
             code: self.code,
@@ -303,7 +328,7 @@ impl NowStatus<'_> {
     const FIXED_PART_SIZE: usize = 8;
 
     /// Create a new success status.
-    pub fn new_success() -> Self {
+    pub(crate) fn new_success() -> Self {
         Self {
             flags: NowStatusFlags::empty(),
             kind: RawNowStatusKind::GENERIC,
@@ -313,7 +338,7 @@ impl NowStatus<'_> {
     }
 
     /// Create a new status with error.
-    pub fn new_error(error: impl Into<NowStatusError>) -> Self {
+    pub(crate) fn new_error(error: impl Into<NowStatusError>) -> Self {
         let error: NowStatusError = error.into();
 
         let flags = if error.message.is_empty() {
@@ -331,7 +356,7 @@ impl NowStatus<'_> {
     }
 
     /// Convert status to result with 'static error.
-    pub fn to_result(&self) -> Result<(), NowStatusError> {
+    pub(crate) fn to_result(&self) -> Result<(), NowStatusError> {
         if !self.flags.contains(NowStatusFlags::ERROR) {
             return Ok(());
         }

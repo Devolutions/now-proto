@@ -1,6 +1,6 @@
 use alloc::borrow::Cow;
-use bitflags::bitflags;
 
+use bitflags::bitflags;
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
@@ -95,18 +95,15 @@ impl<'a> NowExecBatchMsg<'a> {
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.command.size())
-            .and_then(|size| size.checked_add(self.directory.size()))
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, self.command.size(), self.directory.size());
 
         Ok(())
     }
 
-    pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
+    pub(super) fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
-        let flags = NowExecBatchFlags::from_bits_retain(src.read_u16());
+        let flags = NowExecBatchFlags::from_bits_retain(header.flags);
         let session_id = src.read_u32();
         let command = NowVarStr::decode(src)?;
         let directory = NowVarStr::decode(src)?;

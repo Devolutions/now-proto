@@ -1,4 +1,5 @@
 #![allow(unused_crate_dependencies)] // false positives because there is both a library and a binary
+#![allow(clippy::unwrap_used)] // allow for tests
 
 //! Integration Tests (IT)
 //!

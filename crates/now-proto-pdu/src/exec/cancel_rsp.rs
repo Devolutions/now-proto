@@ -37,9 +37,6 @@ impl<'a> NowExecCancelRspMsg<'a> {
             status: NowStatus::new_success(),
         };
 
-        msg.ensure_message_size()
-            .expect("success message size always fits into payload");
-
         msg
     }
 
@@ -49,7 +46,7 @@ impl<'a> NowExecCancelRspMsg<'a> {
             status: NowStatus::new_error(error),
         };
 
-        msg.ensure_message_size()?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, msg.status.size());
 
         Ok(msg)
     }
@@ -66,14 +63,6 @@ impl<'a> NowExecCancelRspMsg<'a> {
     #[allow(clippy::arithmetic_side_effects)]
     fn body_size(&self) -> usize {
         Self::FIXED_PART_SIZE + self.status.size()
-    }
-
-    fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.status.size())
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
-
-        Ok(())
     }
 
     pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {

@@ -1,4 +1,7 @@
 //! This module contains `NOW-PROTO` core types definitions.
+//!
+//! Note that these types are not intended to be used directly by the user, and not exported in the
+//! public API.
 
 mod buffer;
 mod header;
@@ -6,8 +9,11 @@ mod number;
 mod status;
 mod string;
 
-pub use buffer::{NowVarBuf, OwnedNowVarBuf};
-pub use header::{NowHeader, NowMessageClass};
-pub use number::VarU32;
-pub use status::{NowProtoError, NowStatus, NowStatusError, NowStatusErrorKind, OwnedNowStatus};
-pub use string::{NowVarStr, OwnedNowVarStr};
+pub(crate) use buffer::NowVarBuf;
+pub(crate) use header::{NowHeader, NowMessageClass};
+pub(crate) use number::VarU32;
+pub(crate) use status::NowStatus;
+// Only public-exported type is the status error, which should be available to the user for error
+// handling.
+pub use status::{NowProtoError, NowStatusError, NowStatusErrorKind};
+pub(crate) use string::NowVarStr;

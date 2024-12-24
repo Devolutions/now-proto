@@ -1,6 +1,6 @@
 use ironrdp_core::{invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
 
-use crate::{NowChannelMessage, NowChannelMsgKind, NowHeader, NowMessage, NowMessageClass, NowStatus};
+use crate::{NowChannelMessage, NowChannelMsgKind, NowHeader, NowMessage, NowMessageClass, NowStatus, NowStatusError};
 
 /// Channel termination notice, could be sent by either parties at any moment of communication to
 /// gracefully close DVC channel.
@@ -23,28 +23,35 @@ impl IntoOwned for NowChannelTerminateMsg<'_> {
     }
 }
 
+impl Default for NowChannelTerminateMsg<'_> {
+    fn default() -> Self {
+        let status = NowStatus::new_success();
+
+        Self { status }
+    }
+}
+
 impl<'a> NowChannelTerminateMsg<'a> {
     const NAME: &'static str = "NOW_CHANNEL_TERMINATE_MSG";
 
-    pub fn from_status(status: NowStatus<'a>) -> EncodeResult<Self> {
+    pub fn from_error(error: impl Into<NowStatusError>) -> EncodeResult<Self> {
+        let status = NowStatus::new_error(error);
+
         let msg = Self { status };
 
-        msg.ensure_message_size().expect("validated in constructor");
+        ensure_now_message_size!(msg.status.size());
 
         Ok(msg)
+    }
+
+    pub fn to_result(&self) -> Result<(), NowStatusError> {
+        self.status.to_result()
     }
 
     pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         let status = NowStatus::decode(src)?;
 
         Ok(Self { status })
-    }
-
-    fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size =
-            u32::try_from(self.status.size()).map_err(|_| invalid_field_err!("size", "message size overflow"))?;
-
-        Ok(())
     }
 }
 

@@ -11,21 +11,19 @@ mod shell;
 mod started;
 mod win_ps;
 
-use ironrdp_core::{invalid_field_err, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
-
-pub(crate) use win_ps::NowExecWinPsFlags;
-
 pub use abort::NowExecAbortMsg;
 pub use batch::{NowExecBatchMsg, OwnedNowExecBatchMsg};
 pub use cancel_req::NowExecCancelReqMsg;
 pub use cancel_rsp::{NowExecCancelRspMsg, OwnedNowExecCancelRspMsg};
-pub use data::{NowExecDataMsg, OwnedNowExecDataMsg};
+pub use data::{NowExecDataMsg, NowExecDataStreamKind, OwnedNowExecDataMsg};
+use ironrdp_core::{invalid_field_err, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
 pub use process::{NowExecProcessMsg, OwnedNowExecProcessMsg};
 pub use pwsh::{NowExecPwshMsg, OwnedNowExecPwshMsg};
 pub use result::{NowExecResultMsg, OwnedNowExecResultMsg};
 pub use run::{NowExecRunMsg, OwnedNowExecRunMsg};
 pub use shell::{NowExecShellMsg, OwnedNowExecShellMsg};
 pub use started::NowExecStartedMsg;
+pub(crate) use win_ps::NowExecWinPsFlags;
 pub use win_ps::{ApartmentStateKind, NowExecWinPsMsg, OwnedNowExecWinPsMsg};
 
 use crate::NowHeader;
@@ -136,17 +134,17 @@ pub struct NowExecMsgKind(pub u8);
 
 impl NowExecMsgKind {
     /// NOW-PROTO: NOW_EXEC_ABORT_MSG_ID
-    pub const ABORT: Self = Self(0x00);
+    pub const ABORT: Self = Self(0x01);
     /// NOW-PROTO: NOW_EXEC_CANCEL_REQ_MSG_ID
-    pub const CANCEL_REQ: Self = Self(0x01);
+    pub const CANCEL_REQ: Self = Self(0x02);
     /// NOW-PROTO: NOW_EXEC_CANCEL_RSP_MSG_ID
-    pub const CANCEL_RSP: Self = Self(0x02);
+    pub const CANCEL_RSP: Self = Self(0x03);
     /// NOW-PROTO: NOW_EXEC_RESULT_MSG_ID
-    pub const RESULT: Self = Self(0x03);
+    pub const RESULT: Self = Self(0x04);
     /// NOW-PROTO: NOW_EXEC_DATA_MSG_ID
-    pub const DATA: Self = Self(0x04);
+    pub const DATA: Self = Self(0x05);
     /// NOW-PROTO: NOW_EXEC_STARTED_MSG_ID
-    pub const STARTED: Self = Self(0x05);
+    pub const STARTED: Self = Self(0x06);
     /// NOW-PROTO: NOW_EXEC_RUN_MSG_ID
     pub const RUN: Self = Self(0x10);
     /// NOW-PROTO: NOW_EXEC_PROCESS_MSG_ID

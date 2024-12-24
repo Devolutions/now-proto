@@ -74,9 +74,7 @@ impl<'a> NowExecResultMsg<'a> {
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.status.size())
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, self.status.size());
 
         Ok(())
     }

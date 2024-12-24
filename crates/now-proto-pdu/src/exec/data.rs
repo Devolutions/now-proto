@@ -1,7 +1,6 @@
 use alloc::borrow::Cow;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
@@ -32,6 +31,7 @@ bitflags! {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NowExecDataStreamKind {
     Stdin,
     Stdout,
@@ -39,7 +39,7 @@ pub enum NowExecDataStreamKind {
 }
 
 impl NowExecDataStreamKind {
-    fn to_flags(&self) -> NowExecDataFlags {
+    fn to_flags(self) -> NowExecDataFlags {
         match self {
             NowExecDataStreamKind::Stdin => NowExecDataFlags::STDIN,
             NowExecDataStreamKind::Stdout => NowExecDataFlags::STDOUT,
@@ -109,7 +109,7 @@ impl<'a> NowExecDataMsg<'a> {
             data: NowVarBuf::new(data)?,
         };
 
-        msg.ensure_message_size()?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, msg.data.size());
 
         Ok(msg)
     }
@@ -135,14 +135,6 @@ impl<'a> NowExecDataMsg<'a> {
     #[allow(clippy::arithmetic_side_effects)]
     fn body_size(&self) -> usize {
         Self::FIXED_PART_SIZE + self.data.size()
-    }
-
-    fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.data.size())
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
-
-        Ok(())
     }
 
     pub(super) fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {

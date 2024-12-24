@@ -1,7 +1,6 @@
 use alloc::borrow::Cow;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
@@ -90,11 +89,12 @@ impl<'a> NowExecProcessMsg<'a> {
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.filename.size())
-            .and_then(|size| size.checked_add(self.parameters.size()))
-            .and_then(|size| size.checked_add(self.directory.size()))
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
+        ensure_now_message_size!(
+            Self::FIXED_PART_SIZE,
+            self.filename.size(),
+            self.parameters.size(),
+            self.directory.size()
+        );
 
         Ok(())
     }

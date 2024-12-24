@@ -1,7 +1,6 @@
 use core::time;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, ReadCursor, WriteCursor,
 };
@@ -227,7 +226,7 @@ impl NowChannelCapsetMsg {
         let system_capset = NowSystemCapsetFlags::from_bits_retain(src.read_u16());
         let session_capset = NowSessionCapsetFlags::from_bits_retain(src.read_u16());
         let exec_capset = NowExecCapsetFlags::from_bits_retain(src.read_u16());
-        // Read heartbeat interval unconditionaly even if `SET_HEARTBEAT` flags is not set.
+        // Read heartbeat interval unconditionally even if `SET_HEARTBEAT` flags is not set.
         let heartbeat_interval_value = src.read_u32();
 
         let heartbeat_interval = flags

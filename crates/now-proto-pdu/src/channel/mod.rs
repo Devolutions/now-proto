@@ -2,13 +2,15 @@ mod capset;
 mod heartbeat;
 mod terminate;
 
+pub use capset::{
+    NowChannelCapsetFlags, NowChannelCapsetMsg, NowExecCapsetFlags, NowProtoVersion, NowSessionCapsetFlags,
+    NowSystemCapsetFlags,
+};
+pub use heartbeat::NowChannelHeartbeatMsg;
 use ironrdp_core::{DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
+pub use terminate::{NowChannelTerminateMsg, OwnedNowChannelTerminateMsg};
 
 use crate::NowHeader;
-
-pub use capset::NowChannelCapsetMsg;
-pub use heartbeat::NowChannelHeartbeatMsg;
-pub use terminate::{NowChannelTerminateMsg, OwnedNowChannelTerminateMsg};
 
 // Wrapper for the `NOW_CHANNEL_MSG_CLASS_ID` message class.
 #[derive(Debug, Clone, PartialEq, Eq)]

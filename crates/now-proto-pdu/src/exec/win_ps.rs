@@ -1,7 +1,6 @@
 use alloc::borrow::Cow;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
@@ -55,13 +54,14 @@ bitflags! {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ApartmentStateKind {
     Sta,
     Mta,
 }
 
 impl ApartmentStateKind {
-    pub(crate) fn to_flags(&self) -> NowExecWinPsFlags {
+    pub(crate) fn to_flags(self) -> NowExecWinPsFlags {
         match self {
             ApartmentStateKind::Sta => NowExecWinPsFlags::STA,
             ApartmentStateKind::Mta => NowExecWinPsFlags::MTA,
@@ -188,12 +188,13 @@ impl<'a> NowExecWinPsMsg<'a> {
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.command.size())
-            .and_then(|size| size.checked_add(self.directory.size()))
-            .and_then(|size| size.checked_add(self.execution_policy.size()))
-            .and_then(|size| size.checked_add(self.configuration_name.size()))
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
+        ensure_now_message_size!(
+            Self::FIXED_PART_SIZE,
+            self.command.size(),
+            self.directory.size(),
+            self.execution_policy.size(),
+            self.configuration_name.size()
+        );
 
         Ok(())
     }

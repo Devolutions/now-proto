@@ -1,7 +1,7 @@
 use alloc::borrow::Cow;
+use core::time;
 
 use bitflags::bitflags;
-
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned,
     ReadCursor, WriteCursor,
@@ -105,17 +105,11 @@ impl<'a> NowSessionMsgBoxReqMsg<'a> {
             message: NowVarStr::new(message)?,
         };
 
-        msg.ensure_message_size()?;
-
         Ok(msg)
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.title.size())
-            .and_then(|size| size.checked_add(self.message.size()))
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
-
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, self.title.size(), self.message.size());
         Ok(())
     }
 
@@ -135,11 +129,19 @@ impl<'a> NowSessionMsgBoxReqMsg<'a> {
         self
     }
 
-    #[must_use]
-    pub fn with_timeout(mut self, timeout: u32) -> Self {
+    pub fn with_timeout(mut self, timeout: time::Duration) -> EncodeResult<Self> {
+        // Sanity check: Limit message box timeout to ~1 week.
+        const MAX_MSGBOX_TINEOUT: time::Duration = time::Duration::from_secs(60 * 60 * 24 * 7);
+
+        if timeout > MAX_MSGBOX_TINEOUT {
+            return Err(invalid_field_err!("timeout", "too big message box timeout"));
+        }
+
+        let timeout = u32::try_from(timeout.as_secs()).expect("timeout is within u32 range");
+
         self.flags |= NowSessionMessageBoxFlags::TIMEOUT;
         self.timeout = timeout;
-        self
+        Ok(self)
     }
 
     #[must_use]
@@ -160,9 +162,9 @@ impl<'a> NowSessionMsgBoxReqMsg<'a> {
         }
     }
 
-    pub fn timeout(&self) -> Option<u32> {
+    pub fn timeout(&self) -> Option<time::Duration> {
         if self.flags.contains(NowSessionMessageBoxFlags::TIMEOUT) && self.timeout > 0 {
-            Some(self.timeout)
+            Some(time::Duration::from_secs(self.timeout.into()))
         } else {
             None
         }

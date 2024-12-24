@@ -100,12 +100,16 @@ impl<'a> NowSessionMsgBoxRspMsg<'a> {
         }
     }
 
-    pub fn new_error(request_id: u32, error: impl Into<NowStatusError>) -> Self {
-        Self {
+    pub fn new_error(request_id: u32, error: impl Into<NowStatusError>) -> EncodeResult<Self> {
+        let msg = Self {
             request_id,
             response: NowMsgBoxResponse(0),
             status: NowStatus::new_error(error),
-        }
+        };
+
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, msg.status.size());
+
+        Ok(msg)
     }
 
     pub fn request_id(&self) -> u32 {
@@ -148,6 +152,8 @@ impl Encode for NowSessionMsgBoxRspMsg<'_> {
         dst.write_u32(self.request_id);
         dst.write_u32(self.response.value());
 
+        self.status.encode(dst)?;
+
         Ok(())
     }
 
@@ -156,7 +162,7 @@ impl Encode for NowSessionMsgBoxRspMsg<'_> {
     }
 
     fn size(&self) -> usize {
-        NowHeader::FIXED_PART_SIZE + Self::FIXED_PART_SIZE
+        NowHeader::FIXED_PART_SIZE + Self::FIXED_PART_SIZE + self.status.size()
     }
 }
 

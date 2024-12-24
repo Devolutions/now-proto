@@ -42,17 +42,9 @@ impl<'a> NowExecRunMsg<'a> {
             command: NowVarStr::new(command)?,
         };
 
-        msg.ensure_message_size()?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, msg.command.size());
 
         Ok(msg)
-    }
-
-    fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.command.size())
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
-
-        Ok(())
     }
 
     pub fn session_id(&self) -> u32 {

@@ -1,3 +1,6 @@
+use alloc::borrow::Cow;
+use core::time;
+
 use bitflags::bitflags;
 use ironrdp_core::{
     cast_length, ensure_fixed_part_size, invalid_field_err, Decode as _, DecodeResult, Encode, EncodeResult, IntoOwned,
@@ -6,7 +9,6 @@ use ironrdp_core::{
 
 use crate::system::NowSystemMessageKind;
 use crate::{NowHeader, NowMessage, NowMessageClass, NowSystemMessage, NowVarStr};
-use alloc::borrow::Cow;
 
 bitflags! {
     /// NOW_PROTO: NOW_SYSTEM_SHUTDOWN_FLAG_* constants.
@@ -53,14 +55,23 @@ impl<'a> NowSystemShutdownMsg<'a> {
     const NAME: &'static str = "NOW_SYSTEM_SHUTDOWN_MSG";
     const FIXED_PART_SIZE: usize = 4 /* u32 timeout */;
 
-    pub fn new(timeout: u32, message: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+    pub fn new(timeout: time::Duration, message: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+        // Sanity check: Limit shutdown timeout to ~1 year.
+        const MAX_SHUTDOWN_TINEOUT: time::Duration = time::Duration::from_secs(60 * 60 * 24 * 365);
+
+        if timeout > MAX_SHUTDOWN_TINEOUT {
+            return Err(invalid_field_err!("timeout", "too big shutdown timeout"));
+        }
+
+        let timeout = u32::try_from(timeout.as_secs()).expect("timeout is within u32 range");
+
         let msg = Self {
             flags: NowSystemShutdownFlags::empty(),
             timeout,
             message: NowVarStr::new(message)?,
         };
 
-        msg.ensure_message_size()?;
+        ensure_now_message_size!(Self::FIXED_PART_SIZE, msg.message.size());
 
         Ok(msg)
     }
@@ -85,12 +96,12 @@ impl<'a> NowSystemShutdownMsg<'a> {
         self.flags.contains(NowSystemShutdownFlags::REBOOT)
     }
 
-    fn ensure_message_size(&self) -> EncodeResult<()> {
-        let _message_size = Self::FIXED_PART_SIZE
-            .checked_add(self.message.size())
-            .ok_or_else(|| invalid_field_err!("size", "message size overflow"))?;
+    pub fn timeout(&self) -> time::Duration {
+        time::Duration::from_secs(self.timeout.into())
+    }
 
-        Ok(())
+    pub fn message(&self) -> &str {
+        &self.message
     }
 
     // LINTS: Overall message size is validated in the constructor/decode method

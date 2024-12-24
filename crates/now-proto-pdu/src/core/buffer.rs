@@ -14,12 +14,10 @@ use crate::VarU32;
 ///
 /// NOW-PROTO: NOW_VARBUF
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct NowVarBuf<'a>(Cow<'a, [u8]>);
-
-impl_pdu_borrowing!(NowVarBuf<'_>, OwnedNowVarBuf);
+pub(crate) struct NowVarBuf<'a>(Cow<'a, [u8]>);
 
 impl IntoOwned for NowVarBuf<'_> {
-    type Owned = OwnedNowVarBuf;
+    type Owned = NowVarBuf<'static>;
 
     fn into_owned(self) -> Self::Owned {
         NowVarBuf(Cow::Owned(self.0.into_owned()))
@@ -30,7 +28,7 @@ impl<'a> NowVarBuf<'a> {
     const NAME: &'static str = "NOW_VARBUF";
 
     /// Create a new `NowVarBuf` instance. Returns an error if the provided value is too large.
-    pub fn new(value: impl Into<Cow<'a, [u8]>>) -> EncodeResult<Self> {
+    pub(crate) fn new(value: impl Into<Cow<'a, [u8]>>) -> EncodeResult<Self> {
         let value = value.into();
 
         let _: u32 = value
@@ -41,11 +39,6 @@ impl<'a> NowVarBuf<'a> {
             .ok_or_else(|| invalid_field_err!("data", "too large buffer"))?;
 
         Ok(NowVarBuf(value))
-    }
-
-    /// Get the buffer value.
-    pub fn value(&self) -> &[u8] {
-        &self.0
     }
 }
 

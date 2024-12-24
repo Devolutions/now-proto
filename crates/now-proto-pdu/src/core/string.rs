@@ -1,7 +1,8 @@
 //! String types
 
 use alloc::borrow::Cow;
-use core::{ops::Deref, str};
+use core::ops::Deref;
+use core::str;
 
 use ironrdp_core::{
     cast_length, ensure_size, invalid_field_err, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor,
@@ -14,12 +15,10 @@ use crate::VarU32;
 ///
 /// NOW-PROTO: NOW_VARSTR
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct NowVarStr<'a>(Cow<'a, str>);
-
-impl_pdu_borrowing!(NowVarStr<'_>, OwnedNowVarStr);
+pub(crate) struct NowVarStr<'a>(Cow<'a, str>);
 
 impl IntoOwned for NowVarStr<'_> {
-    type Owned = OwnedNowVarStr;
+    type Owned = NowVarStr<'static>;
 
     fn into_owned(self) -> Self::Owned {
         NowVarStr(Cow::Owned(self.0.into_owned()))
@@ -27,12 +26,10 @@ impl IntoOwned for NowVarStr<'_> {
 }
 
 impl<'a> NowVarStr<'a> {
-    pub const MAX_SIZE: usize = VarU32::MAX as usize;
-
     const NAME: &'static str = "NOW_VARSTR";
 
     /// Creates `NowVarStr` from std string. Returns error if string is too big for the protocol.
-    pub fn new(value: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
+    pub(crate) fn new(value: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         let value = value.into();
         // IMPORTANT: we need to check for encoded UTF-8 size, not the string length.
 
@@ -45,10 +42,6 @@ impl<'a> NowVarStr<'a> {
             .ok_or_else(|| invalid_field_err!("string value", "too large string"))?;
 
         Ok(NowVarStr(value))
-    }
-
-    pub fn value(&self) -> &str {
-        &self.0
     }
 }
 
