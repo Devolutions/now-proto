@@ -10,7 +10,7 @@ use ironrdp_core::{
 
 use crate::VarU32;
 
-/// Buffer up to 2^31 bytes long (Length has compact variable length encoding).
+/// Buffer up to 2^30 bytes long (Length has compact variable length encoding).
 ///
 /// NOW-PROTO: NOW_VARBUF
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

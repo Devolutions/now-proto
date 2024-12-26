@@ -11,7 +11,7 @@ use ironrdp_core::{
 
 use crate::VarU32;
 
-/// String value up to 2^31 bytes long (Length has compact variable length encoding).
+/// String value up to 2^30 bytes long (Length has compact variable length encoding).
 ///
 /// NOW-PROTO: NOW_VARSTR
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

@@ -299,7 +299,7 @@ impl From<NowProtoError> for NowStatusError {
 
 impl core::error::Error for NowStatusError {}
 
-/// Operation status code.
+/// Channel or session operation status.
 ///
 /// NOW-PROTO: NOW_STATUS
 #[derive(Debug, Clone, PartialEq, Eq)]
