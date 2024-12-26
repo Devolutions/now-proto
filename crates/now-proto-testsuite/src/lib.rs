@@ -5,3 +5,5 @@
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(unused_crate_dependencies)]
+
+pub mod proto;
