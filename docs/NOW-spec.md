@@ -30,7 +30,8 @@ The NOW virtual channel protocol use an RDP dynamic virtual channel ("Devolution
 
 ## Message Syntax
 
-The following sections specify the NOW protocol message syntax. Unless otherwise specified, all fields defined in this document use the little-endian format.
+The following sections specify the NOW protocol message syntax.
+Unless otherwise specified, all fields defined in this document use the little-endian format.
 
 ### Common Structures
 
@@ -219,8 +220,8 @@ For successful operation this field value is operation specific.
     - `NOW_STATUS_ERROR_KIND_WINAPI`: code contains standard WinAPI error.
     - `NOW_STATUS_ERROR_KIND_UNIX`: code contains standard UNIX error code.
 
-**errorMessage(variable)**: this value contains either optional error message if
-`NOW_STATUS_ERROR_MESSAGE` flag is set, or empty sting if the flag is not set.
+**errorMessage(variable)**: this value contains either an error message if
+`NOW_STATUS_ERROR_MESSAGE` flag is set, or empty string if the flag is not set.
 
 ### Channel Messages
 Channel negotiation and life cycle messages.
@@ -258,14 +259,15 @@ Channel negotiation and life cycle messages.
 |---------------------------------|----------------------|
 | NOW_CHANNEL_CAPSET_MSG_ID<br>0x01 | NOW_CHANNEL_CAPSET_MSG |
 | NOW_CHANNEL_HEARTBEAT_MSG_ID<br>0x02 | NOW_CHANNEL_HEARTBEAT_MSG |
-| NOW_CHANNEL_TERMINATE_MSG_ID<br>0x03 | NOW_CHANNEL_TERMINATE_MSG |
+| NOW_CHANNEL_CLOSE_MSG_ID<br>0x03 | NOW_CHANNEL_CLOSE_MSG |
 
 #### NOW_CHANNEL_CAPSET_MSG
 
 This message is first set by the client side, to advertise capabilities.
 
-Received client message should be downgraded by the server (remove non-intersecting capabilities) and sent back to the client at the start of DVC channel communications. DVC channel should be closed if protocol
-versions are not compatible.
+Received client message should be downgraded by the server (remove non-intersecting capabilities)
+and sent back to the client at the start of DVC channel communications. DVC channel should be
+closed if protocol versions are not compatible.
 
 <table class="byte-layout">
     <thead>
@@ -387,9 +389,9 @@ the specified interval, it should consider the connection as lost.
 
 **msgFlags (2 bytes)**: The message flags.
 
-#### NOW_CHANNEL_TERMINATE_MSG
+#### NOW_CHANNEL_CLOSE_MSG
 
-Channel termination notice, could be sent by either parties at any moment of communication to gracefully
+Channel close notice, could be sent by either parties at any moment of communication to gracefully
 close DVC channel.
 
 <table class="byte-layout">
@@ -420,11 +422,11 @@ close DVC channel.
 
 **msgClass (1 byte)**: The message class (NOW_CHANNEL_MSG_CLASS_ID).
 
-**msgType (1 byte)**: The message type (NOW_CHANNEL_TERMINATE_MSG_ID).
+**msgType (1 byte)**: The message type (NOW_CHANNEL_CLOSE_MSG_ID).
 
 **msgFlags (2 bytes)**: The message flags.
 
-**status (variable)**: Channel termination status represented as NOW_STATUS structure.
+**status (variable)**: Channel close status represented as NOW_STATUS structure.
 
 ### System Messages
 
@@ -801,8 +803,10 @@ The NOW_EXEC_MSG message is used to execute remote commands or scripts.
 
 #### NOW_EXEC_ABORT_MSG
 
-The NOW_EXEC_ABORT_MSG message is used to abort a remote execution immediately. See NOW_EXEC_CANCEL_REQ if
-the graceful session cancellation is needed instead. This message can be sent by the client at any point of session lifetime. The session is considered aborted as soon as this message is sent.
+The NOW_EXEC_ABORT_MSG message is used to abort a remote execution immediately.
+See NOW_EXEC_CANCEL_REQ if the graceful session cancellation is needed instead.
+This message can be sent by the client at any point of session lifetime.
+The session is considered aborted as soon as this message is sent.
 
 <table class="byte-layout">
     <thead>
@@ -926,7 +930,8 @@ The NOW_EXEC_CANCEL_RSP_MSG message is used to respond to a remote execution can
 
 #### NOW_EXEC_RESULT_MSG
 
-The NOW_EXEC_RESULT_MSG message is used to return the result of an execution request. The session is considered terminated as soon as this message is sent.
+The NOW_EXEC_RESULT_MSG message is used to return the result of an execution request.
+The session is considered terminated as soon as this message is sent.
 
 <table class="byte-layout">
     <thead>
@@ -1223,8 +1228,9 @@ The NOW_EXEC_SHELL_MSG message is used to execute a remote shell script.
 
 **command (variable)**: A NOW_VARSTR structure containing the script file contents to execute.
 
-**shell (variable)**: A NOW_VARSTR structure containing the shell to use for execution. If no shell is specified, the default system shell (/bin/sh) will be used. Ignored if NOW_EXEC_FLAG_SHELL_SHELL_SET
-is not set.
+**shell (variable)**: A NOW_VARSTR structure containing the shell to use for execution.
+If no shell is specified, the default system shell (/bin/sh) will be used.
+Ignored if NOW_EXEC_FLAG_SHELL_SHELL_SET is not set.
 
 **directory (variable)**: A NOW_VARSTR structure containing the command working directory. Ignored if
 NOW_EXEC_FLAG_SHELL_DIRECTORY_SET is not set.
@@ -1346,11 +1352,15 @@ The NOW_EXEC_WINPS_MSG message is used to execute a remote Windows PowerShell (p
 
 **command (variable)**: A NOW_VARSTR structure containing the command to execute.
 
-**directory (variable)**: A NOW_VARSTR structure containing the command working directory. Corresponds to the lpCurrentDirectory parameter. Ignored if NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET is not set.
+**directory (variable)**: A NOW_VARSTR structure containing the command working directory.
+Corresponds to the lpCurrentDirectory parameter.
+Ignored if NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET is not set.
 
-**executionPolicy (variable)**: A NOW_VARSTR structure containing the execution policy (-ExecutionPolicy) parameter value. Ignored if NOW_EXEC_FLAG_PS_EXECUTION_POLICY is not set.
+**executionPolicy (variable)**: A NOW_VARSTR structure containing the execution policy (-ExecutionPolicy) parameter value.
+Ignored if NOW_EXEC_FLAG_PS_EXECUTION_POLICY is not set.
 
-**configurationName (variable)**: A NOW_VARSTR structure containing the configuration name (-ConfigurationName) parameter value. Ignored if NOW_EXEC_FLAG_PS_CONFIGURATION_NAME is not set.
+**configurationName (variable)**: A NOW_VARSTR structure containing the configuration name (-ConfigurationName) parameter value.
+Ignored if NOW_EXEC_FLAG_PS_CONFIGURATION_NAME is not set.
 
 #### NOW_EXEC_PWSH_MSG
 
@@ -1404,7 +1414,7 @@ The NOW_EXEC_PWSH_MSG message is used to execute a remote PowerShell 7 (pwsh) co
 
 **command (variable)**: A NOW_VARSTR structure containing the command to execute.
 
-**directory (variable)**: A NOW_VARSTR structure containing the command working directory. Corresponds to the lpCurrentDirectory parameter. Ignored if NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET is not set.
+**directory (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
 
 **executionPolicy (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
 

@@ -2,28 +2,28 @@ use ironrdp_core::{invalid_field_err, Decode, DecodeResult, Encode, EncodeResult
 
 use crate::{NowChannelMessage, NowChannelMsgKind, NowHeader, NowMessage, NowMessageClass, NowStatus, NowStatusError};
 
-/// Channel termination notice, could be sent by either parties at any moment of communication to
+/// Channel close notice, could be sent by either parties at any moment of communication to
 /// gracefully close DVC channel.
 ///
-/// NOW-PROTO: NOW_CHANNEL_TERMINATE_MSG
+/// NOW-PROTO: NOW_CHANNEL_CLOSE_MSG
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NowChannelTerminateMsg<'a> {
+pub struct NowChannelCloseMsg<'a> {
     status: NowStatus<'a>,
 }
 
-impl_pdu_borrowing!(NowChannelTerminateMsg<'_>, OwnedNowChannelTerminateMsg);
+impl_pdu_borrowing!(NowChannelCloseMsg<'_>, OwnedNowChannelCloseMsg);
 
-impl IntoOwned for NowChannelTerminateMsg<'_> {
-    type Owned = OwnedNowChannelTerminateMsg;
+impl IntoOwned for NowChannelCloseMsg<'_> {
+    type Owned = OwnedNowChannelCloseMsg;
 
     fn into_owned(self) -> Self::Owned {
-        OwnedNowChannelTerminateMsg {
+        OwnedNowChannelCloseMsg {
             status: self.status.into_owned(),
         }
     }
 }
 
-impl Default for NowChannelTerminateMsg<'_> {
+impl Default for NowChannelCloseMsg<'_> {
     fn default() -> Self {
         let status = NowStatus::new_success();
 
@@ -31,8 +31,8 @@ impl Default for NowChannelTerminateMsg<'_> {
     }
 }
 
-impl<'a> NowChannelTerminateMsg<'a> {
-    const NAME: &'static str = "NOW_CHANNEL_TERMINATE_MSG";
+impl<'a> NowChannelCloseMsg<'a> {
+    const NAME: &'static str = "NOW_CHANNEL_CLOSE_MSG";
 
     pub fn from_error(error: impl Into<NowStatusError>) -> EncodeResult<Self> {
         let status = NowStatus::new_error(error);
@@ -55,12 +55,12 @@ impl<'a> NowChannelTerminateMsg<'a> {
     }
 }
 
-impl Encode for NowChannelTerminateMsg<'_> {
+impl Encode for NowChannelCloseMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
             size: self.status.size().try_into().expect("validated in constructor"),
             class: NowMessageClass::CHANNEL,
-            kind: NowChannelMsgKind::TERMINATE.0,
+            kind: NowChannelMsgKind::CLOSE.0,
             flags: 0,
         };
 
@@ -80,19 +80,19 @@ impl Encode for NowChannelTerminateMsg<'_> {
     }
 }
 
-impl<'de> Decode<'de> for NowChannelTerminateMsg<'de> {
+impl<'de> Decode<'de> for NowChannelCloseMsg<'de> {
     fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
 
         match (header.class, NowChannelMsgKind(header.kind)) {
-            (NowMessageClass::CHANNEL, NowChannelMsgKind::TERMINATE) => Self::decode_from_body(header, src),
+            (NowMessageClass::CHANNEL, NowChannelMsgKind::CLOSE) => Self::decode_from_body(header, src),
             _ => Err(invalid_field_err!("type", "invalid message type")),
         }
     }
 }
 
-impl<'a> From<NowChannelTerminateMsg<'a>> for NowMessage<'a> {
-    fn from(msg: NowChannelTerminateMsg<'a>) -> Self {
-        NowMessage::Channel(NowChannelMessage::Terminate(msg))
+impl<'a> From<NowChannelCloseMsg<'a>> for NowMessage<'a> {
+    fn from(msg: NowChannelCloseMsg<'a>) -> Self {
+        NowMessage::Channel(NowChannelMessage::Close(msg))
     }
 }

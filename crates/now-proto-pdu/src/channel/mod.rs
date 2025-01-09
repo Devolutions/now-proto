@@ -1,14 +1,14 @@
 mod capset;
+mod close;
 mod heartbeat;
-mod terminate;
 
 pub use capset::{
     NowChannelCapsetFlags, NowChannelCapsetMsg, NowExecCapsetFlags, NowProtoVersion, NowSessionCapsetFlags,
     NowSystemCapsetFlags,
 };
+pub use close::{NowChannelCloseMsg, OwnedNowChannelCloseMsg};
 pub use heartbeat::NowChannelHeartbeatMsg;
 use ironrdp_core::{DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
-pub use terminate::{NowChannelTerminateMsg, OwnedNowChannelTerminateMsg};
 
 use crate::NowHeader;
 
@@ -17,7 +17,7 @@ use crate::NowHeader;
 pub enum NowChannelMessage<'a> {
     Capset(NowChannelCapsetMsg),
     Heartbeat(NowChannelHeartbeatMsg),
-    Terminate(NowChannelTerminateMsg<'a>),
+    Close(NowChannelCloseMsg<'a>),
 }
 
 pub type OwnedNowChannelMessage = NowChannelMessage<'static>;
@@ -29,7 +29,7 @@ impl IntoOwned for NowChannelMessage<'_> {
         match self {
             Self::Capset(msg) => OwnedNowChannelMessage::Capset(msg),
             Self::Heartbeat(msg) => OwnedNowChannelMessage::Heartbeat(msg),
-            Self::Terminate(msg) => OwnedNowChannelMessage::Terminate(msg.into_owned()),
+            Self::Close(msg) => OwnedNowChannelMessage::Close(msg.into_owned()),
         }
     }
 }
@@ -41,7 +41,7 @@ impl<'a> NowChannelMessage<'a> {
         match NowChannelMsgKind(header.kind) {
             NowChannelMsgKind::CAPSET => Ok(Self::Capset(NowChannelCapsetMsg::decode_from_body(header, src)?)),
             NowChannelMsgKind::HEARTBEAT => Ok(Self::Heartbeat(NowChannelHeartbeatMsg::default())),
-            NowChannelMsgKind::TERMINATE => Ok(Self::Terminate(NowChannelTerminateMsg::decode_from_body(header, src)?)),
+            NowChannelMsgKind::CLOSE => Ok(Self::Close(NowChannelCloseMsg::decode_from_body(header, src)?)),
             _ => Err(unsupported_message_err!(class: header.class.0, kind: header.kind)),
         }
     }
@@ -52,7 +52,7 @@ impl Encode for NowChannelMessage<'_> {
         match self {
             Self::Capset(msg) => msg.encode(dst),
             Self::Heartbeat(msg) => msg.encode(dst),
-            Self::Terminate(msg) => msg.encode(dst),
+            Self::Close(msg) => msg.encode(dst),
         }
     }
 
@@ -64,7 +64,7 @@ impl Encode for NowChannelMessage<'_> {
         match self {
             Self::Capset(msg) => msg.size(),
             Self::Heartbeat(msg) => msg.size(),
-            Self::Terminate(msg) => msg.size(),
+            Self::Close(msg) => msg.size(),
         }
     }
 }
@@ -78,6 +78,6 @@ impl NowChannelMsgKind {
     pub const CAPSET: Self = Self(0x01);
     /// NOW-PROTO: NOW_CHANNEL_HEARTBEAT_MSG_ID
     pub const HEARTBEAT: Self = Self(0x02);
-    /// NOW-PROTO: NOW_CHANNEL_TERMINATE_MSG_ID
-    pub const TERMINATE: Self = Self(0x03);
+    /// NOW-PROTO: NOW_CHANNEL_CLOSE_MSG_ID
+    pub const CLOSE: Self = Self(0x03);
 }

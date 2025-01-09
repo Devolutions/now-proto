@@ -71,8 +71,8 @@ fn roundtrip_channel_heartbeat() {
 }
 
 #[test]
-fn roundtrip_channel_terminate_normal() {
-    let msg = NowChannelTerminateMsg::default();
+fn roundtrip_channel_close_normal() {
+    let msg = NowChannelCloseMsg::default();
 
     let decoded = now_msg_roundtrip(
         msg,
@@ -80,16 +80,16 @@ fn roundtrip_channel_terminate_normal() {
     );
 
     let actual = match decoded {
-        NowMessage::Channel(NowChannelMessage::Terminate(msg)) => msg,
-        _ => panic!("Expected NowChannelTerminateMsg"),
+        NowMessage::Channel(NowChannelMessage::Close(msg)) => msg,
+        _ => panic!("Expected NowChannelCloseMsg"),
     };
 
     assert!(actual.to_result().is_ok());
 }
 
 #[test]
-fn roundtrip_channel_terminate_error() {
-    let msg = NowChannelTerminateMsg::from_error(NowStatusError::from(NowStatusErrorKind::Generic(0))).unwrap();
+fn roundtrip_channel_close_error() {
+    let msg = NowChannelCloseMsg::from_error(NowStatusError::from(NowStatusErrorKind::Generic(0))).unwrap();
 
     let decoded = now_msg_roundtrip(
         msg,
@@ -97,8 +97,8 @@ fn roundtrip_channel_terminate_error() {
     );
 
     let actual = match decoded {
-        NowMessage::Channel(NowChannelMessage::Terminate(msg)) => msg,
-        _ => panic!("Expected NowChannelTerminateMsg"),
+        NowMessage::Channel(NowChannelMessage::Close(msg)) => msg,
+        _ => panic!("Expected NowChannelCloseMsg"),
     };
 
     assert_eq!(
