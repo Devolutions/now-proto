@@ -10,6 +10,7 @@ repository.workspace = true
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
+publish = true
 
 [lib]
 doctest = false
@@ -20,7 +21,8 @@ workspace = true
 
 [dependencies]
 bitflags = "2"
-ironrdp-core = { version = "0.1.2", features = ["alloc"] }
+ironrdp-core = { version = "0.1", features = ["alloc"] }
+ironrdp-error = { version = "0.1", features = ["alloc"] }
 
 [features]
 default = []

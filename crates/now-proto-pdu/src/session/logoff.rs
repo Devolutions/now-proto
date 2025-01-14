@@ -47,7 +47,7 @@ impl Decode<'_> for NowSessionLogoffMsg {
     }
 }
 
-impl From<NowSessionLogoffMsg> for NowMessage {
+impl From<NowSessionLogoffMsg> for NowMessage<'_> {
     fn from(msg: NowSessionLogoffMsg) -> Self {
         NowMessage::Session(NowSessionMessage::Logoff(msg))
     }

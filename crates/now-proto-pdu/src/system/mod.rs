@@ -1,20 +1,32 @@
 mod shutdown;
 
-use ironrdp_core::{DecodeResult, Encode, EncodeResult, ReadCursor, WriteCursor};
-pub use shutdown::{NowSystemShutdownFlags, NowSystemShutdownMsg};
+use ironrdp_core::{DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
+pub use shutdown::{NowSystemShutdownMsg, OwnedNowSystemShutdownMsg};
 
 use crate::NowHeader;
 
 // Wrapper for the `NOW_SYSTEM_MSG_CLASS_ID` message class.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NowSystemMessage {
-    Shutdown(NowSystemShutdownMsg),
+pub enum NowSystemMessage<'a> {
+    Shutdown(NowSystemShutdownMsg<'a>),
 }
 
-impl NowSystemMessage {
+pub type OwnedNowSystemMessage = NowSystemMessage<'static>;
+
+impl IntoOwned for NowSystemMessage<'_> {
+    type Owned = OwnedNowSystemMessage;
+
+    fn into_owned(self) -> Self::Owned {
+        match self {
+            Self::Shutdown(msg) => OwnedNowSystemMessage::Shutdown(msg.into_owned()),
+        }
+    }
+}
+
+impl<'a> NowSystemMessage<'a> {
     const NAME: &'static str = "NOW_SYSTEM_MSG";
 
-    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'_>) -> DecodeResult<Self> {
+    pub fn decode_from_body(header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         match NowSystemMessageKind(header.kind) {
             NowSystemMessageKind::SHUTDOWN => Ok(Self::Shutdown(NowSystemShutdownMsg::decode_from_body(header, src)?)),
             _ => Err(unsupported_message_err!(class: header.class.0, kind: header.kind)),
@@ -22,7 +34,7 @@ impl NowSystemMessage {
     }
 }
 
-impl Encode for NowSystemMessage {
+impl Encode for NowSystemMessage<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         match self {
             Self::Shutdown(msg) => msg.encode(dst),

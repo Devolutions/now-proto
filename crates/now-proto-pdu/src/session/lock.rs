@@ -47,7 +47,7 @@ impl Decode<'_> for NowSessionLockMsg {
     }
 }
 
-impl From<NowSessionLockMsg> for NowMessage {
+impl From<NowSessionLockMsg> for NowMessage<'_> {
     fn from(val: NowSessionLockMsg) -> Self {
         NowMessage::Session(NowSessionMessage::Lock(val))
     }
