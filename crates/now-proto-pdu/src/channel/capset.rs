@@ -13,7 +13,7 @@ bitflags! {
     pub struct NowChannelCapsetFlags: u16 {
         /// Set if heartbeat specify channel heartbeat interval.
         ///
-        /// NOW-PROTO: NOW_CHANNEL_SET_HEATBEAT
+        /// NOW-PROTO: NOW_CHANNEL_SET_HEARTBEAT
         const SET_HEARTBEAT = 0x0001;
     }
 }
@@ -145,10 +145,13 @@ impl NowChannelCapsetMsg {
     }
 
     pub fn with_heartbeat_interval(mut self, interval: time::Duration) -> EncodeResult<Self> {
-        // Sanity check: Limit heartbeat interval to 24 hours.
+        // Sanity check: Limit min heartbeat interval to 5 seconds.
+        const MIN_HEARTBEAT_INTERVAL: time::Duration = time::Duration::from_secs(5);
+
+        // Sanity check: Limit max heartbeat interval to 24 hours.
         const MAX_HEARTBEAT_INTERVAL: time::Duration = time::Duration::from_secs(60 * 60 * 24);
 
-        if interval > MAX_HEARTBEAT_INTERVAL {
+        if interval < MIN_HEARTBEAT_INTERVAL || interval > MAX_HEARTBEAT_INTERVAL {
             return Err(invalid_field_err!("heartbeat_timeout", "too big heartbeat interval"));
         }
 
