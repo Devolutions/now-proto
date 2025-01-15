@@ -25,4 +25,5 @@ ironrdp-core = { version = "0.1", features = ["alloc"] }
 ironrdp-error = { version = "0.1", features = ["alloc"] }
 
 [features]
+std = ["ironrdp-core/std", "ironrdp-error/std"]
 default = []

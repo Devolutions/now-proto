@@ -55,6 +55,14 @@ fn roundtrip_channel_capset_simple() {
 }
 
 #[test]
+fn roundtrip_channel_capset_too_small_heartbeat_interval() {
+    // Sanity check should fail
+    NowChannelCapsetMsg::default()
+        .with_heartbeat_interval(time::Duration::from_secs(3))
+        .unwrap_err();
+}
+
+#[test]
 fn roundtrip_channel_capset_too_big_heartbeat_interval() {
     // Sanity check should fail
     NowChannelCapsetMsg::default()
