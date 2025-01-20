@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Devolutions.NowProto\Devolutions.NowProto.csproj" />
+  </ItemGroup>
+
 </Project>
