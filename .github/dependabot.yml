@@ -6,6 +6,7 @@ updates:
       interval: "weekly"
     assignees:
       - "CBenoit"
+      - "pacmancoder"
     open-pull-requests-limit: 3
     groups:
       crypto:
