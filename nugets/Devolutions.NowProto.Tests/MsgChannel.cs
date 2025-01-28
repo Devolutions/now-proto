@@ -1,4 +1,6 @@
-﻿namespace Devolutions.NowProto.Tests
+﻿using Devolutions.NowProto.Capabilities;
+
+namespace Devolutions.NowProto.Tests
 {
     public class MsgChannel
     {
