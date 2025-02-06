@@ -115,7 +115,7 @@ namespace Devolutions.NowClient
             if (_cancelResponse == null)
             {
                 // Graceful session exit or abort could have happened in the meantime.
-                throw new NowSessionException(SessionId, NowSessionException.NowSessionExceptionKind.ExitedSessionInteraction);
+                return;
             }
 
             _cancelResponse.ThrowIfError();

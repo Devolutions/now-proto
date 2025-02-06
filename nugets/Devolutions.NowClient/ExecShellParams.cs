@@ -3,7 +3,7 @@
 namespace Devolutions.NowClient
 {
     /// <summary>
-    /// Shell(e.g. sh, bash, etc.) remote execution session parameters.
+    /// Shell (e.g. sh, bash, etc.) remote execution session parameters.
     /// </summary>
     /// <param name="command">Command/script to execute.</param>
     public class ExecShellParams(string command) : AExecParams

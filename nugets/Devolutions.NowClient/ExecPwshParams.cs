@@ -3,7 +3,7 @@
 namespace Devolutions.NowClient
 {
     /// <summary>
-    /// Powershell 7(pwsh) remote execution session parameters.
+    /// Powershell 7 and higher (pwsh) remote execution session parameters.
     /// </summary>
     /// <param name="command">PowerShell command/script to execute.</param>
     public class ExecPwshParams(string command) : AExecParams

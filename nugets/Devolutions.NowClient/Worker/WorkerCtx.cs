@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Threading.Channels;
 
 using Devolutions.NowProto;
@@ -19,23 +18,23 @@ namespace Devolutions.NowClient.Worker
             Task<NowMessage.NowMessageView>? serverReadTask = null;
             Task? heartbeatCheckTask = null;
 
+            var tasks = new List<Task>();
+
             // Main async IO loop. (akin to tokio's `select!`)
             while (!ctx.ExitRequested)
             {
-                var tasks = new List<Task>();
+                tasks.Clear();
 
                 // Check if task was completed on the previous loop iteration.
                 // and re-add it to the list of tasks to be awaited.
                 if (clientReadTask == null)
                 {
                     clientReadTask = ctx.Commands.ReadAsync().AsTask();
-                    tasks.Add(clientReadTask);
                 }
 
                 if (serverReadTask == null)
                 {
                     serverReadTask = ctx.NowChannel.ReadMessageAny();
-                    tasks.Add(serverReadTask);
                 }
 
                 // Skip task of heartbeat interval was not negotiated.
@@ -44,6 +43,9 @@ namespace Devolutions.NowClient.Worker
                     heartbeatCheckTask = Task.Delay(ctx.HeartbeatInterval.Value * 2);
                     tasks.Add(heartbeatCheckTask);
                 }
+
+                tasks.Add(clientReadTask);
+                tasks.Add(serverReadTask);
 
                 var completedTask = await Task.WhenAny(tasks);
 
@@ -57,7 +59,8 @@ namespace Devolutions.NowClient.Worker
                 }
                 else if (completedTask == serverReadTask)
                 {
-                    NowMessage.NowMessageView message = await serverReadTask;
+                    var message = await serverReadTask;
+                    serverReadTask = null;
 
                     switch (message.MessageClass)
                     {
@@ -84,11 +87,15 @@ namespace Devolutions.NowClient.Worker
                     var heartbeatLeeway = TimeSpan.FromSeconds(5);
 
                     heartbeatCheckTask = null;
-                    if ((DateTime.Now - ctx.LastHeartbeat) > (ctx.HeartbeatInterval + heartbeatLeeway))
+                    if (!((DateTime.Now - ctx.LastHeartbeat) > (ctx.HeartbeatInterval + heartbeatLeeway)))
                     {
-                        // Channel is considered dead; No attempt to send any messages should be made.
-                        ctx.ExitRequested = true;
+                        continue;
                     }
+
+                    Debug.WriteLine("Heartbeat timeout triggered");
+
+                    // Channel is considered dead; No attempt to send any messages should be made.
+                    ctx.ExitRequested = true;
                 }
             }
         }
@@ -125,6 +132,8 @@ namespace Devolutions.NowClient.Worker
         {
             var kind = (SessionMessageKind)message.MessageKind;
 
+            Debug.WriteLine($"Received session message");
+
             switch (kind)
             {
                 case SessionMessageKind.MsgBoxRsp:
@@ -150,6 +159,7 @@ namespace Devolutions.NowClient.Worker
         private static void HandleExecMessage(NowMessage.NowMessageView message, WorkerCtx ctx)
         {
             var kind = (ExecMessageKind)message.MessageKind;
+
             switch (kind)
             {
                 case ExecMessageKind.CancelRsp:

@@ -3,7 +3,7 @@
 namespace Devolutions.NowClient
 {
     /// <summary>
-    /// Batch(Windows CMD) remote execution session parameters.
+    /// Batch (Windows CMD) remote execution session parameters.
     /// </summary>
     /// <param name="command">Command/script to execute.</param>
     public class ExecBatchParams(string command) : AExecParams

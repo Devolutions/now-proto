@@ -51,7 +51,18 @@ namespace Devolutions.NowClient
                 HeartbeatInterval = capabilities.HeartbeatInterval,
             };
 
-            var workerTask = Task.Run(() => WorkerCtx.Run(ctx));
+            var workerTask = Task.Run(() =>
+            {
+                try
+                {
+                    return WorkerCtx.Run(ctx);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine($"NowClient worker exception: {e}");
+                    throw;
+                }
+            });
 
             return new NowClient(capabilities, workerTask, clientChannel.Writer);
         }

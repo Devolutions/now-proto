@@ -3,7 +3,7 @@
 namespace Devolutions.NowClient
 {
     /// <summary>
-    /// Powershell 5(PowerShell.exe) remote execution session parameters.
+    /// Powershell 5 (PowerShell.exe) remote execution session parameters.
     /// </summary>
     /// <param name="command">PowerShell command/script to execute.</param>
     public class ExecWinPsParams(string filename) : AExecParams
