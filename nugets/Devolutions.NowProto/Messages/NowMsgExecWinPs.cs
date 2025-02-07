@@ -161,8 +161,8 @@ namespace Devolutions.NowProto.Messages
             {
                 return new NowMsgExecWinPs
                 {
-                    SessionId = _sessionId,
-                    Command = _command,
+                    SessionId = sessionId,
+                    Command = command,
                     _flags = _flags,
                     _directory = _directory,
                     _executionPolicy = _executionPolicy,
@@ -170,8 +170,6 @@ namespace Devolutions.NowProto.Messages
                 };
             }
 
-            private readonly uint _sessionId = sessionId;
-            private readonly string _command = command;
             private MsgFlags _flags = MsgFlags.None;
             private string _directory = "";
             private string _executionPolicy = "";

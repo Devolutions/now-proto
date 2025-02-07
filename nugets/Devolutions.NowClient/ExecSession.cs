@@ -49,14 +49,16 @@ namespace Devolutions.NowClient
 
             _cancelResponse = msg;
             _cancelReceived.Release();
-            _responseReceivedEvent.Release();
         }
 
         void IExecSessionHandler.HandleResult(NowMsgExecResult msg)
         {
             _result = msg;
             _responseReceivedEvent.Release();
-            _cancelReceived.Release();
+            if (_cancelPending)
+            {
+                _cancelReceived.Release();
+            }
         }
 
         internal ExecSession(
@@ -84,9 +86,9 @@ namespace Devolutions.NowClient
             ThrowIfExited();
 
             await _commandWriter.WriteAsync(new CommandExecAbort(SessionId, exitCode));
-            _canceled = true;
-            _cancelReceived.Release(1);
-            _responseReceivedEvent.Release(1);
+            _aborted = true;
+            _cancelReceived.Release();
+            _responseReceivedEvent.Release();
         }
 
         /// <summary>
@@ -119,9 +121,6 @@ namespace Devolutions.NowClient
             }
 
             _cancelResponse.ThrowIfError();
-
-            // mark as completed only if cancel was successful
-            _canceled = true;
         }
 
         /// <summary>
@@ -159,7 +158,7 @@ namespace Devolutions.NowClient
 
             await _responseReceivedEvent.WaitAsync();
 
-            return _canceled
+            return _aborted
                 ? throw new NowSessionException(SessionId, NowSessionException.NowSessionExceptionKind.Terminated)
                 : _result?.GetExitCodeOrThrow()
                   ?? throw new NowClientException("No result received");
@@ -172,14 +171,14 @@ namespace Devolutions.NowClient
 
         private void ThrowIfExited()
         {
-            if (_result != null || _canceled)
+            if (_result != null || _aborted)
             {
                 throw new NowSessionException(SessionId, NowSessionException.NowSessionExceptionKind.ExitedSessionInteraction);
             }
         }
 
         private bool _lastStdinSent;
-        private bool _canceled;
+        private bool _aborted;
         private bool _cancelPending;
         private NowMsgExecCancelRsp? _cancelResponse;
         private NowMsgExecResult? _result;

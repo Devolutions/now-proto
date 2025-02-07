@@ -169,11 +169,6 @@ namespace Devolutions.NowClient.Worker
                         if (ctx.ExecSessionHandlers.TryGetValue(decoded.SessionId, out IExecSessionHandler? handler))
                         {
                             handler.HandleCancelRsp(decoded);
-                            // Unregister session if the cancel was successful.
-                            if (decoded.IsSuccess)
-                            {
-                                ctx.ExecSessionHandlers.Remove(decoded.SessionId);
-                            }
                         }
                         else
                         {
