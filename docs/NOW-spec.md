@@ -316,7 +316,7 @@ closed if protocol versions are not compatible.
 
 | Flag | Meaning |
 |-------|---------|
-| NOW_CHANNEL_SET_HEATBEAT<br>0x0001 | Set if `heartbeat` specify channel heartbeat interval. |
+| NOW_CHANNEL_SET_HEARTBEAT<br>0x0001 | Set if `heartbeat` specify channel heartbeat interval. |
 
 **versionMajor (1 byte)**: Major protocol version. Breaking changes in protocol should
 increment major version; Protocol implementations with different major version are not compatible.
@@ -352,7 +352,7 @@ increment major version; Protocol implementations with different major version a
 
 **heartbeatInterval (4 bytes, optional)**: A 32-bit unsigned integer, which represents
 periodic heartbeat interval *hint* for a server (60 seconds by default).
-Disables periodic heartbeat if set to `0`. Ignored if `NOW_CHANNEL_SET_HEATBEAT` is not set.
+Disables periodic heartbeat if set to `0`. Ignored if `NOW_CHANNEL_SET_HEARTBEAT` is not set.
 
 
 #### NOW_CHANNEL_HEARTBEAT_MSG

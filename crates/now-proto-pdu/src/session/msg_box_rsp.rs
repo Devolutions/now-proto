@@ -1,5 +1,5 @@
 use ironrdp_core::{
-    ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor,
+    cast_length, ensure_fixed_part_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor,
 };
 
 use crate::{
@@ -121,6 +121,12 @@ impl<'a> NowSessionMsgBoxRspMsg<'a> {
         self.status.to_result().map(|_| self.response)
     }
 
+    // LINTS: Overall message size is validated in the constructor/decode method
+    #[allow(clippy::arithmetic_side_effects)]
+    fn body_size(&self) -> usize {
+        Self::FIXED_PART_SIZE + self.status.size()
+    }
+
     pub(super) fn decode_from_body(_header: NowHeader, src: &mut ReadCursor<'a>) -> DecodeResult<Self> {
         ensure_fixed_part_size!(in: src);
 
@@ -140,7 +146,7 @@ impl<'a> NowSessionMsgBoxRspMsg<'a> {
 impl Encode for NowSessionMsgBoxRspMsg<'_> {
     fn encode(&self, dst: &mut WriteCursor<'_>) -> EncodeResult<()> {
         let header = NowHeader {
-            size: u32::try_from(Self::FIXED_PART_SIZE).expect("always fits in u32"),
+            size: cast_length!("size", self.body_size())?,
             class: NowMessageClass::SESSION,
             kind: NowSessionMessageKind::MSGBOX_RSP.0,
             flags: 0,
@@ -162,7 +168,7 @@ impl Encode for NowSessionMsgBoxRspMsg<'_> {
     }
 
     fn size(&self) -> usize {
-        NowHeader::FIXED_PART_SIZE + Self::FIXED_PART_SIZE + self.status.size()
+        NowHeader::FIXED_PART_SIZE + self.body_size()
     }
 }
 

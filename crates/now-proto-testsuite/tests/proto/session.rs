@@ -76,7 +76,7 @@ fn roundtrip_session_msgbox_rsp() {
     let decoded = now_msg_roundtrip(
         msg,
         expect![
-            "[08, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]"
+            "[12, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]"
         ],
     );
 
@@ -93,15 +93,15 @@ fn roundtrip_session_msgbox_rsp() {
 fn roundtrip_session_msgbox_rsp_error() {
     let msg = NowSessionMsgBoxRspMsg::new_error(
         0x01234567,
-        NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
-            .with_message("err")
-            .unwrap(),
+        NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented)),
     )
     .unwrap();
 
     let decoded = now_msg_roundtrip(
         msg,
-        expect!["[08, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 00, 00, 00, 00, 03, 00, 01, 00, 07, 00, 00, 00, 03, 65, 72, 72, 00]"],
+        expect![
+            "[12, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 00, 00, 00, 00, 01, 00, 01, 00, 07, 00, 00, 00, 00, 00]"
+        ],
     );
 
     let actual = match decoded {
@@ -113,7 +113,5 @@ fn roundtrip_session_msgbox_rsp_error() {
     assert_eq!(
         actual.to_result().unwrap_err(),
         NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
-            .with_message("err")
-            .unwrap()
     );
 }
