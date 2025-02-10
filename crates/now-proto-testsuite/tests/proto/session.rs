@@ -93,13 +93,15 @@ fn roundtrip_session_msgbox_rsp() {
 fn roundtrip_session_msgbox_rsp_error() {
     let msg = NowSessionMsgBoxRspMsg::new_error(
         0x01234567,
-        NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
+        NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented)),
     )
     .unwrap();
 
     let decoded = now_msg_roundtrip(
         msg,
-        expect!["[12, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 00, 00, 00, 00, 01, 00, 01, 00, 07, 00, 00, 00, 00, 00]"],
+        expect![
+            "[12, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 00, 00, 00, 00, 01, 00, 01, 00, 07, 00, 00, 00, 00, 00]"
+        ],
     );
 
     let actual = match decoded {
