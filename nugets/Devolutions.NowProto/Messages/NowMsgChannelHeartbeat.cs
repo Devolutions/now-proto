@@ -11,8 +11,8 @@
     {
         // -- INowMessage --
 
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassChannel;
-        static byte INowMessage.TypeMessageKind => 0x02; // NOW-PROTO: NOW_CHANNEL_HEARTBEAT_MSG_ID
+        public static byte TypeMessageClass => NowMessage.ClassChannel;
+        public static byte TypeMessageKind => 0x02; // NOW-PROTO: NOW_CHANNEL_HEARTBEAT_MSG_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassChannel;
         byte INowMessage.MessageKind => 0x02;

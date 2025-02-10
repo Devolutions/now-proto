@@ -16,8 +16,8 @@ namespace Devolutions.NowProto.Messages
         public static byte TypeMessageClass => NowMessage.ClassSession;
         public static byte TypeMessageKind => 0x04; // NOW-PROTO: NOW_SESSION_MSGBOX_RSP_MSG_ID
 
-        public byte MessageClass => NowMessage.ClassSession;
-        public byte MessageKind => 0x04;
+        byte INowMessage.MessageClass => NowMessage.ClassSession;
+        byte INowMessage.MessageKind => 0x04;
 
         // -- INowSerialize --
         ushort INowSerialize.Flags => 0;
@@ -33,7 +33,7 @@ namespace Devolutions.NowProto.Messages
 
         // -- INowDeserialize --
 
-        public static NowMsgSessionMessageBoxRsp Deserialize(ushort flags, NowReadCursor cursor)
+        static NowMsgSessionMessageBoxRsp INowDeserialize<NowMsgSessionMessageBoxRsp>.Deserialize(ushort flags, NowReadCursor cursor)
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
             var requestId = cursor.ReadUInt32Le();

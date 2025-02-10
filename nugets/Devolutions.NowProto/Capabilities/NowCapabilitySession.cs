@@ -28,5 +28,7 @@
         /// NOW-PROTO: NOW_CAP_SESSION_MSGBOX
         /// </summary>
         Msgbox = 0x0004,
+
+        All = Lock | Logoff | Msgbox,
     }
 }

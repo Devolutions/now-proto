@@ -23,6 +23,7 @@ namespace Devolutions.NowProto
         public void Advance(uint length)
         {
             _buffer = _buffer[(int)length..];
+            BytesFilled += length;
         }
 
         public void WriteBytes(ReadOnlySpan<byte> data)
@@ -87,5 +88,6 @@ namespace Devolutions.NowProto
         }
 
         private ArraySegment<byte> _buffer = buffer;
+        public uint BytesFilled = 0;
     }
 }

@@ -9,8 +9,8 @@
     {
         // -- INowMessage --
 
-        static byte INowMessage.TypeMessageClass => NowMessage.ClassSession;
-        static byte INowMessage.TypeMessageKind => 0x01; // NOW-PROTO: NOW_SESSION_LOCK_MSG_ID
+        public static byte TypeMessageClass => NowMessage.ClassSession;
+        public static byte TypeMessageKind => 0x01; // NOW-PROTO: NOW_SESSION_LOCK_MSG_ID
 
         byte INowMessage.MessageClass => NowMessage.ClassSession;
         byte INowMessage.MessageKind => 0x01;

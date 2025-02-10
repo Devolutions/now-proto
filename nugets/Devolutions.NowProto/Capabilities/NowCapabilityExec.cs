@@ -46,5 +46,7 @@
         /// NOW-PROTO: NOW_CAP_EXEC_STYLE_PWSH
         /// </summary>
         Pwsh = 0x0020,
+
+        All = Run | Process | Shell | Batch | WinPs | Pwsh,
     }
 }

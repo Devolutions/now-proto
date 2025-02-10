@@ -16,5 +16,7 @@
         /// NOW-PROTO: NOW_CAP_SYSTEM_SHUTDOWN
         /// </summary>
         Shutdown = 0x0001,
+
+        All = Shutdown,
     }
 }

@@ -1,4 +1,4 @@
-﻿using Devolutions.NowProto.Capabilities;
+using Devolutions.NowProto.Capabilities;
 
 namespace Devolutions.NowProto.Tests
 {
