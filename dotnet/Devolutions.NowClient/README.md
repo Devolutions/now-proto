@@ -1,7 +1,7 @@
 NOW-proto client (C# library)
 =====================================
 
-This library provides implements high level async client for `NowProto` protocol.
+This library provides a high level async client for `NowProto` protocol.
 
 ### NowClient Architecture overview
 - Provides async client implementation for NOW-proto remote execution channel.

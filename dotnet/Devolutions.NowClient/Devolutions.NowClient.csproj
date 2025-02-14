@@ -1,10 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Devolutions.NowClient</PackageId>
+    <Version>2025.2.17.0</Version>
+
+    <Authors>Devolutions Inc.</Authors>
+    <Company>Devolutions Inc.</Company>
+    <AssemblyTitle>Async client for NowProto protocol</AssemblyTitle>
+    <Description>Provides a high level async client for NowProto protocol</Description>
+    <Copyright>© Devolutions Inc. All rights reserved.</Copyright>
+    <RootNamespace>Devolutions.NowClient</RootNamespace>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Devolutions/now-proto.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <OutputType>Library</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>x86;x64;ARM64</Platforms>
     <IncludeReferencedProjects>true</IncludeReferencedProjects>
   </PropertyGroup>
 
