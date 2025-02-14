@@ -7,11 +7,6 @@ Devolutions::Now::Agent RDP virtual channel protocol libraries and clients.
 
 Current protocol specification: [read](./docs/NOW-spec.md)
 
-### now-proto-pdu (rust)
-
-This repository contains the [Rust implementation](./crates/now-proto-pdu/README.md) of the
-NOW protocol encoding/decoding library.
-
 ### Updating protocol
 
 In order to update the protocol, the following steps should be followed:
