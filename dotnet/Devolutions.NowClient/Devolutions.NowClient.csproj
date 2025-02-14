@@ -6,8 +6,8 @@
 
     <Authors>Devolutions Inc.</Authors>
     <Company>Devolutions Inc.</Company>
-    <AssemblyTitle>Async client for NowProto protocol</AssemblyTitle>
-    <Description>Provides a high level async client for NowProto protocol</Description>
+    <AssemblyTitle>Async client for the NOW protocol</AssemblyTitle>
+    <Description>Provides a high level async client for the NOW protocol</Description>
     <Copyright>© Devolutions Inc. All rights reserved.</Copyright>
     <RootNamespace>Devolutions.NowClient</RootNamespace>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>

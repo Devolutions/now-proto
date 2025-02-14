@@ -1,7 +1,7 @@
 ﻿namespace Devolutions.NowProto.Exceptions
 {
     /// <summary>
-    /// NOW-PROTO protocol-related exception.
+    /// NOW protocol-related exception.
     /// </summary>
     public class NowProtocolException(NowProtocolErrorCode code)
         : NowStatusException(GetDisplayMessage(code), NowErrorKind.Now, (ushort)code, null)
