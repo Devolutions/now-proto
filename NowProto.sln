@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nugets", "nugets", "{BD6154A5-8825-4023-A6AE-CE9FCC4B073B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{BD6154A5-8825-4023-A6AE-CE9FCC4B073B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto", "nugets\Devolutions.NowProto\Devolutions.NowProto.csproj", "{2EB02FFB-DC42-4217-8520-93F06E17BFC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto", "dotnet\Devolutions.NowProto\Devolutions.NowProto.csproj", "{2EB02FFB-DC42-4217-8520-93F06E17BFC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto.Tests", "nugets\Devolutions.NowProto.Tests\Devolutions.NowProto.Tests.csproj", "{34912761-E8CB-4D88-A4B4-365F6DB88985}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto.Tests", "dotnet\Devolutions.NowProto.Tests\Devolutions.NowProto.Tests.csproj", "{34912761-E8CB-4D88-A4B4-365F6DB88985}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowClient", "nugets\Devolutions.NowClient\Devolutions.NowClient.csproj", "{4692658E-C138-4A40-A10C-7E55D38D250B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowClient", "dotnet\Devolutions.NowClient\Devolutions.NowClient.csproj", "{4692658E-C138-4A40-A10C-7E55D38D250B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
