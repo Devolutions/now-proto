@@ -29,7 +29,7 @@ pub fn get_dotnet_output_path() -> anyhow::Result<PathBuf> {
     let build_config = "Debug";
     let target_framework = "net8.0";
 
-    let output_path = Path::new("nugets")
+    let output_path = Path::new("dotnet")
         .join("Devolutions.NowProto")
         .join("bin")
         .join(arch_folder)

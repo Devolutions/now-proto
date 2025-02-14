@@ -5,10 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x86;x64;ARM64</Platforms>
+    <IncludeReferencedProjects>true</IncludeReferencedProjects>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Devolutions.NowProto\Devolutions.NowProto.csproj" />
+    <ProjectReference Include="..\Devolutions.NowProto\Devolutions.NowProto.csproj" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
