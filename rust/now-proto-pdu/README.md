@@ -1,10 +1,11 @@
 NOW-proto PDU encoding/decoding library
 =======================================
 
-This crate provides a Rust implementation of the NOW-proto protocol encoding/decoding library.
+This crate provides a Rust implementation of the NOW protocol encoding/decoding library.
 
 ## Library architecture details
-- The library only provides encoding/decoding functions for the NOW-proto protocol, transport layer
+
+- The library only provides encoding/decoding functions for the NOW protocol, transport layer
   and session processing logic should be implemented by the client/server.
 - `#[no_std]` compatible. Requires `alloc`.
 - PDUs could contain borrowed data by default to avoid unnecessary string/vec allocations when
@@ -23,11 +24,9 @@ This crate provides a Rust implementation of the NOW-proto protocol encoding/dec
 - PDUs should NOT fail on deserialization if message body have more data to ensure backwards
   compatibility with future protocol versions (e.g. new fields added to the end of the message in
   the new protocol version).
--
-
-
 
 ## Versioning
+
 Crate version is not tied to the protocol version (e.g. Introduction of breaking changes in the
 crate API does not necessarily mean a protocol version bump and vice versa). The currently
 implemented protocol version is stored in [`NowProtoVersion::CURRENT`] and should be updated
