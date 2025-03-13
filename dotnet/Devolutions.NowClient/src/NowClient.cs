@@ -156,6 +156,43 @@ namespace Devolutions.NowClient
             await _commandWriter.WriteAsync(command);
         }
 
+        private async Task SessionSetKbdLayoutImpl(NowMsgSessionSetKbdLayout message)
+        {
+            ThrowIfWorkerTerminated();
+
+            if (!Capabilities.SessionCapset.HasFlag(NowCapabilitySession.SetKbdLayout))
+            {
+                ThrowCapabilitiesError("Set keyboard layout");
+            }
+
+            var command = new CommandSessionSetKbdLayout(message);
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
+        /// Set the next keyboard layout for the active foreground window.
+        /// </summary>
+        public async Task SessionSetKbdLayoutNext()
+        {
+            await SessionSetKbdLayoutImpl(NowMsgSessionSetKbdLayout.Next());
+        }
+
+        /// <summary>
+        /// Set the previous keyboard layout for the active foreground window.
+        /// </summary>
+        public async Task SessionSetKbdLayoutPrev()
+        {
+            await SessionSetKbdLayoutImpl(NowMsgSessionSetKbdLayout.Prev());
+        }
+
+        /// <summary>
+        /// Set a specific keyboard layout for the active foreground window.
+        /// </summary>
+        public async Task SessionSetKbdLayoutSpecific(string layout)
+        {
+            await SessionSetKbdLayoutImpl(NowMsgSessionSetKbdLayout.Specific(layout));
+        }
+
         /// <summary>
         /// Start a new simple remote execution session.
         /// (see <see cref="ExecRunParams"/> for more details).

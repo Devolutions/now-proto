@@ -28,6 +28,12 @@
         /// NOW-PROTO: NOW_CAP_SESSION_MSGBOX
         /// </summary>
         Msgbox = 0x0004,
+        /// <summary>
+        /// Set keyboard layout command support.
+        ///
+        /// NOW-PROTO: NOW_CAP_SESSION_SET_KBD_LAYOUT
+        /// </summary>
+        SetKbdLayout = 0x0008,
 
         All = Lock | Logoff | Msgbox,
     }
