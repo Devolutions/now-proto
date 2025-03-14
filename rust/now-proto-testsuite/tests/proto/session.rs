@@ -115,3 +115,48 @@ fn roundtrip_session_msgbox_rsp_error() {
         NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
     );
 }
+
+#[test]
+fn roundtrip_session_set_kbd_layout_specific() {
+    let msg = NowSessionSetKbdLayoutMsg::new_specific("00000409").unwrap();
+
+    let decoded = now_msg_roundtrip(
+        msg,
+        expect!["[0A, 00, 00, 00, 12, 05, 00, 00, 08, 30, 30, 30, 30, 30, 34, 30, 39, 00]"],
+    );
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::SetKbdLayout(msg)) => msg,
+        _ => panic!("Expected NowSessionSetKbdLayoutMsg"),
+    };
+
+    assert_eq!(actual.layout(), SetKbdLayoutOption::Specific("00000409"));
+}
+
+#[test]
+fn roundtrip_session_set_kbd_layout_next() {
+    let msg = NowSessionSetKbdLayoutMsg::new_next();
+
+    let decoded = now_msg_roundtrip(msg, expect!["[02, 00, 00, 00, 12, 05, 01, 00, 00, 00]"]);
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::SetKbdLayout(msg)) => msg,
+        _ => panic!("Expected NowSessionSetKbdLayoutMsg"),
+    };
+
+    assert_eq!(actual.layout(), SetKbdLayoutOption::Next);
+}
+
+#[test]
+fn roundtrip_session_set_kbd_layout_prev() {
+    let msg = NowSessionSetKbdLayoutMsg::new_prev();
+
+    let decoded = now_msg_roundtrip(msg, expect!["[02, 00, 00, 00, 12, 05, 02, 00, 00, 00]"]);
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::SetKbdLayout(msg)) => msg,
+        _ => panic!("Expected NowSessionSetKbdLayoutMsg"),
+    };
+
+    assert_eq!(actual.layout(), SetKbdLayoutOption::Prev);
+}

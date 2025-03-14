@@ -119,117 +119,62 @@
             Assert.Throws<NowProtocolException>(() => msg.GetResponseOrThrow());
         }
 
-        /*
-    let msg = NowSessionMsgBoxRspMsg::new_error(
-               0x01234567,
-               NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
-                   .with_message("err")
-                   .unwrap(),
-           )
-           .unwrap();
+        [Fact]
+        public void SetKbdLayoutSpecific()
+        {
+            var msg = NowMsgSessionSetKbdLayout.Specific("00000409");
 
-           let decoded = now_msg_roundtrip(
-               msg,
-               expect!["[15, 00, 00, 00, 12, 04, 00, 00, 67, 45, 23, 01, 00, 00, 00, 00, 03, 00, 01, 00, 07, 00, 00, 00, 03, 65, 72, 72, 00]"],
-           );
+            var encoded = new byte[]
+            {
+                0x0A, 0x00, 0x00, 0x00, 0x12, 0x05, 0x00, 0x00, 0x08, 0x30, 0x30, 0x30,
+                0x30, 0x30, 0x34, 0x30, 0x39, 0x00
+            };
 
-           let actual = match decoded {
-               NowMessage::Session(NowSessionMessage::MsgBoxRsp(msg)) => msg,
-               _ => panic!("Expected NowSessionMsgBoxRspMsg"),
-           };
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-           assert_eq!(actual.request_id(), 0x01234567);
-           assert_eq!(
-               actual.to_result().unwrap_err(),
-               NowStatusError::from(NowStatusErrorKind::Now(NowProtoError::NotImplemented))
-                   .with_message("err")
-                   .unwrap()
-           );
+            Assert.Equal(msg.LayoutOption, decoded.LayoutOption);
+            Assert.Equal(msg.Layout, decoded.Layout);
 
-                    /*
-                    [TestMethod]
-                    public void MsgLockRoundtrip()
-                    {
-                        var msg = new NowMsgSessionLock();
+            Assert.Equal(NowMsgSessionSetKbdLayout.SetKbdLayoutOption.Specific, msg.LayoutOption);
+            Assert.Equal("00000409", msg.Layout);
+        }
 
-                        var actualEncoded = new byte[(msg as INowSerialize).Size];
-                        {
-                            var cursor = new NowWriteCursor(actualEncoded);
-                            (msg as INowSerialize).Serialize(cursor);
-                        }
+        [Fact]
+        public void SetKbdLayoutNext()
+        {
+            var msg = NowMsgSessionSetKbdLayout.Next();
 
-                        var expectedEncoded = new byte[]
-                        {
-                            0x00, 0x00, 0x00, 0x00, 0x12, 0x01, 0x00, 0x00,
-                        };
+            var encoded = new byte[]
+            {
+                0x02, 0x00, 0x00, 0x00, 0x12, 0x05, 0x01, 0x00, 0x00, 0x00
+            };
 
-                        CollectionAssert.AreEqual(expectedEncoded, actualEncoded);
-                    }
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-                    [TestMethod]
-                    public void MsgLogoff()
-                    {
-                        var msg = new NowMsgSessionLogoff();
+            Assert.Equal(msg.LayoutOption, decoded.LayoutOption);
+            Assert.Equal(msg.Layout, decoded.Layout);
 
-                        var actualEncoded = new byte[(msg as INowSerialize).Size];
-                        {
-                            var cursor = new NowWriteCursor(actualEncoded);
-                            (msg as INowSerialize).Serialize(cursor);
-                        }
+            Assert.Equal(NowMsgSessionSetKbdLayout.SetKbdLayoutOption.Next, msg.LayoutOption);
+            Assert.Null(msg.Layout);
+        }
 
-                        var expectedEncoded = new byte[]
-                        {
-                            0x00, 0x00, 0x00, 0x00, 0x12, 0x02, 0x00, 0x00,
-                        };
+        [Fact]
+        public void SetKbdLayoutPrev()
+        {
+            var msg = NowMsgSessionSetKbdLayout.Prev();
 
-                        CollectionAssert.AreEqual(expectedEncoded, actualEncoded);
-                    }
+            var encoded = new byte[]
+            {
+                0x02, 0x00, 0x00, 0x00, 0x12, 0x05, 0x02, 0x00, 0x00, 0x00
+            };
 
-                    [TestMethod]
-                    public void MsgMessageBoxReq()
-                    {
-                        var msg = new NowMsgSessionMessageBoxReq(0x76543210, "hello")
-                        {
-                            WaitForResponse = true,
-                            Style = NowMsgSessionMessageBoxReq.MessageBoxStyle.AbortRetryIgnore,
-                            Title = "world",
-                            Timeout = 3,
-                        };
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
 
-                        var actualEncoded = new byte[(msg as INowSerialize).Size];
-                        {
-                            var cursor = new NowWriteCursor(actualEncoded);
-                            (msg as INowSerialize).Serialize(cursor);
-                        }
+            Assert.Equal(msg.LayoutOption, decoded.LayoutOption);
+            Assert.Equal(msg.Layout, decoded.Layout);
 
-                        var expectedEncoded = new byte[]
-                        {
-                            0x1A, 0x00, 0x00, 0x00, 0x12, 0x03, 0x0F, 0x00,
-                            0x10, 0x32, 0x54, 0x76, 0x02, 0x00, 0x00, 0x00,
-                            0x03, 0x00, 0x00, 0x00, 0x05, 0x77, 0x6F, 0x72,
-                            0x6C, 0x64, 0x00, 0x05, 0x68, 0x65, 0x6C, 0x6C,
-                            0x6F, 0x00,
-                        };
-
-                        CollectionAssert.AreEqual(expectedEncoded, actualEncoded);
-                    }
-
-                    [TestMethod]
-                    public void MsgMessageBoxRsp()
-                    {
-                        var encoded = new byte[]
-                        {
-                            0x08, 0x00, 0x00, 0x00, 0x12, 0x04, 0x00, 0x00,
-                            0x67, 0x45, 0x23, 0x01, 0x04, 0x00, 0x00, 0x00,
-                        };
-
-                        var msg = NowMessage
-                            .Read(new NowReadCursor(encoded))
-                            .Deserialize<NowMsgSessionMessageBoxRsp>();
-
-                        Assert.AreEqual((uint)0x01234567, msg.RequestId);
-                        Assert.AreEqual(NowMsgSessionMessageBoxRsp.MessageBoxResponse.Retry, msg.Response);
-                    }
-                    */
+            Assert.Equal(NowMsgSessionSetKbdLayout.SetKbdLayoutOption.Prev, msg.LayoutOption);
+            Assert.Null(msg.Layout);
+        }
     }
 }

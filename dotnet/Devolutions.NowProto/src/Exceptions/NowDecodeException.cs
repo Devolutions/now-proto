@@ -20,6 +20,7 @@ namespace Devolutions.NowProto.Exceptions
             UnexpectedMessageKind,
             InvalidDataStreamFlags,
             InvalidApartmentStateFlags,
+            InvalidKbdLayoutFlags,
         }
 
         private static string KindToMessage(ErrorKind kind)
@@ -31,6 +32,7 @@ namespace Devolutions.NowProto.Exceptions
                 ErrorKind.UnexpectedMessageKind => "Unexpected message kind.",
                 ErrorKind.InvalidDataStreamFlags => "Invalid data stream flags.",
                 ErrorKind.InvalidApartmentStateFlags => "Invalid apartment state flags.",
+                ErrorKind.InvalidKbdLayoutFlags => "Invalid keyboard layout flags.",
                 _ => throw new UnreachableException("Should not be constructed with invalid kind."),
             };
         }

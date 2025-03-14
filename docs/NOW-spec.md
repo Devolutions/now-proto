@@ -336,6 +336,7 @@ increment major version; Protocol implementations with different major version a
 | NOW_CAP_SESSION_LOCK<br>0x00000001 | Session lock command support. |
 | NOW_CAP_SESSION_LOGOFF<br>0x00000002 | Session logoff command support. |
 | NOW_CAP_SESSION_MSGBOX<br>0x00000004 | Message box command support. |
+| NOW_CAP_SESSION_SET_KBD_LAYOUT<br>0x00000008 | Set keyboard layout command support. |
 
 **execCapset (4 bytes)**: Remote execution capabilities set.
 
@@ -552,6 +553,7 @@ The NOW_SYSTEM_SHUTDOWN_MSG structure is used to request a system shutdown.NOW_S
 | NOW_SESSION_LOGOFF_MSG_ID<br>0x02 | NOW_SESSION_LOGOFF_MSG |
 | NOW_SESSION_MESSAGE_BOX_MSG_REQ_ID<br>0x03 | NOW_SESSION_MESSAGE_BOX_MSG |
 | NOW_SESSION_MESSAGE_BOX_RSP_MSG_ID<br>0x04 | NOW_SESSION_MESSAGE_RSP_MSG |
+| NOW_SESSION_SWITCH_KBD_LAYOUT_MSG_ID<br>0x05 | NOW_SESSION_SWITCH_KBD_LAYOUT_MSG |
 
 **msgFlags (2 bytes)**: The message flags.
 
@@ -750,6 +752,50 @@ The NOW_SESSION_MSGBOX_RSP_MSG is a message sent in response to NOW_SESSION_MSGB
 If `status` specifies error, this field should be set to `0`.
 
 **status (variable)**: `NOW_STATUS` structure containing message box response status.
+
+#### NOW_SESSION_SET_KBD_LAYOUT_MSG
+
+The NOW_SESSION_SET_KBD_LAYOUT_MSG message is used to set the keyboard layout for the active
+foreground window. The request is fire-and-forget, invalid layout identifiers are ignored.
+
+<table class="byte-layout">
+    <thead>
+        <tr>
+            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
+            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="32">msgSize</td>
+        </tr>
+        <tr>
+            <td colspan="8">msgClass</td>
+            <td colspan="8">msgType</td>
+            <td colspan="16">msgFlags</td>
+        </tr>
+        <tr>
+            <td colspan="32">kbdLayoutId(variable)</td>
+        </tr>
+    </tbody>
+</table>
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_SESSION_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_SESSION_SWITCH_KBD_LAYOUT_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+| Flag                                | Meaning                                 |
+|-------------------------------------|-----------------------------------------|
+| NOW_SET_KBD_LAYOUT_FLAG_NEXT<br>0x00000001 | Switches to next keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_PREV. |
+| NOW_SET_KBD_LAYOUT_FLAG_PREV<br>0x00000002 | Switches to previous keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_NEXT. |
+
+**kbdLayoutId (variable)**: NOW_STRING structure containing the keyboard layout identifier usually represented as [Windows Keyboard Layout Identifier](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-language-pack-default-values) (HKL).
 
 ### Execution Messages
 

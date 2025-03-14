@@ -45,6 +45,10 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_CAP_SESSION_MSGBOX
         const MSGBOX = 0x0004;
+        /// Set keyboard layout command support.
+        ///
+        /// NOW-PROTO: NOW_CAP_SESSION_SET_KBD_LAYOUT
+        const SET_KBD_LAYOUT = 0x0008;
     }
 }
 
