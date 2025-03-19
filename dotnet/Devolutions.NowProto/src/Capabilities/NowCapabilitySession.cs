@@ -35,6 +35,6 @@
         /// </summary>
         SetKbdLayout = 0x0008,
 
-        All = Lock | Logoff | Msgbox,
+        All = Lock | Logoff | Msgbox | SetKbdLayout,
     }
 }
