@@ -1,26 +1,49 @@
 <!--
-This file was created using Markdown Monster (https://markdownmonster.west-wind.com), which offers
-extended formatting capabilities for markdown files, such as TOC and embedded HTML.
+TOC is generated in [Obsidian](obsidian.md) via
+[TOC plugin](https://github.com/hipstersmoothie/obsidian-plugin-toc)
 -->
+
 # NOW-PROTO 1.0
 
-<style>
-    .byte-layout {
-        width: 100%;
-        table-layout: fixed;
-    }
-    .byte-layout th {
-        colspan: 1;
-        text-align: center;
-        vertical-align: bottom;
-    }
-    .byte-layout td {
-        text-align: center;
-    }
-</style>
-
-
-[[_TOC_]]
+- [Transport](#transport)
+- [Message Syntax](#message-syntax)
+	- [Common Structures](#common-structures)
+		- [NOW_INTEGER](#now_integer)
+			- [NOW_VARU32](#now_varu32)
+		- [NOW_STRING](#now_string)
+			- [NOW_VARSTR](#now_varstr)
+		- [NOW_HEADER](#now_header)
+		- [NOW_STATUS](#now_status)
+	- [Channel Messages](#channel-messages)
+		- [NOW_CHANNEL_MSG](#now_channel_msg)
+		- [NOW_CHANNEL_CAPSET_MSG](#now_channel_capset_msg)
+		- [NOW_CHANNEL_HEARTBEAT_MSG](#now_channel_heartbeat_msg)
+		- [NOW_CHANNEL_CLOSE_MSG](#now_channel_close_msg)
+	- [System Messages](#system-messages)
+		- [NOW_SYSTEM_MSG](#now_system_msg)
+		- [NOW_SYSTEM_SHUTDOWN_MSG](#now_system_shutdown_msg)
+	- [Session Messages](#session-messages)
+		- [NOW_SESSION_MSG](#now_session_msg)
+		- [NOW_SESSION_LOCK_MSG](#now_session_lock_msg)
+		- [NOW_SESSION_LOGOFF_MSG](#now_session_logoff_msg)
+		- [NOW_SESSION_MSGBOX_REQ_MSG](#now_session_msgbox_req_msg)
+		- [NOW_SESSION_MSGBOX_RSP_MSG](#now_session_msgbox_rsp_msg)
+		- [NOW_SESSION_SET_KBD_LAYOUT_MSG](#now_session_set_kbd_layout_msg)
+	- [Execution Messages](#execution-messages)
+		- [NOW_EXEC_MSG](#now_exec_msg)
+		- [NOW_EXEC_ABORT_MSG](#now_exec_abort_msg)
+		- [NOW_EXEC_CANCEL_REQ_MSG](#now_exec_cancel_req_msg)
+		- [NOW_EXEC_CANCEL_RSP_MSG](#now_exec_cancel_rsp_msg)
+		- [NOW_EXEC_RESULT_MSG](#now_exec_result_msg)
+		- [NOW_EXEC_DATA_MSG](#now_exec_data_msg)
+		- [NOW_EXEC_STARTED_MSG](#now_exec_started_msg)
+		- [NOW_EXEC_RUN_MSG](#now_exec_run_msg)
+		- [NOW_EXEC_PROCESS_MSG](#now_exec_process_msg)
+		- [NOW_EXEC_SHELL_MSG](#now_exec_shell_msg)
+		- [NOW_EXEC_BATCH_MSG](#now_exec_batch_msg)
+		- [NOW_EXEC_WINPS_MSG](#now_exec_winps_msg)
+		- [NOW_EXEC_PWSH_MSG](#now_exec_pwsh_msg)
+	- [Version History](#version-history)
 
 # Messages
 
@@ -43,25 +66,14 @@ Signed and unsigned integer encoding structures of various sizes.
 
 The NOW_VARU32 structure is used to encode signed integer values in the range [0, 0x3FFFFFFF].
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="2">c</td>
-            <td colspan="6">val1</td>
-            <td colspan="8">val2 (optional)</td>
-            <td colspan="8">val3 (optional)</td>
-            <td colspan="8">val4 (optional)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-1: "c"
+  2-7: "val1"
+  8-15: "val2 (optional)"
+  16-23: "val3 (optional)"
+  24-31: "val4 (optional)"
+```
 
 **c (2 bits)**: A 2-bit integer containing an encoded representation of the number of bytes in this structure.
 
@@ -86,24 +98,11 @@ The NOW_VARU32 structure is used to encode signed integer values in the range [0
 
 The NOW_VARSTR structure is used to represent variable-length strings that could be large, while remaining compact in size for small strings.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">len (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">str (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "len (variable)"
+  32-63: "str (variable)"
+```
 
 **len (variable)**: A NOW_VARU32 structure containing the string length, excluding the null terminator.
 
@@ -113,26 +112,13 @@ The NOW_VARSTR structure is used to represent variable-length strings that could
 
 The NOW_HEADER structure is the header common to all NOW protocol messages.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -152,29 +138,14 @@ The NOW_HEADER structure is the header common to all NOW protocol messages.
 #### NOW_STATUS
 Operation status code.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="16">flags</td>
-            <td colspan="8">kind</td>
-            <td colspan="8">reserved</td>
-        </tr>
-        <tr>
-            <td colspan="32">code</td>
-        </tr>
-        <tr>
-            <td colspan="32">errorMessage(variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-15: "flags"
+  16-23: "kind"
+  24-31: "reserved"
+  32-63: "code"
+  64-95: "errorMessage(variable)"
+```
 
 **flags (2 bytes)**: Status flags.
 
@@ -228,26 +199,13 @@ Channel negotiation and life cycle messages.
 
 #### NOW_CHANNEL_MSG
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -269,42 +227,19 @@ Received client message should be downgraded by the server (remove non-intersect
 and sent back to the client at the start of DVC channel communications. DVC channel should be
 closed if protocol versions are not compatible.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="16">versionMajor</td>
-            <td colspan="16">versionMinor</td>
-        </tr>
-        <tr>
-            <td colspan="32">systemCapset</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionCapset</td>
-        </tr>
-        <tr>
-            <td colspan="32">execCapset</td>
-        </tr>
-        <tr>
-            <td colspan="32">heartbeatInterval</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-79: "versionMajor"
+  80-95: "versionMinor"
+  96-127: "systemCapset"
+  128-159: "sessionCapset"
+  160-191: "execCapset"
+  192-223: "heartbeatInterval"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -361,26 +296,13 @@ Disables periodic heartbeat if set to `0`. Ignored if `NOW_CHANNEL_SET_HEARTBEAT
 Periodic heartbeat message sent by the server. If the client does not receive this message within
 the specified interval, it should consider the connection as lost.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -395,29 +317,14 @@ the specified interval, it should consider the connection as lost.
 Channel close notice, could be sent by either parties at any moment of communication to gracefully
 close DVC channel.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">status (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "status (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -433,26 +340,13 @@ close DVC channel.
 
 #### NOW_SYSTEM_MSG
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -470,34 +364,17 @@ close DVC channel.
 
 #### NOW_SYSTEM_SHUTDOWN_MSG
 
-The NOW_SYSTEM_SHUTDOWN_MSG structure is used to request a system shutdown.NOW_SESSION_LOGOFF_MSG
+The NOW_SYSTEM_SHUTDOWN_MSG structure is used to request a system shutdown.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">timeout</td>
-        </tr>
-        <tr>
-            <td colspan="32">message (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "timeout"
+  96-127: "message (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -520,26 +397,13 @@ The NOW_SYSTEM_SHUTDOWN_MSG structure is used to request a system shutdown.NOW_S
 
 #### NOW_SESSION_MSG
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -561,26 +425,13 @@ The NOW_SYSTEM_SHUTDOWN_MSG structure is used to request a system shutdown.NOW_S
 
 The NOW_SESSION_LOCK_MSG is used to request locking the user session.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -594,26 +445,13 @@ The NOW_SESSION_LOCK_MSG is used to request locking the user session.
 
 The NOW_SESSION_LOGOFF_MSG is used to request a user session logoff.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -627,41 +465,18 @@ The NOW_SESSION_LOGOFF_MSG is used to request a user session logoff.
 
 The NOW_SESSION_MSGBOX_REQ_MSG is used to show a message box in the user session, similar to what the [WTSSendMessage function](https://learn.microsoft.com/en-us/windows/win32/api/wtsapi32/nf-wtsapi32-wtssendmessagew) does.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">requestId</td>
-        </tr>
-        <tr>
-            <td colspan="32">style</td>
-        </tr>
-        <tr>
-            <td colspan="32">timeout</td>
-        </tr>
-        <tr>
-            <td colspan="32">text (variable)</td>
-        </tr>
-                <tr>
-            <td colspan="32">title (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "requestId"
+  96-127: "style"
+  128-159: "timeout"
+  160-191: "text (variable)"
+  192-223: "title (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -694,35 +509,16 @@ for all possible styles. This field may be ignored on platforms other than Windo
 
 The NOW_SESSION_MSGBOX_RSP_MSG is a message sent in response to NOW_SESSION_MSGBOX_REQ_MSG if the NOW_MSGBOX_FLAG_RESPONSE has been set, and contains the result from the message box dialog.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">requestId</td>
-        </tr>
-        <tr>
-            <td colspan="32">response</td>
-        </tr>
-        <tr>
-            <td colspan="32">status (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "requestId"
+  96-127: "response"
+  128-159: "status (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -758,29 +554,14 @@ If `status` specifies error, this field should be set to `0`.
 The NOW_SESSION_SET_KBD_LAYOUT_MSG message is used to set the keyboard layout for the active
 foreground window. The request is fire-and-forget, invalid layout identifiers are ignored.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">kbdLayoutId(variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "kbdLayoutId(variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -803,26 +584,13 @@ foreground window. The request is fire-and-forget, invalid layout identifiers ar
 
 The NOW_EXEC_MSG message is used to execute remote commands or scripts.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -854,32 +622,15 @@ See NOW_EXEC_CANCEL_REQ if the graceful session cancellation is needed instead.
 This message can be sent by the client at any point of session lifetime.
 The session is considered aborted as soon as this message is sent.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">exitCode</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "exitCode"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -897,29 +648,14 @@ The session is considered aborted as soon as this message is sent.
 
 The NOW_EXEC_CANCEL_REQ_MSG message is used to cancel a remote execution session.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -935,32 +671,15 @@ The NOW_EXEC_CANCEL_REQ_MSG message is used to cancel a remote execution session
 
 The NOW_EXEC_CANCEL_RSP_MSG message is used to respond to a remote execution cancel request.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">status (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "status (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -979,35 +698,16 @@ The NOW_EXEC_CANCEL_RSP_MSG message is used to respond to a remote execution can
 The NOW_EXEC_RESULT_MSG message is used to return the result of an execution request.
 The session is considered terminated as soon as this message is sent.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">exitCode</td>
-        </tr>
-        <tr>
-            <td colspan="32">status (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "exitCode"
+  128-159: "status (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1028,32 +728,15 @@ The session is considered terminated as soon as this message is sent.
 
 The NOW_EXEC_DATA_MSG message is used to send input/output data as part of a remote execution.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">data (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "data (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1084,29 +767,14 @@ Message should contain exactly one of `NOW_EXEC_FLAG_DATA_STDIN`, `NOW_EXEC_FLAG
 The NOW_EXEC_STARTED_MSG message is sent by the server after the execution session has been successfully
 started.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1122,32 +790,15 @@ started.
 
 The NOW_EXEC_RUN_MSG message is used to send a run request. This request type maps to starting a program by using the “Run” menu on operating systems (the Start Menu on Windows, the Dock on macOS etc.). The execution of programs started with NOW_EXEC_RUN_MSG is not followed and does not send back the output.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">command (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "command (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1165,38 +816,17 @@ The NOW_EXEC_RUN_MSG message is used to send a run request. This request type ma
 
 The NOW_EXEC_PROCESS_MSG message is used to send a Windows [CreateProcess()](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw) request.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">filename (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">parameters (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">directory (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "filename (variable)"
+  128-159: "parameters (variable)"
+  160-191: "directory (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1224,38 +854,17 @@ The NOW_EXEC_PROCESS_MSG message is used to send a Windows [CreateProcess()](htt
 
 The NOW_EXEC_SHELL_MSG message is used to execute a remote shell script.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">command (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">shell (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">directory (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "command (variable)"
+  128-159: "shell (variable)"
+  160-191: "directory (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1285,35 +894,16 @@ NOW_EXEC_FLAG_SHELL_DIRECTORY_SET is not set.
 
 The NOW_EXEC_BATCH_MSG message is used to execute a remote batch script.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">command (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">directory (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "command (variable)"
+  128-159: "directory (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1338,41 +928,18 @@ if NOW_EXEC_FLAG_BATCH_DIRECTORY_SET is not set.
 
 The NOW_EXEC_WINPS_MSG message is used to execute a remote Windows PowerShell (powershell.exe) command.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">command (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">directory (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">executionPolicy (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">configurationName (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "command (variable)"
+  128-159: "directory (variable)"
+  160-191: "executionPolicy (variable)"
+  192-223: "configurationName (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
@@ -1412,41 +979,18 @@ Ignored if NOW_EXEC_FLAG_PS_CONFIGURATION_NAME is not set.
 
 The NOW_EXEC_PWSH_MSG message is used to execute a remote PowerShell 7 (pwsh) command.
 
-<table class="byte-layout">
-    <thead>
-        <tr>
-            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
-            <th>8</th><th>9</th><th>10</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>20</th><th>1</th><th>2</th><th>3</th>
-            <th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>30</th><th>1</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="32">msgSize</td>
-        </tr>
-        <tr>
-            <td colspan="8">msgClass</td>
-            <td colspan="8">msgType</td>
-            <td colspan="16">msgFlags</td>
-        </tr>
-        <tr>
-            <td colspan="32">sessionId</td>
-        </tr>
-        <tr>
-            <td colspan="32">command (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">directory (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">executionPolicy (variable)</td>
-        </tr>
-        <tr>
-            <td colspan="32">configurationName (variable)</td>
-        </tr>
-    </tbody>
-</table>
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId"
+  96-127: "command (variable)"
+  128-159: "directory (variable)"
+  160-191: "executionPolicy (variable)"
+  192-223: "configurationName (variable)"
+```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
 
