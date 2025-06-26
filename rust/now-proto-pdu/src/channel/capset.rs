@@ -80,6 +80,10 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_CAP_EXEC_STYLE_PWSH
         const STYLE_PWSH = 0x0020;
+        /// Set if host implements exec session IO redirection.
+        ///
+        /// NOW-PROTO: NOW_CAP_EXEC_IO_REDIRECTION
+        const IO_REDIRECTION = 0x1000;
     }
 }
 
@@ -93,7 +97,7 @@ pub struct NowProtoVersion {
 
 impl NowProtoVersion {
     /// Represents the current version of the NOW protocol implemented by the library.
-    pub const CURRENT: Self = Self { major: 1, minor: 0 };
+    pub const CURRENT: Self = Self { major: 1, minor: 1 };
 }
 
 /// This message is first set by the client side, to advertise capabilities.

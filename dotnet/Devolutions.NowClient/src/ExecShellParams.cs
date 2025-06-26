@@ -27,6 +27,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// </summary>
+        public ExecShellParams IoRedirection()
+        {
+            _ioRedirection = true;
+            return this;
+        }
+
         internal NowMsgExecShell ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecShell.Builder(sessionId, command);
@@ -41,9 +50,15 @@ namespace Devolutions.NowClient
                 builder.Directory(_directory);
             }
 
+            if (_ioRedirection)
+            {
+                builder.IoRedirection();
+            }
+
             return builder.Build();
         }
 
+        private bool _ioRedirection = false;
         private string? _shell = null;
         private string? _directory = null;
     }

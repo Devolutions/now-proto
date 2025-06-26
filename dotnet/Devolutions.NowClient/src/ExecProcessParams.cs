@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using Devolutions.NowProto.Messages;
 
 namespace Devolutions.NowClient
@@ -26,6 +28,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// </summary>
+        public ExecProcessParams IoRedirection()
+        {
+            _ioRedirection = true;
+            return this;
+        }
+
         internal NowMsgExecProcess ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecProcess.Builder(sessionId, filename);
@@ -40,10 +51,16 @@ namespace Devolutions.NowClient
                 builder.Directory(_directory);
             }
 
+            if (_ioRedirection)
+            {
+                builder.IoRedirection();
+            }
+
             return builder.Build();
         }
 
 
+        private bool _ioRedirection = false;
         private string? _parameters = null;
         private string? _directory = null;
     }

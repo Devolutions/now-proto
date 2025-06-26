@@ -51,6 +51,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PS_DIRECTORY_SET
         const DIRECTORY_SET = 0x0100;
+
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
+        const IO_REDIRECTION = 0x1000;
     }
 }
 
@@ -230,6 +235,16 @@ impl<'a> NowExecWinPsMsg<'a> {
         } else {
             None
         }
+    }
+
+    #[must_use]
+    pub fn with_io_redirection(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::IO_REDIRECTION;
+        self
+    }
+
+    pub fn is_with_io_redirection(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::IO_REDIRECTION)
     }
 
     pub fn is_no_logo(&self) -> bool {

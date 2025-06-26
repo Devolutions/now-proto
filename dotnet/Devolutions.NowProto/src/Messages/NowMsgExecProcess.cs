@@ -22,6 +22,7 @@ namespace Devolutions.NowProto.Messages
         ushort INowSerialize.Flags => (ushort)(
             (Parameters != null ? MsgFlags.ParametersSet : 0)
             | (Directory != null ? MsgFlags.DirectorySet : 0)
+            | (IoRedirection ? MsgFlags.IoRedirection : 0)
         );
         uint INowSerialize.BodySize =>
             FixedPartSize
@@ -52,7 +53,8 @@ namespace Devolutions.NowProto.Messages
                 sessionId,
                 filename,
                 msgFlags.HasFlag(MsgFlags.ParametersSet) ? parameters : null,
-                msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null
+                msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
+                msgFlags.HasFlag(MsgFlags.IoRedirection)
             );
         }
 
@@ -74,6 +76,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET
             /// </summary>
             DirectorySet = 0x0002,
+
+            /// <summary>
+            /// Enable stdio(stdout, stderr, stdin) redirection.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION
+            /// </summary>
+            IoRedirection = 0x1000,
         }
 
         private const uint FixedPartSize = 4; // u32 SessionId
@@ -92,28 +101,37 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
+            public Builder IoRedirection()
+            {
+                _ioRedirection = true;
+                return this;
+            }
+
             public NowMsgExecProcess Build()
             {
-                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory);
+                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory, _ioRedirection);
             }
 
             private readonly uint _sessionId = sessionId;
             private readonly string _filename = filename;
             private string? _parameters = null;
             private string? _directory = null;
+            private bool _ioRedirection = false;
         }
 
-        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory)
+        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory, bool ioRedirection)
         {
             SessionId = sessionId;
             Filename = filename;
             Parameters = parameters;
             Directory = directory;
+            IoRedirection = ioRedirection;
         }
 
         public uint SessionId { get; }
         public string Filename { get; }
         public string? Parameters { get; }
         public string? Directory { get; }
+        public bool IoRedirection { get; }
     }
 }

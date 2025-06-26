@@ -1,6 +1,6 @@
 use expect_test::expect;
 use now_proto_pdu::*;
-use now_proto_testsuite::proto::now_msg_roundtrip;
+use now_proto_testsuite::proto::{now_msg_decodes_into, now_msg_roundtrip};
 
 #[test]
 fn roundtrip_exec_abort() {
@@ -166,12 +166,27 @@ fn roundtrip_exec_started() {
 }
 
 #[test]
-fn roundtrip_exec_run() {
+fn exec_run_v1_0() {
     let msg = NowExecRunMsg::new(0x1234567, "hello").unwrap();
+
+    const ENCODED: &'static [u8] = &[
+        0x0B, 0x00, 0x00, 0x00, 0x13, 0x10, 0x00, 0x00, 0x67, 0x45, 0x23, 0x01, 0x05, 0x68, 0x65, 0x6C, 0x6C, 0x6F,
+        0x00,
+    ];
+
+    now_msg_decodes_into(msg, ENCODED);
+}
+
+#[test]
+fn roundtrip_exec_run() {
+    let msg = NowExecRunMsg::new(0x1234567, "hello")
+        .unwrap()
+        .with_directory("hi")
+        .unwrap();
 
     let decoded = now_msg_roundtrip(
         msg,
-        expect!["[0B, 00, 00, 00, 13, 10, 00, 00, 67, 45, 23, 01, 05, 68, 65, 6C, 6C, 6F, 00]"],
+        expect!["[0F, 00, 00, 00, 13, 10, 01, 00, 67, 45, 23, 01, 05, 68, 65, 6C, 6C, 6F, 00, 02, 68, 69, 00]"],
     );
 
     let actual = match decoded {

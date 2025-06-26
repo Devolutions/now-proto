@@ -21,6 +21,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_SHELL_DIRECTORY_SET
         const DIRECTORY_SET = 0x0002;
+
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_SHELL_IO_REDIRECTION
+        const IO_REDIRECTION = 0x1000;
     }
 }
 
@@ -121,6 +126,16 @@ impl<'a> NowExecShellMsg<'a> {
         } else {
             None
         }
+    }
+
+    #[must_use]
+    pub fn with_io_redirection(mut self) -> Self {
+        self.flags |= NowExecShellFlags::IO_REDIRECTION;
+        self
+    }
+
+    pub fn is_with_io_redirection(&self) -> bool {
+        self.flags.contains(NowExecShellFlags::IO_REDIRECTION)
     }
 
     // LINTS: Overall message size is validated in the constructor/decode method

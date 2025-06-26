@@ -21,6 +21,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET
         const DIRECTORY_SET = 0x0002;
+
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION
+        const IO_REDIRECTION = 0x1000;
     }
 }
 
@@ -86,6 +91,16 @@ impl<'a> NowExecProcessMsg<'a> {
         self.ensure_message_size()?;
 
         Ok(self)
+    }
+
+    #[must_use]
+    pub fn with_io_redirection(mut self) -> Self {
+        self.flags |= NowExecProcessFlags::IO_REDIRECTION;
+        self
+    }
+
+    pub fn is_with_io_redirection(&self) -> bool {
+        self.flags.contains(NowExecProcessFlags::IO_REDIRECTION)
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {

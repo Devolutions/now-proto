@@ -17,6 +17,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// </summary>
+        public ExecBatchParams IoRedirection()
+        {
+            _ioRedirection = true;
+            return this;
+        }
+
         internal NowMsgExecBatch ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecBatch.Builder(sessionId, command);
@@ -26,9 +35,15 @@ namespace Devolutions.NowClient
                 builder.Directory(_directory);
             }
 
+            if (_ioRedirection)
+            {
+                builder.IoRedirection();
+            }
+
             return builder.Build();
         }
 
         private string? _directory = null;
+        private bool _ioRedirection = false;
     }
 }

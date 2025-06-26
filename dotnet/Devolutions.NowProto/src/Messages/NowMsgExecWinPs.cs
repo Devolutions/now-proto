@@ -85,6 +85,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_PS_DIRECTORY_SET
             /// </summary>
             DirectorySet = 0x0100,
+
+            /// <summary>
+            /// Enable stdio(stdout, stderr, stdin) redirection.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
+            /// </summary>
+            IoRedirection = 0x1000,
         }
 
         public enum ApartmentStateKind : ushort
@@ -154,6 +161,12 @@ namespace Devolutions.NowProto.Messages
             {
                 _configurationName = name;
                 _flags |= MsgFlags.ConfigurationName;
+                return this;
+            }
+
+            public Builder IoRedirection()
+            {
+                _flags |= MsgFlags.IoRedirection;
                 return this;
             }
 
@@ -258,6 +271,8 @@ namespace Devolutions.NowProto.Messages
 
         public uint SessionId { get; private init; } = 0;
         public string Command { get; private init; } = "";
+
+        public bool IoRedirection => _flags.HasFlag(MsgFlags.IoRedirection);
 
         private MsgFlags _flags = MsgFlags.None;
         private string _directory = "";

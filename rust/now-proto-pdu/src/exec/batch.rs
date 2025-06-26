@@ -16,6 +16,10 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DIRECTORY_SET
         const DIRECTORY_SET = 0x0001;
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_IO_REDIRECTION
+        const IO_REDIRECTION = 0x1000;
     }
 }
 
@@ -69,6 +73,16 @@ impl<'a> NowExecBatchMsg<'a> {
         self.ensure_message_size()?;
 
         Ok(self)
+    }
+
+    #[must_use]
+    pub fn with_io_redirection(mut self) -> Self {
+        self.flags |= NowExecBatchFlags::IO_REDIRECTION;
+        self
+    }
+
+    pub fn is_with_io_redirection(&self) -> bool {
+        self.flags.contains(NowExecBatchFlags::IO_REDIRECTION)
     }
 
     pub fn session_id(&self) -> u32 {

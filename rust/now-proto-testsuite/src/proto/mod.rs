@@ -16,3 +16,14 @@ pub fn now_msg_roundtrip(msg: impl Into<NowMessage<'static>>, expected_bytes: Ex
 
     decoded.into_owned()
 }
+
+pub fn now_msg_decodes_into(msg: impl Into<NowMessage<'static>>, expected_bytes: &[u8]) -> NowMessage<'static> {
+    let msg = msg.into();
+
+    let mut cursor = ReadCursor::new(expected_bytes);
+    let decoded = NowMessage::decode(&mut cursor).expect("failed to decode message");
+
+    assert_eq!(msg, decoded);
+
+    decoded.into_owned()
+}

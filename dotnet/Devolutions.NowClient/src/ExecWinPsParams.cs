@@ -81,6 +81,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// </summary>
+        private ExecWinPsParams IoRedirection()
+        {
+            _ioRedirection = true;
+            return this;
+        }
+
         internal NowMsgExecWinPs ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecWinPs.Builder(sessionId, filename);
@@ -125,6 +134,11 @@ namespace Devolutions.NowClient
                 builder.SetNonInteractive();
             }
 
+            if (_ioRedirection)
+            {
+                builder.IoRedirection();
+            }
+
             return builder.Build();
         }
 
@@ -137,5 +151,6 @@ namespace Devolutions.NowClient
         private bool _noExit = false;
         private bool _noProfile = false;
         private bool _nonInteractive = false;
+        private bool _ioRedirection = false;
     }
 }
