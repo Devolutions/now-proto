@@ -105,7 +105,7 @@ impl<'a> NowExecRunMsg<'a> {
         let session_id = src.read_u32();
         let command: NowVarStr<'_> = NowVarStr::decode(src)?;
 
-        // Directory fied has been added in v1.1.
+        // Directory field has been added in v1.1.
         let directory = if !src.is_empty() {
             let directory = NowVarStr::decode(src)?;
 
