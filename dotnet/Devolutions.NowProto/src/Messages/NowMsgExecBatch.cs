@@ -82,7 +82,7 @@ namespace Devolutions.NowProto.Messages
                 _directory = directory;
                 return this;
             }
-            public Builder IoRedirection()
+            public Builder EnableIoRedirection()
             {
                 _ioRedirection = true;
                 return this;

@@ -102,7 +102,7 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
-            public Builder IoRedirection()
+            public Builder EnableIoRedirection()
             {
                 _ioRedirection = true;
                 return this;

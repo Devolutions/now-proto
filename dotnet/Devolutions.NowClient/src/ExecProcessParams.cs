@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 using Devolutions.NowProto.Messages;
 
 namespace Devolutions.NowClient
@@ -29,11 +27,12 @@ namespace Devolutions.NowClient
         }
 
         /// <summary>
-        /// Enable stdio (stdout, stderr, stdin) redirection.
+        /// Enables or disables the use of pipes for standard input, output, and error streams.
+        /// When enabled, the process's standard streams are redirected through pipes.
         /// </summary>
-        public ExecProcessParams IoRedirection()
+        public ExecProcessParams IoRedirection(bool enable)
         {
-            _ioRedirection = true;
+            _ioRedirection = enable;
             return this;
         }
 
@@ -53,7 +52,7 @@ namespace Devolutions.NowClient
 
             if (_ioRedirection)
             {
-                builder.IoRedirection();
+                builder.EnableIoRedirection();
             }
 
             return builder.Build();

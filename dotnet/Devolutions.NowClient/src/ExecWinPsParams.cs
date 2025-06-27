@@ -47,9 +47,9 @@ namespace Devolutions.NowClient
         /// <summary>
         /// Disable the PowerShell logo display. (-NoLogo)
         /// </summary>
-        public ExecWinPsParams NoLogo()
+        public ExecWinPsParams NoLogo(bool enable = true)
         {
-            _noLogo = true;
+            _noLogo = enable;
             return this;
         }
 
@@ -57,36 +57,37 @@ namespace Devolutions.NowClient
         /// <summary>
         /// Do not close the PowerShell session after the command/script execution. (-NoExit)
         /// </summary>
-        public ExecWinPsParams NoExit()
+        public ExecWinPsParams NoExit(bool enable = true)
         {
-            _noExit = true;
+            _noExit = enable;
             return this;
         }
 
         /// <summary>
         /// Do not load the PowerShell profile. (-NoProfile)
         /// </summary>
-        public ExecWinPsParams NoProfile()
+        public ExecWinPsParams NoProfile(bool enable = true)
         {
-            _noProfile = true;
+            _noProfile = enable;
             return this;
         }
 
         /// <summary>
         /// Run the PowerShell session in non-interactive mode. (-NonInteractive)
         /// </summary>
-        public ExecWinPsParams NonInteractive()
+        public ExecWinPsParams NonInteractive(bool enable = true)
         {
-            _nonInteractive = true;
+            _nonInteractive = enable;
             return this;
         }
 
         /// <summary>
-        /// Enable stdio (stdout, stderr, stdin) redirection.
+        /// Enables or disables the use of pipes for standard input, output, and error streams.
+        /// When enabled, the process's standard streams are redirected through pipes.
         /// </summary>
-        private ExecWinPsParams IoRedirection()
+        private ExecWinPsParams IoRedirection(bool enable = true)
         {
-            _ioRedirection = true;
+            _ioRedirection = enable;
             return this;
         }
 
@@ -136,7 +137,7 @@ namespace Devolutions.NowClient
 
             if (_ioRedirection)
             {
-                builder.IoRedirection();
+                builder.EnableIoRedirection();
             }
 
             return builder.Build();

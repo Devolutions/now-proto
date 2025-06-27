@@ -6,8 +6,6 @@
         [Fact]
         public void DecodeRunV1_0()
         {
-            //var msg = new NowMsgExecRun(0x1234567, "hello");
-
             var encoded = new byte[]
             {
                 0x0B, 0x00, 0x00, 0x00, 0x13, 0x10, 0x00, 0x00, 0x67, 0x45,

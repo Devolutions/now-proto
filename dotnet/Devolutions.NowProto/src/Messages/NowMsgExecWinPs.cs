@@ -164,7 +164,7 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
-            public Builder IoRedirection()
+            public Builder EnableIoRedirection()
             {
                 _flags |= MsgFlags.IoRedirection;
                 return this;
