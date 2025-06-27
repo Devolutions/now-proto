@@ -235,10 +235,10 @@ packet-beta
   48-63: "msgFlags"
   64-79: "versionMajor"
   80-95: "versionMinor"
-  96-127: "systemCapset"
-  128-159: "sessionCapset"
-  160-191: "execCapset"
-  192-223: "heartbeatInterval"
+  96-111: "systemCapset"
+  112-127: "sessionCapset"
+  128-143: "execCapset"
+  144-175: "heartbeatInterval"
 ```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
@@ -258,31 +258,32 @@ increment major version; Protocol implementations with different major version a
 
 **versionMinor (1 byte)**: Minor protocol version. Incremented when new non-breaking feature is added.
 
-**systemCapset (4 bytes)**: System commands capabilities set.
+**systemCapset (2 bytes)**: System commands capabilities set.
 
 | Flag | Meaning |
 |-------|---------|
 | NOW_CAP_SYSTEM_SHUTDOWN<br>0x0001 | System shutdown command support. |
 
-**sessionCapset (4 bytes)**: Session commands capabilities set.
+**sessionCapset (2 bytes)**: Session commands capabilities set.
 
 | Flag | Meaning |
 |-------|---------|
-| NOW_CAP_SESSION_LOCK<br>0x00000001 | Session lock command support. |
-| NOW_CAP_SESSION_LOGOFF<br>0x00000002 | Session logoff command support. |
-| NOW_CAP_SESSION_MSGBOX<br>0x00000004 | Message box command support. |
-| NOW_CAP_SESSION_SET_KBD_LAYOUT<br>0x00000008 | Set keyboard layout command support. |
+| NOW_CAP_SESSION_LOCK<br>0x0001 | Session lock command support. |
+| NOW_CAP_SESSION_LOGOFF<br>0x0002 | Session logoff command support. |
+| NOW_CAP_SESSION_MSGBOX<br>0x0004 | Message box command support. |
+| NOW_CAP_SESSION_SET_KBD_LAYOUT<br>0x0008 | Set keyboard layout command support. |
 
-**execCapset (4 bytes)**: Remote execution capabilities set.
+**execCapset (2 bytes)**: Remote execution capabilities set.
 
 | Flag | Meaning |
 |-------|---------|
-| NOW_CAP_EXEC_STYLE_RUN<br>0x00000001 | Generic "Run" execution style. |
-| NOW_CAP_EXEC_STYLE_PROCESS<br>0x00000002 | CreateProcess() execution style. |
-| NOW_CAP_EXEC_STYLE_SHELL<br>0x00000004 | System shell (.sh) execution style. |
-| NOW_CAP_EXEC_STYLE_BATCH<br>0x00000008 | Windows batch file (.bat) execution style. |
-| NOW_CAP_EXEC_STYLE_WINPS<br>0x00000010 | Windows PowerShell (.ps1) execution style. |
-| NOW_CAP_EXEC_STYLE_PWSH<br>0x00000020 | PowerShell 7 (.ps1) execution style. |
+| NOW_CAP_EXEC_STYLE_RUN<br>0x0001 | Generic "Run" execution style. |
+| NOW_CAP_EXEC_STYLE_PROCESS<br>000002 | CreateProcess() execution style. |
+| NOW_CAP_EXEC_STYLE_SHELL<br>0x0004 | System shell (.sh) execution style. |
+| NOW_CAP_EXEC_STYLE_BATCH<br>0x0008 | Windows batch file (.bat) execution style. |
+| NOW_CAP_EXEC_STYLE_WINPS<br>0x0010 | Windows PowerShell (.ps1) execution style. |
+| NOW_CAP_EXEC_STYLE_PWSH<br>0x0020 | PowerShell 7 (.ps1) execution style. |
+| NOW_CAP_EXEC_IO_REDIRECTION<br>0x1000 | Set if host implements exec session IO redirection. |
 
 <!-- TODO: add AppleScript command -->
 
@@ -488,10 +489,10 @@ packet-beta
 
 | Flag                                | Meaning                                 |
 |-------------------------------------|-----------------------------------------|
-| NOW_MSGBOX_FLAG_TITLE<br>0x00000001 | The `title` field is contains a non-default value. |
-| NOW_MSGBOX_FLAG_STYLE<br>0x00000002 | The `style` field contains a non-default value. |
-| NOW_MSGBOX_FLAG_TIMEOUT<br>0x00000004 | The `timeout` field contains a non-default value. |
-| NOW_MSGBOX_FLAG_RESPONSE<br>0x00000008 | A response message is expected (don't fire and forget). |
+| NOW_MSGBOX_FLAG_TITLE<br>0x0001 | The `title` field is contains a non-default value. |
+| NOW_MSGBOX_FLAG_STYLE<br>0x0002 | The `style` field contains a non-default value. |
+| NOW_MSGBOX_FLAG_TIMEOUT<br>0x0004 | The `timeout` field contains a non-default value. |
+| NOW_MSGBOX_FLAG_RESPONSE<br>0x0008 | A response message is expected (don't fire and forget). |
 
 **requestId (4 bytes)**: the message request id, sent back in the response.
 
@@ -573,8 +574,8 @@ packet-beta
 
 | Flag                                | Meaning                                 |
 |-------------------------------------|-----------------------------------------|
-| NOW_SET_KBD_LAYOUT_FLAG_NEXT<br>0x00000001 | Switches to next keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_PREV. |
-| NOW_SET_KBD_LAYOUT_FLAG_PREV<br>0x00000002 | Switches to previous keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_NEXT. |
+| NOW_SET_KBD_LAYOUT_FLAG_NEXT<br>0x0001 | Switches to next keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_PREV. |
+| NOW_SET_KBD_LAYOUT_FLAG_PREV<br>0x0002 | Switches to previous keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_NEXT. |
 
 **kbdLayoutId (variable)**: NOW_STRING structure containing the keyboard layout identifier usually represented as [Windows Keyboard Layout Identifier](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-language-pack-default-values) (HKL).
 
@@ -748,10 +749,10 @@ packet-beta
 
 | Flag                                   | Meaning                         |
 |----------------------------------------|---------------------------------|
-| NOW_EXEC_FLAG_DATA_LAST<br>0x00000001 | This is the last data message, the command completed execution. |
-| NOW_EXEC_FLAG_DATA_STDIN<br>0x00000002 | The data is from the standard input. |
-| NOW_EXEC_FLAG_DATA_STDOUT<br>0x00000004 | The data is from the standard output. |
-| NOW_EXEC_FLAG_DATA_STDERR<br>0x00000008 | The data is from the standard error. |
+| NOW_EXEC_FLAG_DATA_LAST<br>0x0001 | This is the last data message, the command completed execution. |
+| NOW_EXEC_FLAG_DATA_STDIN<br>0x0002 | The data is from the standard input. |
+| NOW_EXEC_FLAG_DATA_STDOUT<br>0x0004 | The data is from the standard output. |
+| NOW_EXEC_FLAG_DATA_STDERR<br>0x0008 | The data is from the standard error. |
 
 Message should contain exactly one of `NOW_EXEC_FLAG_DATA_STDIN`, `NOW_EXEC_FLAG_DATA_STDOUT` or `NOW_EXEC_FLAG_DATA_STDERR` flags set.
 
@@ -798,6 +799,7 @@ packet-beta
   48-63: "msgFlags"
   64-95: "sessionId"
   96-127: "command (variable)"
+  128-159: "directory (variable)"
 ```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
@@ -808,9 +810,16 @@ packet-beta
 
 **msgFlags (2 bytes)**: The message flags.
 
+| Flag                                   | Meaning                   |
+|----------------------------------------|---------------------------|
+| NOW_EXEC_FLAG_RUN_DIRECTORY_SET<br>0x0001 | `directory` field contains non-default value. |
+
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
 **command (variable)**: A NOW_VARSTR structure containing the command to execute.
+
+**directory (variable)**: A NOW_VARSTR structure containing the command working directory. Ignored if
+NOW_EXEC_FLAG_RUN_DIRECTORY_SET is not set.
 
 #### NOW_EXEC_PROCESS_MSG
 
@@ -839,7 +848,8 @@ packet-beta
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x0001 | `parameters` field contains non-default value. |
-| NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value.|
+| NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
@@ -876,8 +886,9 @@ packet-beta
 
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
-| NOW_EXEC_FLAG_SHELL_SHELL_SET<br>0x00000001 | `shell` field contains non-default value. |
-| NOW_EXEC_FLAG_SHELL_DIRECTORY_SET<br>0x00000002 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_SHELL_SHELL_SET<br>0x0001 | `shell` field contains non-default value. |
+| NOW_EXEC_FLAG_SHELL_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_SHELL_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -915,7 +926,8 @@ packet-beta
 
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
-| NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x00000001 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x00001 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_BATCH_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -949,17 +961,18 @@ packet-beta
 
 **msgFlags (2 bytes)**: The message flags, specifying the PowerShell command-line arguments.
 
-| Flag                                   | Meaning                   |
-|----------------------------------------|---------------------------|
-| NOW_EXEC_FLAG_PS_NO_LOGO<br>0x00000001 | PowerShell -NoLogo option |
-| NOW_EXEC_FLAG_PS_NO_EXIT<br>0x00000002 | PowerShell -NoExit option |
-| NOW_EXEC_FLAG_PS_STA<br>0x00000004 | PowerShell -Sta option |
-| NOW_EXEC_FLAG_PS_MTA<br>0x00000008 | PowerShell -Mta option |
-| NOW_EXEC_FLAG_PS_NO_PROFILE<br>0x00000010 | PowerShell -NoProfile option |
-| NOW_EXEC_FLAG_PS_NON_INTERACTIVE<br>0x00000020 | PowerShell -NonInteractive option |
-| NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x00000040 | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter |
-| NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x00000080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
-| NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x00000100 | `directory` field contains non-default value and specifies command working directory |
+| Flag                                          | Meaning                                                                                                        |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| NOW_EXEC_FLAG_PS_NO_LOGO<br>0x0001            | PowerShell -NoLogo option                                                                                      |
+| NOW_EXEC_FLAG_PS_NO_EXIT<br>0x0002            | PowerShell -NoExit option                                                                                      |
+| NOW_EXEC_FLAG_PS_STA<br>0x0004                | PowerShell -Sta option                                                                                         |
+| NOW_EXEC_FLAG_PS_MTA<br>0x0008                | PowerShell -Mta option                                                                                         |
+| NOW_EXEC_FLAG_PS_NO_PROFILE<br>0x0010         | PowerShell -NoProfile option                                                                                   |
+| NOW_EXEC_FLAG_PS_NON_INTERACTIVE<br>0x0020    | PowerShell -NonInteractive option                                                                              |
+| NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x0040   | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter     |
+| NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x0080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
+| NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x0100      | `directory` field contains non-default value and specifies command working directory                           |
+| NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                               |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1013,3 +1026,6 @@ packet-beta
 ### Version History
 - 1.0
     - Initial protocol version
+- 1.1
+    - Add IO redirection capability flag and explicit IO redirection flags for exec messages.
+    - Add working directory specification for Run (ShellExecute) messages.

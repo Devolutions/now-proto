@@ -10,7 +10,7 @@ namespace Devolutions.NowProto.Messages
     ///
     /// NOW_PROTO: NOW_EXEC_RUN_MSG
     /// </summary>
-    public class NowMsgExecRun(uint sessionId, string command) : INowSerialize, INowDeserialize<NowMsgExecRun>
+    public class NowMsgExecRun : INowSerialize, INowDeserialize<NowMsgExecRun>
     {
         // -- INowMessage --
 
@@ -22,14 +22,20 @@ namespace Devolutions.NowProto.Messages
 
         // -- INowSerialize --
 
-        ushort INowSerialize.Flags => 0;
-        uint INowSerialize.BodySize => FixedPartSize + NowVarStr.LengthOf(Command);
+        ushort INowSerialize.Flags => (ushort)(
+            !string.IsNullOrEmpty(Directory) ? MsgFlags.DirectorySet : 0
+        );
+
+        uint INowSerialize.BodySize => FixedPartSize
+            + NowVarStr.LengthOf(Command)
+            + NowVarStr.LengthOf(Directory ?? string.Empty);
 
         void INowSerialize.SerializeBody(NowWriteCursor cursor)
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
             cursor.WriteUint32Le(SessionId);
             cursor.WriteVarStr(Command);
+            cursor.WriteVarStr(Directory ?? string.Empty);
         }
 
         // -- INowDeserialize --
@@ -43,14 +49,72 @@ namespace Devolutions.NowProto.Messages
             var sessionId = cursor.ReadUInt32Le();
             var command = cursor.ReadVarStr();
 
-            return new NowMsgExecRun(sessionId, command);
+            string? directory = null;
+            if (!cursor.IsEmpty())
+            {
+                directory = cursor.ReadVarStr();
+            }
+
+            return new NowMsgExecRun
+            {
+                SessionId = sessionId,
+                Command = command,
+                Directory = directory
+            };
         }
 
         // -- impl --
 
+        public NowMsgExecRun(uint sessionId, string command)
+        {
+            SessionId = sessionId;
+            Command = command;
+            Directory = null;
+        }
+
+        private NowMsgExecRun()
+        {
+            SessionId = 0;
+            Command = string.Empty;
+            Directory = null;
+        }
+
+        [Flags]
+        private enum MsgFlags : ushort
+        {
+            /// <summary>
+            /// Set if directory field contains non-default value.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_RUN_DIRECTORY_SET
+            /// </summary>
+            DirectorySet = 0x0001,
+        }
+
         private const uint FixedPartSize = 4; // u32 SessionId
 
-        public uint SessionId { get; } = sessionId;
-        public string Command { get; } = command;
+        public class Builder(uint sessionId, string command)
+        {
+            public Builder Directory(string directory)
+            {
+                _directory = directory;
+                return this;
+            }
+
+            public NowMsgExecRun Build()
+            {
+                return new NowMsgExecRun
+                {
+                    SessionId = sessionId,
+                    Command = command,
+                    Directory = _directory
+                };
+            }
+
+            private string? _directory = null;
+        }
+
+        public uint SessionId { get; private init; }
+        public string Command { get; private init; }
+        public string? Directory { get; private init; }
     }
 }

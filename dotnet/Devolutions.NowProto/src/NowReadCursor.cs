@@ -53,6 +53,10 @@ namespace Devolutions.NowProto
             _buffer = remaining;
         }
 
+        public bool IsEmpty()
+        {
+            return _buffer.Count == 0;
+        }
 
         public ArraySegment<byte> ReadBytes(uint count)
         {

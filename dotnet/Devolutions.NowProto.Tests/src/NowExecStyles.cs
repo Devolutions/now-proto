@@ -2,15 +2,35 @@
 {
     public class NowExecStyles
     {
-        [Fact]
-        public void Run()
-        {
-            var msg = new NowMsgExecRun(0x1234567, "hello");
 
+        [Fact]
+        public void DecodeRunV1_0()
+        {
             var encoded = new byte[]
             {
                 0x0B, 0x00, 0x00, 0x00, 0x13, 0x10, 0x00, 0x00, 0x67, 0x45,
                 0x23, 0x01, 0x05, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x00
+            };
+
+            var readCursor = new NowReadCursor(encoded);
+            var decoded = NowMessage.Read(readCursor).Deserialize<NowMsgExecRun>();
+
+            Assert.Equal((uint)0x1234567, decoded.SessionId);
+            Assert.Equal("hello", decoded.Command);
+        }
+
+        [Fact]
+        public void Run()
+        {
+            var msg = new NowMsgExecRun.Builder(0x1234567, "hello")
+                .Directory("hi")
+                .Build();
+
+            var encoded = new byte[]
+            {
+                0x0F, 0x00, 0x00, 0x00, 0x13, 0x10, 0x01, 0x00, 0x67, 0x45,
+                0x23, 0x01, 0x05, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x00, 0x02,
+                0x68, 0x69, 0x00
             };
 
             var decoded = NowTest.MessageRoundtrip(msg, encoded);

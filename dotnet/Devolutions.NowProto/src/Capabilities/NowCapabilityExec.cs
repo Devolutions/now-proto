@@ -47,6 +47,13 @@
         /// </summary>
         Pwsh = 0x0020,
 
-        All = Run | Process | Shell | Batch | WinPs | Pwsh,
+        /// <summary>
+        /// Set if host implements exec session IO redirection.
+        ///
+        /// NOW-PROTO: NOW_CAP_EXEC_IO_REDIRECTION
+        /// </summary>
+        IoRedirection = 0x1000,
+
+        All = Run | Process | Shell | Batch | WinPs | Pwsh | IoRedirection,
     }
 }

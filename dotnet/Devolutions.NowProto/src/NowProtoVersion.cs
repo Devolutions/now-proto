@@ -2,7 +2,7 @@
 {
     public readonly record struct NowProtoVersion(ushort Major, ushort Minor)
     {
-        public static NowProtoVersion Current => new(1, 0);
+        public static NowProtoVersion Current => new(1, 1);
 
         // -- IComparable -- 
         public int CompareTo(NowProtoVersion other)

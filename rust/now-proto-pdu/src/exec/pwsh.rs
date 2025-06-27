@@ -153,6 +153,16 @@ impl<'a> NowExecPwshMsg<'a> {
         }
     }
 
+    #[must_use]
+    pub fn with_io_redirection(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::IO_REDIRECTION;
+        self
+    }
+
+    pub fn is_with_io_redirection(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::IO_REDIRECTION)
+    }
+
     pub fn is_no_logo(&self) -> bool {
         self.flags.contains(NowExecWinPsFlags::NO_LOGO)
     }

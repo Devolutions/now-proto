@@ -47,36 +47,46 @@ namespace Devolutions.NowClient
         /// <summary>
         /// Disable the PowerShell logo display. (-NoLogo)
         /// </summary>
-        public ExecPwshParams NoLogo()
+        public ExecPwshParams NoLogo(bool enable = true)
         {
-            _noLogo = true;
+            _noLogo = enable;
             return this;
         }
 
         /// <summary>
         /// Do not close the PowerShell session after the command/script execution. (-NoExit)
         /// </summary>
-        public ExecPwshParams NoExit()
+        public ExecPwshParams NoExit(bool enable = true)
         {
-            _noExit = true;
+            _noExit = enable;
             return this;
         }
 
         /// <summary>
         /// Do not load the PowerShell profile. (-NoProfile)
         /// </summary>
-        public ExecPwshParams NoProfile()
+        public ExecPwshParams NoProfile(bool enable = true)
         {
-            _noProfile = true;
+            _noProfile = enable;
             return this;
         }
 
         /// <summary>
         /// Run the PowerShell session in non-interactive mode. (-NonInteractive)
         /// </summary>
-        public ExecPwshParams NonInteractive()
+        public ExecPwshParams NonInteractive(bool enable = true)
         {
-            _nonInteractive = true;
+            _nonInteractive = enable;
+            return this;
+        }
+
+        /// <summary>
+        /// Enables or disables the use of pipes for standard input, output, and error streams.
+        /// When enabled, the process's standard streams are redirected through pipes.
+        /// </summary>
+        public ExecPwshParams IoRedirection(bool enable)
+        {
+            _ioRedirection = enable;
             return this;
         }
 
@@ -124,6 +134,11 @@ namespace Devolutions.NowClient
                 builder.SetNonInteractive();
             }
 
+            if (_ioRedirection)
+            {
+                builder.EnableIoRedirection();
+            }
+
             return builder.Build();
         }
 
@@ -136,5 +151,6 @@ namespace Devolutions.NowClient
         private bool _noExit = false;
         private bool _noProfile = false;
         private bool _nonInteractive = false;
+        private bool _ioRedirection = false;
     }
 }

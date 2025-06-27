@@ -20,7 +20,8 @@ namespace Devolutions.NowProto.Messages
         // -- INowSerialize --
 
         ushort INowSerialize.Flags => (ushort)(
-            (Directory != null ? MsgFlags.DirectorySet : 0)
+            (Directory != null ? MsgFlags.DirectorySet : 0) |
+            (IoRedirection ? MsgFlags.IoRedirection : 0)
         );
         uint INowSerialize.BodySize =>
             FixedPartSize
@@ -47,7 +48,8 @@ namespace Devolutions.NowProto.Messages
             return new NowMsgExecBatch(
                 sessionId,
                 filename,
-                msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null
+                msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
+                msgFlags.HasFlag(MsgFlags.IoRedirection)
             );
         }
 
@@ -62,6 +64,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DIRECTORY_SET
             /// </summary>
             DirectorySet = 0x0001,
+
+            /// <summary>
+            /// Enable stdio (stdout, stderr, stdin) redirection.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_IO_REDIRECTION
+            /// </summary>
+            IoRedirection = 0x1000,
         }
 
         private const uint FixedPartSize = 4; // u32 SessionId
@@ -73,26 +82,34 @@ namespace Devolutions.NowProto.Messages
                 _directory = directory;
                 return this;
             }
+            public Builder EnableIoRedirection()
+            {
+                _ioRedirection = true;
+                return this;
+            }
 
             public NowMsgExecBatch Build()
             {
-                return new NowMsgExecBatch(_sessionId, _filename, _directory);
+                return new NowMsgExecBatch(_sessionId, _filename, _directory, _ioRedirection);
             }
 
             private readonly uint _sessionId = sessionId;
             private readonly string _filename = filename;
             private string? _directory = null;
+            private bool _ioRedirection = false;
         }
 
-        internal NowMsgExecBatch(uint sessionId, string filename, string? directory)
+        internal NowMsgExecBatch(uint sessionId, string filename, string? directory, bool ioRedirection)
         {
             SessionId = sessionId;
             Filename = filename;
             Directory = directory;
+            IoRedirection = ioRedirection;
         }
 
         public uint SessionId { get; }
         public string Filename { get; }
         public string? Directory { get; }
+        public bool IoRedirection { get; }
     }
 }

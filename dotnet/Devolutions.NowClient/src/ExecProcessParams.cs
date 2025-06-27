@@ -26,6 +26,16 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enables or disables the use of pipes for standard input, output, and error streams.
+        /// When enabled, the process's standard streams are redirected through pipes.
+        /// </summary>
+        public ExecProcessParams IoRedirection(bool enable)
+        {
+            _ioRedirection = enable;
+            return this;
+        }
+
         internal NowMsgExecProcess ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecProcess.Builder(sessionId, filename);
@@ -40,10 +50,16 @@ namespace Devolutions.NowClient
                 builder.Directory(_directory);
             }
 
+            if (_ioRedirection)
+            {
+                builder.EnableIoRedirection();
+            }
+
             return builder.Build();
         }
 
 
+        private bool _ioRedirection = false;
         private string? _parameters = null;
         private string? _directory = null;
     }
