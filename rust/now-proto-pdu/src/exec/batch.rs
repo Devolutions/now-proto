@@ -16,7 +16,7 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DIRECTORY_SET
         const DIRECTORY_SET = 0x0001;
-        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// Enable stdio (stdout, stderr, stdin) redirection.
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_IO_REDIRECTION
         const IO_REDIRECTION = 0x1000;

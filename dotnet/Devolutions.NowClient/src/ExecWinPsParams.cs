@@ -82,7 +82,7 @@ namespace Devolutions.NowClient
         }
 
         /// <summary>
-        /// Enable stdio(stdout, stderr, stdin) redirection.
+        /// Enable stdio (stdout, stderr, stdin) redirection.
         /// </summary>
         private ExecWinPsParams IoRedirection()
         {

@@ -849,7 +849,7 @@ packet-beta
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x0001 | `parameters` field contains non-default value. |
 | NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value.|
-| NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION<br>0x1000 | Enable stdio(stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
@@ -888,7 +888,7 @@ packet-beta
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_SHELL_SHELL_SET<br>0x0001 | `shell` field contains non-default value. |
 | NOW_EXEC_FLAG_SHELL_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value. |
-| NOW_EXEC_FLAG_SHELL_IO_REDIRECTION<br>0x1000 | Enable stdio(stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_SHELL_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -927,7 +927,7 @@ packet-beta
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x00001 | `directory` field contains non-default value. |
-| NOW_EXEC_FLAG_BATCH_IO_REDIRECTION<br>0x1000 | Enable stdio(stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_BATCH_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -972,7 +972,7 @@ packet-beta
 | NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x0040   | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter     |
 | NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x0080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
 | NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x0100      | `directory` field contains non-default value and specifies command working directory                           |
-| NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio(stdout, stderr, stdin) redirection.                                                               |
+| NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                               |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1028,4 +1028,4 @@ packet-beta
     - Initial protocol version
 - 1.1
     - Add IO redirection capability flag and explicit IO redirection flags for exec messages.
-    - Add working directory specification for Run(ShellExecute) messages.
+    - Add working directory specification for Run (ShellExecute) messages.

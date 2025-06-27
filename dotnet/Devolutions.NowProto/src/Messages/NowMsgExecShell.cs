@@ -79,7 +79,7 @@ namespace Devolutions.NowProto.Messages
             DirectorySet = 0x0002,
 
             /// <summary>
-            /// Enable stdio(stdout, stderr, stdin) redirection.
+            /// Enable stdio (stdout, stderr, stdin) redirection.
             ///
             /// NOW-PROTO: NOW_EXEC_FLAG_SHELL_IO_REDIRECTION
             /// </summary>
