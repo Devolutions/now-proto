@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
+        <Platforms>AnyCPU;ARM64;x64;x86</Platforms>
     </PropertyGroup>
 
     <ItemGroup>

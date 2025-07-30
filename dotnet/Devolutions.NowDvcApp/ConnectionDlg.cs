@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO.Pipes;
 
+using Devolutions.NowClient;
+
 namespace Devolutions.NowDvcApp
 {
     public partial class ConnectionDlg : Form
@@ -55,18 +57,12 @@ namespace Devolutions.NowDvcApp
             {
                 var pipeName = $"now-proto-{_channelId}";
 
-                var pipeServer = new NamedPipeClientStream(
-                    ".",
-                    pipeName,
-                    PipeDirection.InOut,
-                    PipeOptions.Asynchronous
-                );
-                await pipeServer.ConnectAsync();
+                var transport = await NowClientPipeTransport.Connect(pipeName);
 
                 Trace.WriteLine("Connected to DVC pipe");
 
                 // Connect and negotiate capabilities.
-                var client = await NowClient.NowClient.Connect(new NowProtoPipeTransport(pipeServer));
+                var client = await NowClient.NowClient.Connect(transport);
 
                 Debug.WriteLine("NOW channel has been connected!");
 

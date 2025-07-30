@@ -11,14 +11,14 @@ public class NowClientPipeTransport : INowTransport
     {
         this._pipe = pipe;
     }
-    
+
     public static async Task<NowClientPipeTransport> Connect(string pipeName, TimeSpan? timeout = null)
     {
         if (pipeName.Length == 0)
         {
             throw new ArgumentException("Pipe name cannot be empty");
         }
-        
+
         var pipeServer = new NamedPipeClientStream(
             ".",
             pipeName,
@@ -36,12 +36,12 @@ public class NowClientPipeTransport : INowTransport
         }
         else
         {
-            await pipeServer.ConnectAsync();   
+            await pipeServer.ConnectAsync();
         }
-        
+
         return new NowClientPipeTransport(pipeServer);
     }
-    
+
     async Task INowTransport.Write(byte[] data)
     {
         await _pipe.WriteAsync(data);

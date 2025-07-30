@@ -23,7 +23,7 @@ static class Program
             Description = "DVC transport timeout in seconds",
             DefaultValueFactory = (_) => null
         };
-        
+
 
         rootCommand.Add(pipeNameOption);
         rootCommand.Add(timeoutSeconds);
@@ -33,18 +33,18 @@ static class Program
         var timeoutParsed = parsed.GetValue(timeoutSeconds);
         TimeSpan? timeout = timeoutParsed.HasValue ? TimeSpan.FromSeconds(timeoutParsed.Value) : null;
         var pipeNameValue = parsed.GetValue<string>(pipeNameOption)!;
-        
+
         Console.WriteLine("Connecting to the NowProto DVC...");
         var transport = await NowClientPipeTransport.Connect
         (
             pipeNameValue,
             timeout
         );
-        
+
         Console.WriteLine($"Pipe transport has been connected via {pipeNameValue}");
 
         var client = await NowClient.NowClient.Connect(transport);
-        
+
         Console.WriteLine($"Negotiated NowProto client version: {client.Capabilities.Version}");
 
 
@@ -52,10 +52,10 @@ static class Program
         do
         {
             repeat = true;
-            
+
             Console.Write("Operation (msg/run/logoff/lock/exit): ");
             var operation = Console.ReadLine()?.Trim().ToLowerInvariant() ?? string.Empty;
-            
+
             switch (operation)
             {
                 case "run":
@@ -66,7 +66,7 @@ static class Program
                         Console.WriteLine("Command cannot be empty.");
                         continue;
                     }
-                    
+
                     var runParams = new ExecRunParams(command);
                     await client.ExecRun(runParams);
                     Console.WriteLine("OK");
@@ -82,7 +82,7 @@ static class Program
                     var messageBoxParams = new MessageBoxParams(message)
                         .Style(NowMsgSessionMessageBoxReq.MessageBoxStyle.YesNo)
                         .Title("DVC test");
-                    
+
                     await client.SessionMessageBoxNoResponse(messageBoxParams);
                     Console.WriteLine("OK");
                     break;
@@ -104,9 +104,9 @@ static class Program
                     break;
             }
         } while (repeat);
-        
+
         Console.WriteLine("Disconnecting from the NowProto DVC...");
-        
+
         return 0;
     }
 }
