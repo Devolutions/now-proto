@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowClient", "dotnet\Devolutions.NowClient\Devolutions.NowClient.csproj", "{4692658E-C138-4A40-A10C-7E55D38D250B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devolutions.NowClientCli", "dotnet\Devolutions.NowClientCli\Devolutions.NowClientCli.csproj", "{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devolutions.NowClient.Cli", "dotnet\Devolutions.NowClient.Cli\Devolutions.NowClient.Cli.csproj", "{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

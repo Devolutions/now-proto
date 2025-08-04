@@ -2,10 +2,9 @@
 
 using System.CommandLine;
 
-using Devolutions.NowClient;
 using Devolutions.NowProto.Messages;
 
-namespace Devolutions.NowClientCli;
+namespace Devolutions.NowClient.Cli;
 
 static class Program
 {
@@ -35,15 +34,14 @@ static class Program
         var pipeNameValue = parsed.GetValue<string>(pipeNameOption)!;
 
         Console.WriteLine("Connecting to the NowProto DVC...");
-        var transport = await NowClientPipeTransport.Connect
-        (
+        var transport = await NowClientPipeTransport.Connect(
             pipeNameValue,
             timeout
         );
 
         Console.WriteLine($"Pipe transport has been connected via {pipeNameValue}");
 
-        var client = await NowClient.NowClient.Connect(transport);
+        var client = await NowClient.Connect(transport);
 
         Console.WriteLine($"Negotiated NowProto client version: {client.Capabilities.Version}");
 
