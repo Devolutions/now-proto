@@ -1,4 +1,4 @@
-use ironrdp_core::{Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
+use ironrdp_core::{ensure_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
 
 use crate::{NowChannelMessage, NowExecMessage, NowHeader, NowMessageClass, NowSessionMessage, NowSystemMessage};
 
@@ -59,7 +59,14 @@ impl Encode for NowMessage<'_> {
 impl<'de> Decode<'de> for NowMessage<'de> {
     fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
         let header = NowHeader::decode(src)?;
-        Self::decode_from_body(header, src)
+
+        // Read all message body regardless of the remaining lefover message data.
+        // This is required to allow forward compatibility with future now-proto versions,
+        // which may add new message fields which are encoded unconditionally.
+        ensure_size!(in: src, size: header.size as usize);
+        let mut body = ReadCursor::new(src.read_slice(header.size as usize));
+
+        Self::decode_from_body(header, &mut body)
     }
 }
 
