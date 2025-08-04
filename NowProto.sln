@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowProto.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Devolutions.NowClient", "dotnet\Devolutions.NowClient\Devolutions.NowClient.csproj", "{4692658E-C138-4A40-A10C-7E55D38D250B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devolutions.NowClient.Cli", "dotnet\Devolutions.NowClient.Cli\Devolutions.NowClient.Cli.csproj", "{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -57,6 +59,18 @@ Global
 		{4692658E-C138-4A40-A10C-7E55D38D250B}.Release|x64.Build.0 = Release|x64
 		{4692658E-C138-4A40-A10C-7E55D38D250B}.Release|x86.ActiveCfg = Release|x86
 		{4692658E-C138-4A40-A10C-7E55D38D250B}.Release|x86.Build.0 = Release|x86
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|ARM64.Build.0 = Debug|ARM64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|x64.ActiveCfg = Debug|x64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|x64.Build.0 = Debug|x64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|x86.ActiveCfg = Debug|x86
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Debug|x86.Build.0 = Debug|x86
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|ARM64.ActiveCfg = Release|ARM64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|ARM64.Build.0 = Release|ARM64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|x64.ActiveCfg = Release|x64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|x64.Build.0 = Release|x64
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|x86.ActiveCfg = Release|x86
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,6 +79,7 @@ Global
 		{2EB02FFB-DC42-4217-8520-93F06E17BFC4} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
 		{34912761-E8CB-4D88-A4B4-365F6DB88985} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
 		{4692658E-C138-4A40-A10C-7E55D38D250B} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
+		{0671D9A1-E59B-40BF-AF89-DB7D5B827CBC} = {BD6154A5-8825-4023-A6AE-CE9FCC4B073B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F560B013-7C83-480F-9D1E-723DBE3D159F}
