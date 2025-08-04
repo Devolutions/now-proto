@@ -1,0 +1,15 @@
+use now_proto_pdu::*;
+use now_proto_testsuite::proto::now_msg_decodes_into;
+
+#[test]
+fn forward_compatibility() {
+    let msg = NowExecRunMsg::new(0x1234567, "hello").unwrap();
+
+    const ENCODED: &[u8] = &[
+        0x0B, 0x00, 0x00, 0x00, 0x13, 0x10, 0x00, 0x00, 0x67, 0x45, 0x23, 0x01, 0x05, 0x68, 0x65, 0x6C, 0x6C, 0x6F,
+        0x00, // additional data
+        0x01, 0x02, 0x03, 0x04,
+    ];
+
+    now_msg_decodes_into(msg, &ENCODED[..ENCODED.len() - 4]);
+}
