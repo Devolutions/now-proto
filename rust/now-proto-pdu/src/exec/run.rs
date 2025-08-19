@@ -82,8 +82,12 @@ impl<'a> NowExecRunMsg<'a> {
         &self.command
     }
 
-    pub fn directory(&self) -> &str {
-        &self.directory
+    pub fn directory(&self) -> Option<&str> {
+        if self.flags.contains(NowExecRunFlags::DIRECTORY_SET) {
+            Some(&self.directory)
+        } else {
+            None
+        }
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {
