@@ -18,8 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [**breaking**] Change incorrect `NowExecRunMsg::directory` method (#33) ([edba71a91e](https://github.com/Devolutions/now-proto/commit/edba71a91ec63735c0aeb3ae839fda3b570d0bc6)) 
 
-
-
 ## [[0.2.0](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.1.0...now-proto-pdu-v0.2.0)] - 2025-03-14
 
 ### <!-- 1 -->Features
