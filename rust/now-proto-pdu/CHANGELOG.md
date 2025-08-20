@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### <!-- 1 -->Features
 
-- Add io redirection flags to all exec sessions; add missing working directory option to ShellExecute (#29) ([ce0afe06c4](https://github.com/Devolutions/now-proto/commit/ce0afe06c4d1a9f1750eb0055034fd0b896db407)) 
+- Add IO redirection flags to all exec sessions; add missing working directory option to ShellExecute (#29) ([ce0afe06c4](https://github.com/Devolutions/now-proto/commit/ce0afe06c4d1a9f1750eb0055034fd0b896db407)) 
 
 ### <!-- 4 -->Bug Fixes
 
