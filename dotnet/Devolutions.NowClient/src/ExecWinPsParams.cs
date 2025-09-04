@@ -85,7 +85,7 @@ namespace Devolutions.NowClient
         /// Enables or disables the use of pipes for standard input, output, and error streams.
         /// When enabled, the process's standard streams are redirected through pipes.
         /// </summary>
-        private ExecWinPsParams IoRedirection(bool enable = true)
+        public ExecWinPsParams IoRedirection(bool enable = true)
         {
             _ioRedirection = enable;
             return this;
