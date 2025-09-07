@@ -1,6 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Devolutions.NowProto</PackageId>
+    <Version>1.0.0.0</Version>
+    <AssemblyTitle>Core NOW protocol library</AssemblyTitle>
+    <Copyright>© Devolutions Inc. All rights reserved.</Copyright>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Devolutions/now-proto.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
