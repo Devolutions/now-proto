@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Devolutions.NowClient</PackageId>
-    <Version>2025.9.4.1</Version>
-
+    <Version>1.0.0.0</Version>
     <Authors>Devolutions Inc.</Authors>
     <Company>Devolutions Inc.</Company>
     <AssemblyTitle>Async client for the NOW protocol</AssemblyTitle>
