@@ -5,45 +5,54 @@ TOC is generated in [Obsidian](obsidian.md) via
 
 # NOW-PROTO 1.0
 
-- [Transport](#transport)
-- [Message Syntax](#message-syntax)
-	- [Common Structures](#common-structures)
-		- [NOW_INTEGER](#now_integer)
-			- [NOW_VARU32](#now_varu32)
-		- [NOW_STRING](#now_string)
-			- [NOW_VARSTR](#now_varstr)
-		- [NOW_HEADER](#now_header)
-		- [NOW_STATUS](#now_status)
-	- [Channel Messages](#channel-messages)
-		- [NOW_CHANNEL_MSG](#now_channel_msg)
-		- [NOW_CHANNEL_CAPSET_MSG](#now_channel_capset_msg)
-		- [NOW_CHANNEL_HEARTBEAT_MSG](#now_channel_heartbeat_msg)
-		- [NOW_CHANNEL_CLOSE_MSG](#now_channel_close_msg)
-	- [System Messages](#system-messages)
-		- [NOW_SYSTEM_MSG](#now_system_msg)
-		- [NOW_SYSTEM_SHUTDOWN_MSG](#now_system_shutdown_msg)
-	- [Session Messages](#session-messages)
-		- [NOW_SESSION_MSG](#now_session_msg)
-		- [NOW_SESSION_LOCK_MSG](#now_session_lock_msg)
-		- [NOW_SESSION_LOGOFF_MSG](#now_session_logoff_msg)
-		- [NOW_SESSION_MSGBOX_REQ_MSG](#now_session_msgbox_req_msg)
-		- [NOW_SESSION_MSGBOX_RSP_MSG](#now_session_msgbox_rsp_msg)
-		- [NOW_SESSION_SET_KBD_LAYOUT_MSG](#now_session_set_kbd_layout_msg)
-	- [Execution Messages](#execution-messages)
-		- [NOW_EXEC_MSG](#now_exec_msg)
-		- [NOW_EXEC_ABORT_MSG](#now_exec_abort_msg)
-		- [NOW_EXEC_CANCEL_REQ_MSG](#now_exec_cancel_req_msg)
-		- [NOW_EXEC_CANCEL_RSP_MSG](#now_exec_cancel_rsp_msg)
-		- [NOW_EXEC_RESULT_MSG](#now_exec_result_msg)
-		- [NOW_EXEC_DATA_MSG](#now_exec_data_msg)
-		- [NOW_EXEC_STARTED_MSG](#now_exec_started_msg)
-		- [NOW_EXEC_RUN_MSG](#now_exec_run_msg)
-		- [NOW_EXEC_PROCESS_MSG](#now_exec_process_msg)
-		- [NOW_EXEC_SHELL_MSG](#now_exec_shell_msg)
-		- [NOW_EXEC_BATCH_MSG](#now_exec_batch_msg)
-		- [NOW_EXEC_WINPS_MSG](#now_exec_winps_msg)
-		- [NOW_EXEC_PWSH_MSG](#now_exec_pwsh_msg)
-	- [Version History](#version-history)
+- [NOW-PROTO 1.0](#now-proto-10)
+- [Messages](#messages)
+  - [Transport](#transport)
+  - [Message Syntax](#message-syntax)
+    - [Common Structures](#common-structures)
+      - [NOW\_INTEGER](#now_integer)
+        - [NOW\_VARU32](#now_varu32)
+      - [NOW\_STRING](#now_string)
+        - [NOW\_VARSTR](#now_varstr)
+      - [NOW\_HEADER](#now_header)
+      - [NOW\_STATUS](#now_status)
+    - [Channel Messages](#channel-messages)
+      - [NOW\_CHANNEL\_MSG](#now_channel_msg)
+      - [NOW\_CHANNEL\_CAPSET\_MSG](#now_channel_capset_msg)
+      - [NOW\_CHANNEL\_HEARTBEAT\_MSG](#now_channel_heartbeat_msg)
+      - [NOW\_CHANNEL\_CLOSE\_MSG](#now_channel_close_msg)
+    - [System Messages](#system-messages)
+      - [NOW\_SYSTEM\_MSG](#now_system_msg)
+      - [NOW\_SYSTEM\_SHUTDOWN\_MSG](#now_system_shutdown_msg)
+    - [Session Messages](#session-messages)
+      - [NOW\_SESSION\_MSG](#now_session_msg)
+      - [NOW\_SESSION\_LOCK\_MSG](#now_session_lock_msg)
+      - [NOW\_SESSION\_LOGOFF\_MSG](#now_session_logoff_msg)
+      - [NOW\_SESSION\_MSGBOX\_REQ\_MSG](#now_session_msgbox_req_msg)
+      - [NOW\_SESSION\_MSGBOX\_RSP\_MSG](#now_session_msgbox_rsp_msg)
+      - [NOW\_SESSION\_SET\_KBD\_LAYOUT\_MSG](#now_session_set_kbd_layout_msg)
+    - [Execution Messages](#execution-messages)
+      - [NOW\_EXEC\_MSG](#now_exec_msg)
+      - [NOW\_EXEC\_ABORT\_MSG](#now_exec_abort_msg)
+      - [NOW\_EXEC\_CANCEL\_REQ\_MSG](#now_exec_cancel_req_msg)
+      - [NOW\_EXEC\_CANCEL\_RSP\_MSG](#now_exec_cancel_rsp_msg)
+      - [NOW\_EXEC\_RESULT\_MSG](#now_exec_result_msg)
+      - [NOW\_EXEC\_DATA\_MSG](#now_exec_data_msg)
+      - [NOW\_EXEC\_STARTED\_MSG](#now_exec_started_msg)
+      - [NOW\_EXEC\_RUN\_MSG](#now_exec_run_msg)
+      - [NOW\_EXEC\_PROCESS\_MSG](#now_exec_process_msg)
+      - [NOW\_EXEC\_SHELL\_MSG](#now_exec_shell_msg)
+      - [NOW\_EXEC\_BATCH\_MSG](#now_exec_batch_msg)
+      - [NOW\_EXEC\_WINPS\_MSG](#now_exec_winps_msg)
+      - [NOW\_EXEC\_PWSH\_MSG](#now_exec_pwsh_msg)
+    - [RDM Messages](#rdm-messages)
+      - [NOW\_RDM\_MSG](#now_rdm_msg)
+      - [NOW\_RDM\_APP\_START\_MSG](#now_rdm_app_start_msg)
+      - [NOW\_RDM\_APP\_CLOSE\_MSG](#now_rdm_app_close_msg)
+      - [NOW\_RDM\_SESSION\_START\_MSG](#now_rdm_session_start_msg)
+      - [NOW\_RDM\_SESSION\_CLOSE\_MSG](#now_rdm_session_close_msg)
+      - [NOW\_RDM\_SESSION\_FOCUS\_MSG](#now_rdm_session_focus_msg)
+    - [Version History](#version-history)
 
 # Messages
 
@@ -130,6 +139,7 @@ packet-beta
 | NOW_SYSTEM_MSG_CLASS_ID<br>0x11 | System message class. |
 | NOW_SESSION_MSG_CLASS_ID<br>0x12 | Session message class. |
 | NOW_EXEC_MSG_CLASS_ID<br>0x13 | Exec message class. |
+| NOW_RDM_MSG_CLASS_ID<br>0x14 | RDM message class. |
 
 **msgType (1 byte)**: The message type, specific to the message class.
 
@@ -1022,6 +1032,135 @@ packet-beta
 **executionPolicy (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
 
 **configurationName (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
+
+### RDM Messages
+
+#### NOW_RDM_MSG
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type.
+
+| Value                           | Meaning              |
+|---------------------------------|----------------------|
+| NOW_RDM_APP_START_MSG_ID<br>0x01 | NOW_RDM_APP_START_MSG |
+| NOW_RDM_APP_CLOSE_MSG_ID<br>0x02 | NOW_RDM_APP_CLOSE_MSG |
+| NOW_RDM_SESSION_START_MSG_ID<br>0x03 | NOW_RDM_SESSION_OPEN_MSG |
+| NOW_RDM_SESSION_CLOSE_MSG_ID<br>0x04 | NOW_RDM_SESSION_CLOSE_MSG |
+| NOW_RDM_SESSION_FOCUS_MSG_ID<br>0x05 | NOW_RDM_SESSION_FOCUS_MSG |
+
+**msgFlags (2 bytes)**: The message flags.
+
+#### NOW_RDM_APP_START_MSG
+
+The NOW_RDM_APP_START_MSG is used to start the RDM application.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_APP_START_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+#### NOW_RDM_APP_CLOSE_MSG
+
+The NOW_RDM_APP_CLOSE_MSG is used to close the RDM application.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_APP_CLOSE_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+#### NOW_RDM_SESSION_START_MSG
+
+The NOW_RDM_SESSION_START_MSG is used to start a new RDM Jump session.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_START_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+
+#### NOW_RDM_SESSION_CLOSE_MSG
+
+The NOW_RDM_SESSION_CLOSE_MSG is used to close an RDM Jump session.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_CLOSE_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+#### NOW_RDM_SESSION_FOCUS_MSG
+
+The NOW_RDM_SESSION_FOCUS_MSG is used to focus an RDM Jump session.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_FOCUS_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
 
 ### Version History
 - 1.0
