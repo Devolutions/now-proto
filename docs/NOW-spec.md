@@ -5,45 +5,54 @@ TOC is generated in [Obsidian](obsidian.md) via
 
 # NOW-PROTO 1.0
 
-- [Transport](#transport)
-- [Message Syntax](#message-syntax)
-	- [Common Structures](#common-structures)
-		- [NOW_INTEGER](#now_integer)
-			- [NOW_VARU32](#now_varu32)
-		- [NOW_STRING](#now_string)
-			- [NOW_VARSTR](#now_varstr)
-		- [NOW_HEADER](#now_header)
-		- [NOW_STATUS](#now_status)
-	- [Channel Messages](#channel-messages)
-		- [NOW_CHANNEL_MSG](#now_channel_msg)
-		- [NOW_CHANNEL_CAPSET_MSG](#now_channel_capset_msg)
-		- [NOW_CHANNEL_HEARTBEAT_MSG](#now_channel_heartbeat_msg)
-		- [NOW_CHANNEL_CLOSE_MSG](#now_channel_close_msg)
-	- [System Messages](#system-messages)
-		- [NOW_SYSTEM_MSG](#now_system_msg)
-		- [NOW_SYSTEM_SHUTDOWN_MSG](#now_system_shutdown_msg)
-	- [Session Messages](#session-messages)
-		- [NOW_SESSION_MSG](#now_session_msg)
-		- [NOW_SESSION_LOCK_MSG](#now_session_lock_msg)
-		- [NOW_SESSION_LOGOFF_MSG](#now_session_logoff_msg)
-		- [NOW_SESSION_MSGBOX_REQ_MSG](#now_session_msgbox_req_msg)
-		- [NOW_SESSION_MSGBOX_RSP_MSG](#now_session_msgbox_rsp_msg)
-		- [NOW_SESSION_SET_KBD_LAYOUT_MSG](#now_session_set_kbd_layout_msg)
-	- [Execution Messages](#execution-messages)
-		- [NOW_EXEC_MSG](#now_exec_msg)
-		- [NOW_EXEC_ABORT_MSG](#now_exec_abort_msg)
-		- [NOW_EXEC_CANCEL_REQ_MSG](#now_exec_cancel_req_msg)
-		- [NOW_EXEC_CANCEL_RSP_MSG](#now_exec_cancel_rsp_msg)
-		- [NOW_EXEC_RESULT_MSG](#now_exec_result_msg)
-		- [NOW_EXEC_DATA_MSG](#now_exec_data_msg)
-		- [NOW_EXEC_STARTED_MSG](#now_exec_started_msg)
-		- [NOW_EXEC_RUN_MSG](#now_exec_run_msg)
-		- [NOW_EXEC_PROCESS_MSG](#now_exec_process_msg)
-		- [NOW_EXEC_SHELL_MSG](#now_exec_shell_msg)
-		- [NOW_EXEC_BATCH_MSG](#now_exec_batch_msg)
-		- [NOW_EXEC_WINPS_MSG](#now_exec_winps_msg)
-		- [NOW_EXEC_PWSH_MSG](#now_exec_pwsh_msg)
-	- [Version History](#version-history)
+- [NOW-PROTO 1.0](#now-proto-10)
+- [Messages](#messages)
+  - [Transport](#transport)
+  - [Message Syntax](#message-syntax)
+    - [Common Structures](#common-structures)
+      - [NOW\_INTEGER](#now_integer)
+        - [NOW\_VARU32](#now_varu32)
+      - [NOW\_STRING](#now_string)
+        - [NOW\_VARSTR](#now_varstr)
+      - [NOW\_HEADER](#now_header)
+      - [NOW\_STATUS](#now_status)
+    - [Channel Messages](#channel-messages)
+      - [NOW\_CHANNEL\_MSG](#now_channel_msg)
+      - [NOW\_CHANNEL\_CAPSET\_MSG](#now_channel_capset_msg)
+      - [NOW\_CHANNEL\_HEARTBEAT\_MSG](#now_channel_heartbeat_msg)
+      - [NOW\_CHANNEL\_CLOSE\_MSG](#now_channel_close_msg)
+    - [System Messages](#system-messages)
+      - [NOW\_SYSTEM\_MSG](#now_system_msg)
+      - [NOW\_SYSTEM\_SHUTDOWN\_MSG](#now_system_shutdown_msg)
+    - [Session Messages](#session-messages)
+      - [NOW\_SESSION\_MSG](#now_session_msg)
+      - [NOW\_SESSION\_LOCK\_MSG](#now_session_lock_msg)
+      - [NOW\_SESSION\_LOGOFF\_MSG](#now_session_logoff_msg)
+      - [NOW\_SESSION\_MSGBOX\_REQ\_MSG](#now_session_msgbox_req_msg)
+      - [NOW\_SESSION\_MSGBOX\_RSP\_MSG](#now_session_msgbox_rsp_msg)
+      - [NOW\_SESSION\_SET\_KBD\_LAYOUT\_MSG](#now_session_set_kbd_layout_msg)
+    - [Execution Messages](#execution-messages)
+      - [NOW\_EXEC\_MSG](#now_exec_msg)
+      - [NOW\_EXEC\_ABORT\_MSG](#now_exec_abort_msg)
+      - [NOW\_EXEC\_CANCEL\_REQ\_MSG](#now_exec_cancel_req_msg)
+      - [NOW\_EXEC\_CANCEL\_RSP\_MSG](#now_exec_cancel_rsp_msg)
+      - [NOW\_EXEC\_RESULT\_MSG](#now_exec_result_msg)
+      - [NOW\_EXEC\_DATA\_MSG](#now_exec_data_msg)
+      - [NOW\_EXEC\_STARTED\_MSG](#now_exec_started_msg)
+      - [NOW\_EXEC\_RUN\_MSG](#now_exec_run_msg)
+      - [NOW\_EXEC\_PROCESS\_MSG](#now_exec_process_msg)
+      - [NOW\_EXEC\_SHELL\_MSG](#now_exec_shell_msg)
+      - [NOW\_EXEC\_BATCH\_MSG](#now_exec_batch_msg)
+      - [NOW\_EXEC\_WINPS\_MSG](#now_exec_winps_msg)
+      - [NOW\_EXEC\_PWSH\_MSG](#now_exec_pwsh_msg)
+    - [RDM Messages](#rdm-messages)
+      - [NOW\_RDM\_MSG](#now_rdm_msg)
+      - [NOW\_RDM\_APP\_START\_MSG](#now_rdm_app_start_msg)
+      - [NOW\_RDM\_APP\_CLOSE\_MSG](#now_rdm_app_close_msg)
+      - [NOW\_RDM\_SESSION\_START\_MSG](#now_rdm_session_start_msg)
+      - [NOW\_RDM\_SESSION\_CLOSE\_MSG](#now_rdm_session_close_msg)
+      - [NOW\_RDM\_SESSION\_FOCUS\_MSG](#now_rdm_session_focus_msg)
+    - [Version History](#version-history)
 
 # Messages
 
@@ -108,6 +117,36 @@ packet-beta
 
 **str (variable)**: The UTF-8 encoded string excluding the null terminator.
 
+##### NOW_GUID
+
+The NOW_GUID structure is a GUID encoded in a NOW_VARSTR structure, as a lowercase string of 36 characters. Implementations should use the NOW_VARSTR type, but refer to the NOW_GUID definition for validation.
+
+```mermaid
+packet-beta
+  0-31: "len (variable)"
+  32-63: "str (variable)"
+```
+
+**len (variable)**: A NOW_VARU32 structure containing the string length (36), excluding the null terminator.
+
+**str (variable)**: The UTF-8 encoded lowercase GUID string, excluding the null terminator, like this: 00112233-4455-6677-8899-aabbccddeeff. If the value is omitted, use the null GUID value: 00000000-0000-0000-0000-000000000000.
+
+#### NOW_BUFFER
+
+##### NOW_VARBUF
+
+The NOW_VARBUF structure is used to represent variable-length buffers.
+
+```mermaid
+packet-beta
+  0-31: "len (variable)"
+  32-63: "str (variable)"
+```
+
+**size (variable)**: A NOW_VARU32 structure containing the buffer size.
+
+**data (variable)**: The buffer data, whose size is given by the size field.
+
 #### NOW_HEADER
 
 The NOW_HEADER structure is the header common to all NOW protocol messages.
@@ -130,6 +169,7 @@ packet-beta
 | NOW_SYSTEM_MSG_CLASS_ID<br>0x11 | System message class. |
 | NOW_SESSION_MSG_CLASS_ID<br>0x12 | Session message class. |
 | NOW_EXEC_MSG_CLASS_ID<br>0x13 | Exec message class. |
+| NOW_RDM_MSG_CLASS_ID<br>0x14 | RDM message class. |
 
 **msgType (1 byte)**: The message type, specific to the message class.
 
@@ -1024,6 +1064,271 @@ packet-beta
 
 **configurationName (variable)**: A NOW_VARSTR structure, same as with NOW_EXEC_WINPS_MSG.
 
+### RDM Messages
+
+#### NOW_RDM_MSG
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type.
+
+| Value                                 | Meaning                    |
+| ------------------------------------- | -------------------------- |
+| NOW_RDM_CAPABILITIES_MSG_ID<br>0x01   | NOW_RDM_CAPABILITIES_MSG   |
+| NOW_RDM_APP_START_MSG_ID<br>0x02      | NOW_RDM_APP_START_MSG      |
+| NOW_RDM_APP_ACTION_MSG_ID<br>0x03     | NOW_RDM_APP_ACTION_MSG     |
+| NOW_RDM_APP_NOTIFY_MSG_ID<br>0x04     | NOW_RDM_APP_NOTIFY_MSG     |
+| NOW_RDM_SESSION_START_MSG_ID<br>0x05  | NOW_RDM_SESSION_OPEN_MSG   |
+| NOW_RDM_SESSION_ACTION_MSG_ID<br>0x06 | NOW_RDM_SESSION_ACTION_MSG |
+| NOW_RDM_SESSION_NOTIFY_MSG_ID<br>0x07 | NOW_RDM_SESSION_NOTIFY_MSG |
+
+**msgFlags (2 bytes)**: The message flags.
+
+The NOW_RDM_CAPABILITIES_MSG is used to synchronize client and server capabilities, such as system time, RDM versions, etc. The client sends this message to the server expecting an immediate response back, such that important system clock differences can be detected.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-127: "timestamp"
+  128-159: "syncFlags"
+  160-191: "rdmVersion (variable)"
+  192-223: "versionExtra (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_CAPABILITIES_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**timestamp (8 bytes)**: The system UTC time, in seconds since the Unix epoch, encoded as signed 64-bit integer. This is the equivalent of `[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()` in .NET or `date +%s` in Linux.
+
+**syncFlags (4 bytes)**: The synchronization flags.
+
+| Value                                         | Meaning                                                                                            |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| NOW_RDM_SYNC_APP_AVAILABLE_FLAG<br>0x00000001 | RDM application is available. Only sent by the server to the client. The server ignores this flag. |
+
+**rdmVersion (variable)**: The RDM version string with 4 parts like "2025.X.Y.Z", encoded as a NOW_VARSTR. This value is empty if RDM is not available.
+
+**versionExtra (variable)**: A string field reserved for extra version information with no predefined format. Unused for now, leave empty.
+
+#### NOW_RDM_APP_START_MSG
+
+The NOW_RDM_APP_START_MSG is used to launch RDM.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "launchFlags"
+  96-127: "timeout"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_APP_START_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**launchFlags (4 bytes)**: The application launch flags.
+
+| Value                                        | Meaning                       |
+| -------------------------------------------- | ----------------------------- |
+| NOW_RDM_LAUNCH_JUMP_MODE_FLAG<br>0x00000001  | Launch RDM in Jump mode       |
+| NOW_RDM_LAUNCH_MAXIMIZED_FLAG<br>0x00000002  | Launch RDM maximized          |
+| NOW_RDM_LAUNCH_FULLSCREEN_FLAG<br>0x00000004 | Launch RDM in fullscreen mode |
+**timeout (4 bytes)**: The launch timeout, in seconds, that the client is willing to wait for RDM to launch and become ready. A recommended default value is 45 seconds.
+
+#### NOW_RDM_APP_ACTION_MSG
+
+The NOW_RDM_APP_ACTION_MSG is sent by the client to trigger an application state change.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "appAction"
+  96-127: "actionData (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_APP_NOTIFY_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**appAction (4 bytes)**: The application action.
+
+| Value                                                    | Meaning                            |
+| -------------------------------------------------------- | ---------------------------------- |
+| NOW_RDM_APP_ACTION_CLOSE_ID<br>0x00000001                | Close (terminate) RDM application. |
+| NOW_RDM_APP_ACTION_MINIMIZE_ID<br>0x00000002             | Minimize RDM application window.   |
+| NOW_RDM_APP_ACTION_MAXIMIZE_ID<br>0x00000003             | Maximize RDM application window.   |
+| NOW_RDM_APP_ACTION_RESTORE_ID<br>0x00000004              | Restore RDM application window.    |
+| NOW_RDM_APP_ACTION_FULLSCREEN_ID<br>0x00000005           | Toggle RDM fullscreen mode         |
+actionData (variable): A serialized XML object, encoded in a NOW_VARSTR structure. This field is reserved for future use and should be left empty.
+
+#### NOW_RDM_APP_NOTIFY_MSG
+
+The NOW_RDM_APP_NOTIFY_MSG is sent by the server to notify the client of an RDM app state change, such as readiness.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "appState"
+  96-127: "reasonCode"
+  128-159: "notifyData"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_APP_NOTIFY_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**appState (4 bytes)**: The application state.
+
+| Value                                         | Meaning                                          |
+| --------------------------------------------- | ------------------------------------------------ |
+| NOW_RDM_APP_STATE_READY_ID<br>0x00000001      | RDM is launched and ready to launch connections. |
+| NOW_RDM_APP_STATE_FAILED_ID<br>0x00000002     | RDM has failed to launch.                        |
+| NOW_RDM_APP_STATE_CLOSED_ID<br>0x00000003     | RDM has been closed or terminated.               |
+| NOW_RDM_APP_STATE_MINIMIZED_ID<br>0x00000004  | RDM has been minimized.                          |
+| NOW_RDM_APP_STATE_MAXIMIZED_ID<br>0x00000005  | RDM has been maximized.                          |
+| NOW_RDM_APP_STATE_RESTORED_ID<br>0x00000006   | RDM has been restored.                           |
+| NOW_RDM_APP_STATE_FULLSCREEN_ID<br>0x00000007 | RDM fullscreen mode has been toggled.            |
+**reasonCode (4 bytes)**: A reason code specific to the application state change.
+
+| Value                                           | Meaning                                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| NOW_RDM_REASON_NOT_SPECIFIED_ID<br>0x00000000   | Unspecified reason (default value).                                                     |
+| NOW_RDM_REASON_USER_INITIATED_ID<br>0x00000001  | The application state change was user-initiated.                                        |
+| NOW_RDM_REASON_NOT_INSTALLED_ID<br>0x00000002   | RDM has failed to launched because it is not installed.                                 |
+| NOW_RDM_REASON_STARTUP_FAILURE_ID<br>0x00000003 | RDM is installed, but something prevented it from starting up properly.                 |
+| NOW_RDM_REASON_LAUNCH_TIMEOUT_ID<br>0x00000004  | RDM is installed and could be launched but it wasn't ready before the expected timeout. |
+notifyData (variable): A serialized XML object, encoded in a NOW_VARSTR structure. This field is reserved for future use and should be left empty.
+
+#### NOW_RDM_SESSION_START_MSG
+
+The NOW_RDM_SESSION_START_MSG is used to start a new RDM session.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId (variable)"
+  96-127: "connectionId (variable)"
+  128-159: "connectionData (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_FOCUS_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+sessionId (variable): session id, encoded as a NOW_GUID structure.
+
+connectionId (variable): connection id, encoded as a NOW_GUID structure. Reserved for future use. set to null when unused.
+
+connectionData (variable): The serialized RDM XML connection object, encoded in a NOW_VARSTR structure.
+#### NOW_RDM_SESSION_ACTION_MSG
+
+The NOW_RDM_SESSION_ACTION_MSG is used by the client to trigger an action on an existing session, such closing or focusing a session.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionAction"
+  96-127: "sessionId (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_ACTION_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**sessionAction (4 bytes)**: The session action id.
+
+| Value                                         | Meaning                                       |
+| --------------------------------------------- | --------------------------------------------- |
+| NOW_RDM_SESSION_ACTION_CLOSE_ID<br>0x00000001 | Close or terminate the session.               |
+| NOW_RDM_SESSION_ACTION_FOCUS_ID<br>0x00000002 | Focus the embedded tab of a specific session. |
+
+sessionId (variable): session id, encoded as a NOW_GUID structure.
+
+#### NOW_RDM_SESSION_NOTIFY_MSG
+
+The NOW_RDM_SESSION_NOTIFY_MSG is used by the server to notify of a session state change, such as a session closing, or a session focus change.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId (variable)"
+  96-127: "logData (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_NOTIFY_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+**sessionNotify (4 bytes)**: The session notify id.
+
+| Value                                         | Meaning                       |
+| --------------------------------------------- | ----------------------------- |
+| NOW_RDM_SESSION_NOTIFY_CLOSE_ID<br>0x00000001 | The session has been closed.  |
+| NOW_RDM_SESSION_NOTIFY_FOCUS_ID<br>0x00000002 | The session has been focused. |
+
+sessionId (variable): session id, encoded as a NOW_GUID structure. Can be null in some cases, such as when no session is in focus.
+
+logData (variable): The serialized RDM XML log information object, encoded in a NOW_VARSTR structure. Primarily used to send logs back to RDM on session close. This field should be empty for session notifications that aren't logged, such as focus changes.
+
 ### Version History
 - 1.0
     - Initial protocol version
@@ -1032,3 +1337,5 @@ packet-beta
     - Add working directory specification for Run (ShellExecute) messages.
 - 1.2
     - Add PowerShell server mode support.
+- 1.3
+	- Add RDM Jump protocol extension.
