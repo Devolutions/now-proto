@@ -117,6 +117,20 @@ packet-beta
 
 **str (variable)**: The UTF-8 encoded string excluding the null terminator.
 
+##### NOW_GUID
+
+The NOW_GUID structure is a GUID encoded in a NOW_VARSTR structure, as a lowercase string of 36 characters. Implementations should use the NOW_VARSTR type, but refer to the NOW_GUID definition for validation.
+
+```mermaid
+packet-beta
+  0-31: "len (variable)"
+  32-63: "str (variable)"
+```
+
+**len (variable)**: A NOW_VARU32 structure containing the string length (36), excluding the null terminator.
+
+**str (variable)**: The UTF-8 encoded lowercase GUID string, excluding the null terminator, like this: 00112233-4455-6677-8899-aabbccddeeff. If the value is omitted, use the null GUID value: 00000000-0000-0000-0000-000000000000.
+
 #### NOW_HEADER
 
 The NOW_HEADER structure is the header common to all NOW protocol messages.
@@ -1051,19 +1065,19 @@ packet-beta
 
 **msgType (1 byte)**: The message type.
 
-| Value                           | Meaning              |
-|---------------------------------|----------------------|
-| NOW_RDM_APP_START_MSG_ID<br>0x01 | NOW_RDM_APP_START_MSG |
-| NOW_RDM_APP_CLOSE_MSG_ID<br>0x02 | NOW_RDM_APP_CLOSE_MSG |
-| NOW_RDM_SESSION_START_MSG_ID<br>0x03 | NOW_RDM_SESSION_OPEN_MSG |
+| Value                                | Meaning                   |
+| ------------------------------------ | ------------------------- |
+| NOW_RDM_APP_LAUNCH_MSG_ID<br>0x01    | NOW_RDM_APP_LAUNCH_MSG    |
+| NOW_RDM_APP_READY_MSG_ID<br>0x02     | NOW_RDM_APP_READY_MSG     |
+| NOW_RDM_SESSION_START_MSG_ID<br>0x03 | NOW_RDM_SESSION_OPEN_MSG  |
 | NOW_RDM_SESSION_CLOSE_MSG_ID<br>0x04 | NOW_RDM_SESSION_CLOSE_MSG |
 | NOW_RDM_SESSION_FOCUS_MSG_ID<br>0x05 | NOW_RDM_SESSION_FOCUS_MSG |
 
 **msgFlags (2 bytes)**: The message flags.
 
-#### NOW_RDM_APP_START_MSG
+#### NOW_RDM_APP_LAUNCH_MSG
 
-The NOW_RDM_APP_START_MSG is used to start the RDM application.
+The NOW_RDM_APP_LAUNCH_MSG is used to launch RDM.
 
 ```mermaid
 packet-beta
@@ -1081,9 +1095,9 @@ packet-beta
 
 **msgFlags (2 bytes)**: The message flags.
 
-#### NOW_RDM_APP_CLOSE_MSG
+#### NOW_RDM_APP_READY_MSG
 
-The NOW_RDM_APP_CLOSE_MSG is used to close the RDM application.
+The NOW_RDM_APP_READY_MSG is sent by the server to notify the client that RDM is ready.
 
 ```mermaid
 packet-beta
@@ -1097,7 +1111,7 @@ packet-beta
 
 **msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
 
-**msgType (1 byte)**: The message type (NOW_RDM_APP_CLOSE_MSG_ID).
+**msgType (1 byte)**: The message type (NOW_RDM_APP_READY_MSG_ID).
 
 **msgFlags (2 bytes)**: The message flags.
 
@@ -1111,47 +1125,9 @@ packet-beta
   32-39: "msgClass"
   40-47: "msgType"
   48-63: "msgFlags"
-```
-
-**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
-
-**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
-
-**msgType (1 byte)**: The message type (NOW_RDM_SESSION_START_MSG_ID).
-
-**msgFlags (2 bytes)**: The message flags.
-
-
-#### NOW_RDM_SESSION_CLOSE_MSG
-
-The NOW_RDM_SESSION_CLOSE_MSG is used to close an RDM Jump session.
-
-```mermaid
-packet-beta
-  0-31: "msgSize"
-  32-39: "msgClass"
-  40-47: "msgType"
-  48-63: "msgFlags"
-```
-
-**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
-
-**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
-
-**msgType (1 byte)**: The message type (NOW_RDM_SESSION_CLOSE_MSG_ID).
-
-**msgFlags (2 bytes)**: The message flags.
-
-#### NOW_RDM_SESSION_FOCUS_MSG
-
-The NOW_RDM_SESSION_FOCUS_MSG is used to focus an RDM Jump session.
-
-```mermaid
-packet-beta
-  0-31: "msgSize"
-  32-39: "msgClass"
-  40-47: "msgType"
-  48-63: "msgFlags"
+  64-95: "sessionId (variable)"
+  96-127: "connectionId (variable)"
+  128-159: "connectionData (variable)"
 ```
 
 **msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
@@ -1161,6 +1137,57 @@ packet-beta
 **msgType (1 byte)**: The message type (NOW_RDM_SESSION_FOCUS_MSG_ID).
 
 **msgFlags (2 bytes)**: The message flags.
+
+sessionId (variable): session id, encoded as a NOW_GUID structure.
+
+connectionId (variable): connection id, encoded as a NOW_GUID structure. Reserved for future use: use null GUID.
+
+connectionData (variable): The serialized RDM XML connection object, encoded in a NOW_VARSTR structure.
+#### NOW_RDM_SESSION_CLOSE_MSG
+
+The NOW_RDM_SESSION_CLOSE_MSG is used to close a session when sent by the client, and it is used to notify of a session close when sent by the server. When the session close is initiated by the client, the server should not send a response. The server should notify of a session close that was not client-initiated.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_FOCUS_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+sessionId (variable): session id, encoded as a NOW_GUID structure.
+
+#### NOW_RDM_SESSION_FOCUS_MSG
+
+The NOW_RDM_SESSION_FOCUS_MSG is used to focus a session when sent by the client, and it is used to notify of a session focus change when sent by the server. When the session focus is initiated by the client, the server should not send a response. The server should notify of a focus change that was not client-initiated.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "sessionId (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_RDM_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_RDM_SESSION_FOCUS_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+sessionId (variable): session id, encoded as a NOW_GUID structure.
 
 ### Version History
 - 1.0
