@@ -972,7 +972,8 @@ packet-beta
 | NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x0040   | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter     |
 | NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x0080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
 | NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x0100      | `directory` field contains non-default value and specifies command working directory                           |
-| NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                               |
+| NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                              |
+| NOW_EXEC_FLAG_PS_SERVER_MODE<br>0x2000        | Run PowerShell in server mode.                                                                                 |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1029,3 +1030,5 @@ packet-beta
 - 1.1
     - Add IO redirection capability flag and explicit IO redirection flags for exec messages.
     - Add working directory specification for Run (ShellExecute) messages.
+- 1.2
+    - Add PowerShell server mode support.
