@@ -185,6 +185,10 @@ impl<'a> NowExecPwshMsg<'a> {
         self.flags.contains(NowExecWinPsFlags::NON_INTERACTIVE)
     }
 
+    pub fn is_server_mode(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::SERVER_MODE)
+    }
+
     pub fn apartment_state(&self) -> DecodeResult<Option<ComApartmentStateKind>> {
         ComApartmentStateKind::from_flags(self.flags)
     }
