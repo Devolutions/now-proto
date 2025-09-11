@@ -59,6 +59,12 @@ impl<'a> NowExecPwshMsg<'a> {
         Ok(msg)
     }
 
+    pub fn new_server_mode(session_id: u32) -> EncodeResult<Self> {
+        let mut msg = Self::new(session_id, "")?;
+        msg.flags |= NowExecWinPsFlags::SERVER_MODE;
+        Ok(msg)
+    }
+
     pub fn with_directory(mut self, directory: impl Into<Cow<'a, str>>) -> EncodeResult<Self> {
         self.flags |= NowExecWinPsFlags::DIRECTORY_SET;
         self.directory = NowVarStr::new(directory)?;

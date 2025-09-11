@@ -56,6 +56,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
         const IO_REDIRECTION = 0x1000;
+
+        /// Run PowerShell in server mode.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PS_SERVER_MODE
+        const SERVER_MODE = 0x2000;
     }
 }
 
@@ -139,6 +144,12 @@ impl<'a> NowExecWinPsMsg<'a> {
 
         msg.ensure_message_size()?;
 
+        Ok(msg)
+    }
+
+    pub fn new_server_mode(session_id: u32) -> EncodeResult<Self> {
+        let mut msg = Self::new(session_id, "")?;
+        msg.flags |= NowExecWinPsFlags::SERVER_MODE;
         Ok(msg)
     }
 
@@ -261,6 +272,10 @@ impl<'a> NowExecWinPsMsg<'a> {
 
     pub fn is_non_interactive(&self) -> bool {
         self.flags.contains(NowExecWinPsFlags::NON_INTERACTIVE)
+    }
+
+    pub fn is_server_mode(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::SERVER_MODE)
     }
 
     pub fn apartment_state(&self) -> DecodeResult<Option<ComApartmentStateKind>> {
