@@ -92,6 +92,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_WINPS_IO_REDIRECTION
             /// </summary>
             IoRedirection = 0x1000,
+
+            /// <summary>
+            /// Run PowerShell in server mode.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_SERVER_MODE
+            /// </summary>
+            ServerMode = 0x2000,
         }
 
         public enum ApartmentStateKind : ushort
@@ -107,6 +114,13 @@ namespace Devolutions.NowProto.Messages
 
         public class Builder(uint sessionId, string command)
         {
+            public static Builder NewCommandMode(uint sessionId)
+            {
+                var builder = new Builder(sessionId, "");
+                builder._flags |= MsgFlags.ServerMode;
+
+                return builder;
+            }
             public Builder Directory(string directory)
             {
                 _directory = directory;
@@ -272,6 +286,7 @@ namespace Devolutions.NowProto.Messages
         public string Command { get; private init; } = "";
 
         public bool IoRedirection => _flags.HasFlag(MsgFlags.IoRedirection);
+        public bool ServerMode => _flags.HasFlag(MsgFlags.ServerMode);
 
         private MsgFlags _flags = MsgFlags.None;
         private string _directory = "";

@@ -6,8 +6,18 @@ namespace Devolutions.NowClient
     /// Powershell 5 (PowerShell.exe) remote execution session parameters.
     /// </summary>
     /// <param name="command">PowerShell command/script to execute.</param>
-    public class ExecWinPsParams(string filename) : AExecParams
+    public class ExecWinPsParams(string command) : AExecParams
     {
+        /// <summary>
+        /// Create params for PowerShell server mode execution.
+        /// </summary>
+        public static ExecWinPsParams NewServerMode()
+        {
+            var execParams = new ExecWinPsParams("");
+            execParams._serverMode = true;
+            return execParams;
+        }
+
         /// <summary>
         /// Set the working directory for the command/script.
         /// </summary>
@@ -93,7 +103,9 @@ namespace Devolutions.NowClient
 
         internal NowMsgExecWinPs ToNowMessage(uint sessionId)
         {
-            var builder = new NowMsgExecWinPs.Builder(sessionId, filename);
+            var builder = _serverMode
+                ? NowMsgExecWinPs.Builder.NewCommandMode(sessionId)
+                : new NowMsgExecWinPs.Builder(sessionId, command);
 
             if (_directory != null)
             {
@@ -153,5 +165,6 @@ namespace Devolutions.NowClient
         private bool _noProfile = false;
         private bool _nonInteractive = false;
         private bool _ioRedirection = false;
+        private bool _serverMode = false;
     }
 }

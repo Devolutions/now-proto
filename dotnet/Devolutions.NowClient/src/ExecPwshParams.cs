@@ -9,6 +9,16 @@ namespace Devolutions.NowClient
     public class ExecPwshParams(string command) : AExecParams
     {
         /// <summary>
+        /// Create params for PowerShell server mode execution.
+        /// </summary>
+        public static ExecPwshParams NewServerMode()
+        {
+            var execParams = new ExecPwshParams("");
+            execParams._serverMode = true;
+            return execParams;
+        }
+
+        /// <summary>
         /// Set the working directory for the command/script.
         /// </summary>
         public ExecPwshParams Directory(string directory)
@@ -92,7 +102,9 @@ namespace Devolutions.NowClient
 
         internal NowMsgExecPwsh ToNowMessage(uint sessionId)
         {
-            var builder = new NowMsgExecPwsh.Builder(sessionId, command);
+            var builder = _serverMode
+                ? NowMsgExecPwsh.Builder.NewCommandMode(sessionId)
+                : new NowMsgExecPwsh.Builder(sessionId, command);
 
             if (_directory != null)
             {
@@ -152,5 +164,6 @@ namespace Devolutions.NowClient
         private bool _noProfile = false;
         private bool _nonInteractive = false;
         private bool _ioRedirection = false;
+        private bool _serverMode = false;
     }
 }
