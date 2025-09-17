@@ -39,6 +39,9 @@ public class NowClientPipeTransport : INowTransport
             await pipeServer.ConnectAsync();
         }
 
+        // Byte mode is default, but let's be explicit.
+        pipeServer.ReadMode = PipeTransmissionMode.Byte;
+
         return new NowClientPipeTransport(pipeServer);
     }
 
