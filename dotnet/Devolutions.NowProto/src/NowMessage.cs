@@ -62,6 +62,11 @@ namespace Devolutions.NowProto
                 return T.Deserialize(_header.Flags, reader);
             }
 
+            /// <summary>
+            /// Gets the total size of the message including header and body.
+            /// </summary>
+            public uint FrameSize => NowHeader.FixedPartSize + _header.Size;
+
             public byte MessageClass => _header.MsgClass;
             public byte MessageKind => _header.MsgKind;
             public ushort Flags => _header.Flags;

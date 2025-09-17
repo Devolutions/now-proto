@@ -5,9 +5,12 @@ namespace Devolutions.NowClient
     /// <summary>
     /// Transport wrapper with NOW-proto message
     /// serialization/deserialization capabilities.
+    /// Includes defragmentation logic to handle partial messages and multiple in-frame messages.
     /// </summary>
     internal class NowChannelTransport(INowTransport transport)
     {
+        private readonly NowMessageBuffer _messageBuffer = new();
+
         public async Task WriteMessage(INowSerialize message)
         {
             var cursor = new NowWriteCursor(_writeBuffer);
@@ -25,10 +28,14 @@ namespace Devolutions.NowClient
 
         public async Task<NowMessage.NowMessageView> ReadMessageAny()
         {
-            var frame = await transport.Read();
-            var cursor = new NowReadCursor(frame);
+            // Keep reading from transport until we have at least one complete message.
+            while (!_messageBuffer.HasCompleteMessage)
+            {
+                var frame = await transport.Read();
+                _messageBuffer.AddData(frame);
+            }
 
-            return NowMessage.Read(cursor);
+            return _messageBuffer.GetNextMessage()!.Value;
         }
 
         private const int DefaultBufferSize = 1024 * 64; // 64KB Buffer
