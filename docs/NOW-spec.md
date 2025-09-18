@@ -253,10 +253,10 @@ packet-beta
 |-------|---------|
 | NOW_CHANNEL_SET_HEARTBEAT<br>0x0001 | Set if `heartbeat` specify channel heartbeat interval. |
 
-**versionMajor (1 byte)**: Major protocol version. Breaking changes in protocol should
+**versionMajor (2 bytes)**: Major protocol version. Breaking changes in protocol should
 increment major version; Protocol implementations with different major version are not compatible.
 
-**versionMinor (1 byte)**: Minor protocol version. Incremented when new non-breaking feature is added.
+**versionMinor (2 bytes)**: Minor protocol version. Incremented when new non-breaking feature is added.
 
 **systemCapset (2 bytes)**: System commands capabilities set.
 
