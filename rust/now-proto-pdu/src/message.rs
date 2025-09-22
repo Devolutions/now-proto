@@ -1,6 +1,8 @@
 use ironrdp_core::{ensure_size, Decode, DecodeResult, Encode, EncodeResult, IntoOwned, ReadCursor, WriteCursor};
 
-use crate::{NowChannelMessage, NowExecMessage, NowHeader, NowMessageClass, NowSessionMessage, NowSystemMessage};
+use crate::{
+    NowChannelMessage, NowExecMessage, NowHeader, NowMessageClass, NowRdmMessage, NowSessionMessage, NowSystemMessage,
+};
 
 /// Wrapper type for messages transferred over the NOW-PROTO communication channel.
 ///
@@ -11,6 +13,7 @@ pub enum NowMessage<'a> {
     System(NowSystemMessage<'a>),
     Session(NowSessionMessage<'a>),
     Exec(NowExecMessage<'a>),
+    Rdm(NowRdmMessage<'a>),
 }
 
 impl_pdu_borrowing!(NowMessage<'_>, OwnedNowMessage);
@@ -24,6 +27,7 @@ impl IntoOwned for NowMessage<'_> {
             Self::System(msg) => OwnedNowMessage::System(msg.into_owned()),
             Self::Session(msg) => OwnedNowMessage::Session(msg.into_owned()),
             Self::Exec(msg) => OwnedNowMessage::Exec(msg.into_owned()),
+            Self::Rdm(msg) => OwnedNowMessage::Rdm(msg.into_owned()),
         }
     }
 }
@@ -39,6 +43,7 @@ impl Encode for NowMessage<'_> {
             Self::System(msg) => msg.encode(dst),
             Self::Session(msg) => msg.encode(dst),
             Self::Exec(msg) => msg.encode(dst),
+            Self::Rdm(msg) => msg.encode(dst),
         }
     }
 
@@ -52,6 +57,7 @@ impl Encode for NowMessage<'_> {
             Self::System(msg) => msg.size(),
             Self::Session(msg) => msg.size(),
             Self::Exec(msg) => msg.size(),
+            Self::Rdm(msg) => msg.size(),
         }
     }
 }
@@ -77,6 +83,7 @@ impl<'a> NowMessage<'a> {
             NowMessageClass::SYSTEM => Ok(Self::System(NowSystemMessage::decode_from_body(header, src)?)),
             NowMessageClass::SESSION => Ok(Self::Session(NowSessionMessage::decode_from_body(header, src)?)),
             NowMessageClass::EXEC => Ok(Self::Exec(NowExecMessage::decode_from_body(header, src)?)),
+            NowMessageClass::RDM => Ok(Self::Rdm(NowRdmMessage::decode_from_body(header, src)?)),
             // Handle unknown class; Unknown kind is handled by underlying message type.
             _ => Err(unsupported_message_err!(class: header.class.0, kind: header.kind)),
         }
