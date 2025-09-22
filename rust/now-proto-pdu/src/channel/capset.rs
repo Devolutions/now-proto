@@ -97,7 +97,7 @@ pub struct NowProtoVersion {
 
 impl NowProtoVersion {
     /// Represents the current version of the NOW protocol implemented by the library.
-    pub const CURRENT: Self = Self { major: 1, minor: 2 };
+    pub const CURRENT: Self = Self { major: 1, minor: 3 };
 }
 
 /// This message is first set by the client side, to advertise capabilities.

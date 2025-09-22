@@ -4,12 +4,14 @@
 //! public API.
 
 mod buffer;
+mod guid;
 mod header;
 mod number;
 mod status;
 mod string;
 
 pub(crate) use buffer::NowVarBuf;
+pub(crate) use guid::NowGuid;
 pub(crate) use header::{NowHeader, NowMessageClass};
 pub(crate) use number::VarU32;
 pub(crate) use status::NowStatus;

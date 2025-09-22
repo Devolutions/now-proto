@@ -15,6 +15,9 @@ impl NowMessageClass {
 
     /// NOW-PROTO: NOW_EXEC_MSG_CLASS_ID
     pub const EXEC: Self = Self(0x13);
+
+    /// NOW-PROTO: NOW_RDM_MSG_CLASS_ID
+    pub const RDM: Self = Self(0x14);
 }
 
 /// The NOW_HEADER structure is the header common to all NOW protocol messages.

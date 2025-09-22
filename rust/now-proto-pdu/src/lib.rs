@@ -10,6 +10,8 @@ extern crate alloc;
 pub extern crate ironrdp_core;
 pub extern crate ironrdp_error;
 
+pub use uuid::Uuid;
+
 #[macro_use]
 mod macros;
 
@@ -23,6 +25,7 @@ mod channel;
 mod core;
 mod exec;
 mod message;
+mod rdm;
 mod session;
 mod system;
 
@@ -31,5 +34,6 @@ pub use core::*;
 pub use channel::*;
 pub use exec::*;
 pub use message::*;
+pub use rdm::*;
 pub use session::*;
 pub use system::*;
