@@ -1,0 +1,142 @@
+namespace Devolutions.NowProto.Tests
+{
+    public class MsgRdm
+    {
+        [Fact]
+        public void RdmCapabilitiesMsg()
+        {
+            var msg = new NowMsgRdmCapabilities.Builder(1672531200, "2025.1.2.3") // Unix timestamp for January 1, 2023 00:00:00 UTC
+                .VersionExtra("ABC")
+                .WithAppAvailable()
+                .Build();
+
+            var encoded = new byte[]
+            {
+                0x1D, 0x00, 0x00, 0x00, 0x14, 0x01, 0x00, 0x00, 0x00, 0xCD, 0xB0, 0x63, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x0A, 0x32, 0x30, 0x32, 0x35, 0x2E, 0x31, 0x2E, 0x32, 0x2E, 0x33, 0x00, 0x03, 0x41, 0x42, 0x43, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.Timestamp, decoded.Timestamp);
+            Assert.Equal(msg.SyncFlags, decoded.SyncFlags);
+            Assert.Equal(msg.RdmVersion, decoded.RdmVersion);
+            Assert.Equal(msg.VersionExtra, decoded.VersionExtra);
+            Assert.True(decoded.IsAppAvailable);
+        }
+
+        [Fact]
+        public void RdmAppStartMsg()
+        {
+            var msg = new NowMsgRdmAppStart.Builder()
+                .Timeout(45) // timeout in seconds
+                .WithJumpMode()
+                .WithMaximized()
+                .Build();
+
+            var encoded = new byte[]
+            {
+                0x08, 0x00, 0x00, 0x00, 0x14, 0x02, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x2D, 0x00, 0x00, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.LaunchFlags, decoded.LaunchFlags);
+            Assert.Equal(msg.Timeout, decoded.Timeout);
+            Assert.True(decoded.IsJumpMode);
+            Assert.True(decoded.IsMaximized);
+        }
+
+        [Fact]
+        public void RdmAppActionMsg()
+        {
+            var msg = NowMsgRdmAppAction.Close("ABC");
+
+            var encoded = new byte[]
+            {
+                0x09, 0x00, 0x00, 0x00, 0x14, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x41, 0x42, 0x43, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.AppAction, decoded.AppAction);
+            Assert.Equal(msg.ActionData, decoded.ActionData);
+        }
+
+        [Fact]
+        public void RdmAppNotifyMsg()
+        {
+            var msg = new NowMsgRdmAppNotify(NowRdmAppState.Ready, NowRdmReason.NotSpecified, "OK");
+
+            var encoded = new byte[]
+            {
+                0x0C, 0x00, 0x00, 0x00, 0x14, 0x04, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x4F, 0x4B, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.AppState, decoded.AppState);
+            Assert.Equal(msg.ReasonCode, decoded.ReasonCode);
+            Assert.Equal(msg.NotifyData, decoded.NotifyData);
+        }
+
+        [Fact]
+        public void RdmSessionStartMsg()
+        {
+            // Guids from Rust test: session_id and connection_id
+            var sessionId = new Guid("01020304-0506-0708-090a-0b0c0d0e0f10");
+            var connectionId = new Guid("a1b2c3d4-e5f6-0718-293a-4b5c6d7e8f90");
+
+            var msg = new NowMsgRdmSessionStart(sessionId, connectionId, "<a>b</a>");
+
+            var encoded = new byte[]
+            {
+                0x56, 0x00, 0x00, 0x00, 0x14, 0x05, 0x00, 0x00, 0x24, 0x30, 0x31, 0x30, 0x32, 0x30, 0x33, 0x30, 0x34, 0x2D, 0x30, 0x35, 0x30, 0x36, 0x2D, 0x30, 0x37, 0x30, 0x38, 0x2D, 0x30, 0x39, 0x30, 0x61, 0x2D, 0x30, 0x62, 0x30, 0x63, 0x30, 0x64, 0x30, 0x65, 0x30, 0x66, 0x31, 0x30, 0x00, 0x24, 0x61, 0x31, 0x62, 0x32, 0x63, 0x33, 0x64, 0x34, 0x2D, 0x65, 0x35, 0x66, 0x36, 0x2D, 0x30, 0x37, 0x31, 0x38, 0x2D, 0x32, 0x39, 0x33, 0x61, 0x2D, 0x34, 0x62, 0x35, 0x63, 0x36, 0x64, 0x37, 0x65, 0x38, 0x66, 0x39, 0x30, 0x00, 0x08, 0x3C, 0x61, 0x3E, 0x62, 0x3C, 0x2F, 0x61, 0x3E, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.SessionId, decoded.SessionId);
+            Assert.Equal(msg.ConnectionId, decoded.ConnectionId);
+            Assert.Equal(msg.ConnectionData, decoded.ConnectionData);
+        }
+
+        [Fact]
+        public void RdmSessionActionMsg()
+        {
+            // Guid from Rust test: session_id
+            var sessionId = new Guid("a1b2c3d4-e5f6-0718-293a-4b5c6d7e8f90");
+
+            var msg = NowMsgRdmSessionAction.Focus(sessionId);
+
+            var encoded = new byte[]
+            {
+                0x2A, 0x00, 0x00, 0x00, 0x14, 0x06, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x24, 0x61, 0x31, 0x62, 0x32, 0x63, 0x33, 0x64, 0x34, 0x2D, 0x65, 0x35, 0x66, 0x36, 0x2D, 0x30, 0x37, 0x31, 0x38, 0x2D, 0x32, 0x39, 0x33, 0x61, 0x2D, 0x34, 0x62, 0x35, 0x63, 0x36, 0x64, 0x37, 0x65, 0x38, 0x66, 0x39, 0x30, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.SessionAction, decoded.SessionAction);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
+        }
+
+        [Fact]
+        public void RdmSessionNotifyMsg()
+        {
+            // Guid from Rust test: session_id
+            var sessionId = new Guid("a1b2c3d4-e5f6-0718-293a-4b5c6d7e8f90");
+
+            var msg = NowMsgRdmSessionNotify.Close(sessionId, "Session closed gracefully");
+
+            var encoded = new byte[]
+            {
+                0x45, 0x00, 0x00, 0x00, 0x14, 0x07, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x24, 0x61, 0x31, 0x62, 0x32, 0x63, 0x33, 0x64, 0x34, 0x2D, 0x65, 0x35, 0x66, 0x36, 0x2D, 0x30, 0x37, 0x31, 0x38, 0x2D, 0x32, 0x39, 0x33, 0x61, 0x2D, 0x34, 0x62, 0x35, 0x63, 0x36, 0x64, 0x37, 0x65, 0x38, 0x66, 0x39, 0x30, 0x00, 0x19, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6F, 0x6E, 0x20, 0x63, 0x6C, 0x6F, 0x73, 0x65, 0x64, 0x20, 0x67, 0x72, 0x61, 0x63, 0x65, 0x66, 0x75, 0x6C, 0x6C, 0x79, 0x00
+            };
+
+            var decoded = NowTest.MessageRoundtrip(msg, encoded);
+
+            Assert.Equal(msg.SessionNotifyKind, decoded.SessionNotifyKind);
+            Assert.Equal(msg.SessionId, decoded.SessionId);
+            Assert.Equal(msg.LogData, decoded.LogData);
+        }
+    }
+}

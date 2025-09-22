@@ -47,6 +47,15 @@ namespace Devolutions.NowProto
 
         }
 
+        public ulong ReadUInt64Le()
+        {
+            var data = ReadBytes(8);
+
+            if (BitConverter.IsLittleEndian) return BitConverter.ToUInt64(data);
+            Span<byte> reversed = [data[7], data[6], data[5], data[4], data[3], data[2], data[1], data[0]];
+            return BitConverter.ToUInt64(reversed);
+        }
+
         public void Advance(uint count)
         {
             var remaining = _buffer.Slice((int)count, _buffer.Count - (int)count);
