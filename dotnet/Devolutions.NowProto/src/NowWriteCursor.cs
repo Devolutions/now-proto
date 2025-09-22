@@ -87,6 +87,34 @@ namespace Devolutions.NowProto
             Advance(4);
         }
 
+        public void WriteUint64Le(ulong value)
+        {
+            EnsureEnoughBytes(8);
+            if (BitConverter.IsLittleEndian)
+            {
+                _buffer[0] = (byte)(value & 0xFF);
+                _buffer[1] = (byte)((value >> 8) & 0xFF);
+                _buffer[2] = (byte)((value >> 16) & 0xFF);
+                _buffer[3] = (byte)((value >> 24) & 0xFF);
+                _buffer[4] = (byte)((value >> 32) & 0xFF);
+                _buffer[5] = (byte)((value >> 40) & 0xFF);
+                _buffer[6] = (byte)((value >> 48) & 0xFF);
+                _buffer[7] = (byte)((value >> 56) & 0xFF);
+            }
+            else
+            {
+                _buffer[0] = (byte)((value >> 56) & 0xFF);
+                _buffer[1] = (byte)((value >> 48) & 0xFF);
+                _buffer[2] = (byte)((value >> 40) & 0xFF);
+                _buffer[3] = (byte)((value >> 32) & 0xFF);
+                _buffer[4] = (byte)((value >> 24) & 0xFF);
+                _buffer[5] = (byte)((value >> 16) & 0xFF);
+                _buffer[6] = (byte)((value >> 8) & 0xFF);
+                _buffer[7] = (byte)(value & 0xFF);
+            }
+            Advance(8);
+        }
+
         private ArraySegment<byte> _buffer = buffer;
         public uint BytesFilled = 0;
     }

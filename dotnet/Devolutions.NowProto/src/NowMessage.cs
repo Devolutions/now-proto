@@ -21,6 +21,9 @@ namespace Devolutions.NowProto
         // NOW-PROTO: NOW_EXEC_MSG_CLASS_ID
         public const byte ClassExec = 0x13;
 
+        // NOW-PROTO: NOW_RDM_MSG_CLASS_ID
+        public const byte ClassRdm = 0x14;
+
         /// <summary>
         /// Immutable message view. Allows to read message header and body without deserialization
         /// or to perform deserialization to specific message type on demand.
