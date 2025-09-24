@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 
 using Devolutions.NowClient.Worker;
+using Devolutions.NowProto;
 using Devolutions.NowProto.Capabilities;
 using Devolutions.NowProto.Messages;
 
@@ -64,7 +65,9 @@ namespace Devolutions.NowClient
                 }
             });
 
-            return new NowClient(capabilities, workerTask, clientChannel.Writer);
+            var client = new NowClient(capabilities, workerTask, clientChannel.Writer);
+
+            return client;
         }
 
         /// <summary>
@@ -336,6 +339,157 @@ namespace Devolutions.NowClient
             await _commandWriter.WriteAsync(new CommandChannelClose());
         }
 
+        // RDM Methods
+
+        /// <summary>
+        /// Sets the callback for RDM application notifications.
+        /// </summary>
+        public async Task SetRdmAppNotifyHandler(RdmAppNotifyHandler? handler)
+        {
+            ThrowIfWorkerTerminated();
+
+            await _commandWriter.WriteAsync(new CommandSetRdmAppNotifyHandler(handler));
+        }
+
+        private bool _rdmCapabilitiesSent = false;
+        private RdmCapabilityInfo? _rdmCapabilities = null;
+
+        /// <summary>
+        /// Performs RDM capabilities exchange with the server.
+        /// This method is automatically called before any RDM app or session operations if not already called.
+        /// </summary>
+        public async Task RdmSync()
+        {
+            ThrowIfWorkerTerminated();
+
+            var clientTimestamp = DateTimeOffset.UtcNow;
+            var message = new NowMsgRdmCapabilities.Builder(
+                (ulong)clientTimestamp.ToUnixTimeSeconds(),
+                ""
+            ).Build();
+
+            var responseHandler = new TaskCompletionSource<NowMsgRdmCapabilities>();
+            var command = new CommandRdmCapabilities(message, responseHandler);
+
+            await _commandWriter.WriteAsync(command);
+
+            var response = await responseHandler.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            _rdmCapabilities = new RdmCapabilityInfo
+            {
+                IsAppAvailable = response.IsAppAvailable,
+                RdmVersion = response.RdmVersion,
+                VersionExtra = response.VersionExtra,
+                ServerTimestamp = DateTimeOffset.FromUnixTimeSeconds((long)response.Timestamp),
+            };
+
+            _rdmCapabilitiesSent = true;
+        }
+
+        /// <summary>
+        /// Checks if RDM application is available on the server.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task<bool> IsRdmAppAvailable()
+        {
+            await EnsureRdmCapabilitiesSent();
+
+            return _rdmCapabilities?.IsAppAvailable ?? false;
+        }
+
+        /// <summary>
+        /// Gets the RDM version information from the server.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task<RdmVersion?> GetRdmVersion()
+        {
+            await EnsureRdmCapabilitiesSent();
+
+            if (_rdmCapabilities == null || !_rdmCapabilities.IsAppAvailable)
+                return null;
+
+            return new RdmVersion(_rdmCapabilities.RdmVersion,
+                string.IsNullOrEmpty(_rdmCapabilities.VersionExtra) ? null : _rdmCapabilities.VersionExtra);
+        }
+
+        /// <summary>
+        /// Starts the RDM application on the server.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task RdmStart(RdmStartParams? startParams = null)
+        {
+            ThrowIfWorkerTerminated();
+            await EnsureRdmCapabilitiesSent();
+
+            var parameters = startParams ?? new RdmStartParams();
+            var builder = new NowMsgRdmAppStart.Builder()
+                .Timeout((uint)parameters.Timeout.TotalSeconds);
+
+            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.JumpMode))
+                builder = builder.WithJumpMode();
+            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.Maximized))
+                builder = builder.WithMaximized();
+            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.Fullscreen))
+                builder = builder.WithFullscreen();
+
+            var message = builder.Build();
+            var command = new CommandRdmAppStart(message);
+
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
+        /// Sends an action command to the RDM application.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task RdmAction(NowRdmAppAction action, string actionData = "")
+        {
+            ThrowIfWorkerTerminated();
+            await EnsureRdmCapabilitiesSent();
+
+            var message = new NowMsgRdmAppAction(action, actionData);
+            var command = new CommandRdmAppAction(message);
+
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
+        /// Starts a new RDM session.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task<RdmSession> RdmSessionStart(RdmSessionStartParams sessionParams)
+        {
+            ThrowIfWorkerTerminated();
+            await EnsureRdmCapabilitiesSent();
+
+            var message = new NowMsgRdmSessionStart(sessionParams.SessionId, sessionParams.ConnectionId, sessionParams.ConnectionData);
+            var session = new RdmSession(sessionParams.SessionId, _commandWriter, sessionParams.NotifyHandler);
+            var command = new CommandRdmSessionStart(message, session);
+
+            await _commandWriter.WriteAsync(command);
+
+            return session;
+        }
+
+        /// <summary>
+        /// Ensures that RDM capabilities have been exchanged with the server.
+        /// </summary>
+        private async Task EnsureRdmCapabilitiesSent()
+        {
+            if (!_rdmCapabilitiesSent)
+            {
+                // Check if server version supports RDM functionality
+                if (Capabilities.Version < MIN_RDM_ENABLED_VERSION)
+                {
+                    throw new NowClientException(
+                        $"RDM functionality requires NOW-proto server version {MIN_RDM_ENABLED_VERSION.Major}.{MIN_RDM_ENABLED_VERSION.Minor} or higher. " +
+                        $"Current server version is {Capabilities.Version.Major}.{Capabilities.Version.Minor}.");
+                }
+
+                await RdmSync();
+            }
+        }
+
         private static void ThrowCapabilitiesError(string capability)
         {
             throw new NowClientException($"{capability} is not supported by server.");
@@ -351,17 +505,23 @@ namespace Devolutions.NowClient
 
         private NowClient(
             NowMsgChannelCapset capabilities,
-            Task runnerTask,
+            Task workerTask,
             ChannelWriter<IClientCommand> commandWriter
         )
         {
             this.Capabilities = capabilities;
-            this._runnerTask = runnerTask;
+            this._runnerTask = workerTask;
             this._commandWriter = commandWriter;
         }
 
         private const int TimeoutConnectSeconds = 10;
         private const int IoChannelCapacity = 1024;
+
+        /// <summary>
+        /// Minimum NOW-proto server version required for RDM functionality.
+        /// RDM features were introduced in version 1.3, so servers with version 1.2 and below are not supported.
+        /// </summary>
+        private static readonly NowProtoVersion MIN_RDM_ENABLED_VERSION = new(1, 3);
 
         /// <summary>
         /// Check if the NOW-proto channel has been terminated.
