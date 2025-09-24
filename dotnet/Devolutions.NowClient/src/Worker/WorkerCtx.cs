@@ -77,6 +77,9 @@ namespace Devolutions.NowClient.Worker
                         case NowMessage.ClassExec:
                             HandleExecMessage(message, ctx);
                             break;
+                        case NowMessage.ClassRdm:
+                            HandleRdmMessage(message, ctx);
+                            break;
                         default:
                             Debug.WriteLine($"Unhandled message class={message.MessageClass}");
                             break;
@@ -228,6 +231,33 @@ namespace Devolutions.NowClient.Worker
             }
         }
 
+        private static void HandleRdmMessage(NowMessage.NowMessageView message, WorkerCtx ctx)
+        {
+            var kind = (RdmMessageKind)message.MessageKind;
+
+            switch (kind)
+            {
+                case RdmMessageKind.Capabilities:
+                    var capabilities = message.Deserialize<NowMsgRdmCapabilities>();
+                    ctx.HandleRdmCapabilitiesResponse(capabilities);
+                    break;
+
+                case RdmMessageKind.AppNotify:
+                    var appNotify = message.Deserialize<NowMsgRdmAppNotify>();
+                    ctx.RdmAppNotifyHandler?.Invoke(appNotify.AppState, appNotify.ReasonCode, appNotify.NotifyData);
+                    break;
+
+                case RdmMessageKind.SessionNotify:
+                    var sessionNotify = message.Deserialize<NowMsgRdmSessionNotify>();
+                    ctx.HandleRdmSessionNotify(sessionNotify);
+                    break;
+
+                default:
+                    Debug.WriteLine($"Unhandled RDM message kind: {message.MessageKind}");
+                    break;
+            }
+        }
+
         // -- IO --
         public required NowChannelTransport NowChannel;
         public required ChannelReader<IClientCommand> Commands;
@@ -240,5 +270,44 @@ namespace Devolutions.NowClient.Worker
 
         public Dictionary<uint, IMessageBoxRspHandler> MessageBoxHandlers = [];
         public Dictionary<uint, IExecSessionHandler> ExecSessionHandlers = [];
+
+        // -- RDM State --
+        public RdmAppNotifyHandler? RdmAppNotifyHandler;
+        public TaskCompletionSource<NowMsgRdmCapabilities>? RdmCapabilitiesResponseHandler;
+        public Dictionary<Guid, RdmSession> RdmSessions = [];
+
+        public void RegisterRdmCapabilitiesHandler(TaskCompletionSource<NowMsgRdmCapabilities> handler)
+        {
+            RdmCapabilitiesResponseHandler = handler;
+        }
+
+        private void HandleRdmCapabilitiesResponse(NowMsgRdmCapabilities response)
+        {
+            if (RdmCapabilitiesResponseHandler != null)
+            {
+                RdmCapabilitiesResponseHandler.SetResult(response);
+                RdmCapabilitiesResponseHandler = null;
+            }
+        }
+
+        public void RegisterRdmSession(RdmSession session)
+        {
+            RdmSessions[session.SessionId] = session;
+        }
+
+        public void HandleRdmSessionNotify(NowMsgRdmSessionNotify sessionNotify)
+        {
+            // Handle session notifications through the session object if it exists
+            if (RdmSessions.TryGetValue(sessionNotify.SessionId, out RdmSession? session))
+            {
+                session.HandleNotification(sessionNotify.SessionNotifyKind, sessionNotify.LogData);
+
+                // Remove from sessions if closed
+                if (sessionNotify.SessionNotifyKind == NowRdmSessionNotifyKind.Close)
+                {
+                    RdmSessions.Remove(sessionNotify.SessionId);
+                }
+            }
+        }
     }
 }

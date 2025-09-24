@@ -51,7 +51,7 @@ static class Program
         {
             repeat = true;
 
-            Console.Write("Operation (msg/run/pwsh/logoff/lock/exit): ");
+            Console.Write("Operation (msg/run/pwsh/logoff/lock/rdm-run/rdm-version/exit): ");
             var operation = Console.ReadLine()?.Trim().ToLowerInvariant() ?? string.Empty;
 
             switch (operation)
@@ -103,6 +103,12 @@ static class Program
                 case "lock":
                     await client.SessionLock();
                     Console.WriteLine("OK");
+                    break;
+                case "rdm-run":
+                    await ExecuteRdmRunCommand(client);
+                    break;
+                case "rdm-version":
+                    await ExecuteRdmVersionCommand(client);
                     break;
                 case "exit":
                     Console.WriteLine("Exiting...");
@@ -242,6 +248,73 @@ static class Program
         {
             Console.Error.WriteLine($"Error executing PowerShell command: {ex.Message}");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Executes the RDM run command - starts an RDM application.
+    /// </summary>
+    private static async Task ExecuteRdmRunCommand(NowClient client)
+    {
+        try
+        {
+            // Check if RDM is available
+            Console.WriteLine("Checking RDM availability...");
+            var isAvailable = await client.IsRdmAppAvailable();
+            if (!isAvailable)
+            {
+                Console.WriteLine("RDM is not available on this system.");
+                return;
+            }
+
+            // Start RDM application
+            Console.WriteLine("Starting RDM application...");
+            var startParams = new RdmStartParams();
+
+            await client.RdmStart(startParams);
+            Console.WriteLine("RDM application started successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error executing RDM run command: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Executes the RDM version command - displays RDM version information.
+    /// </summary>
+    private static async Task ExecuteRdmVersionCommand(NowClient client)
+    {
+        try
+        {
+            // Check if RDM is available
+            var isAvailable = await client.IsRdmAppAvailable();
+            if (!isAvailable)
+            {
+                Console.WriteLine("RDM is not available on this system.");
+                return;
+            }
+
+            Console.WriteLine("RDM is available.");
+
+            // Get and display version information
+            var rdmVersion = await client.GetRdmVersion();
+            if (rdmVersion != null)
+            {
+                Console.WriteLine($"RDM Version: {rdmVersion.Version}");
+                if (!string.IsNullOrEmpty(rdmVersion.Extra))
+                {
+                    Console.WriteLine($"Extra information: {rdmVersion.Extra}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not retrieve RDM version information.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error executing RDM version command: {ex.Message}");
         }
     }
 }
