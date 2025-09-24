@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [[0.4.0](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.3.2...now-proto-pdu-v0.4.0)] - 2025-09-24
+
+### <!-- 1 -->Features
+
+- Implemented NOW-Proto 1.3 features in rust crate ([b99bbeae0c](https://github.com/Devolutions/now-proto/commit/b99bbeae0cda6f6ee20e0f29b6b36ee9abdd34e9)) 
+
+### <!-- 4 -->Bug Fixes
+
+- Update version numbers in libraries ([7296b6d325](https://github.com/Devolutions/now-proto/commit/7296b6d325df4fc08ca18faa1a4e24a322ba2bb7)) 
+
+
+
 ## [[0.3.2](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.3.1...now-proto-pdu-v0.3.2)] - 2025-09-11
 
 ### <!-- 4 -->Bug Fixes
