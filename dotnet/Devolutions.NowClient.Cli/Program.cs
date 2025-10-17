@@ -45,16 +45,22 @@ static class Program
 
         Console.WriteLine($"Negotiated NowProto client version: {client.Capabilities.Version}");
 
+        // Set up RDM notification callback
+        await client.SetRdmAppNotifyHandler((appState, reasonCode, notifyData) =>
+        {
+            Console.WriteLine($"[RDM NOTIFICATION] State: {appState}, Reason: {reasonCode}, Data: {notifyData}");
+        });
+
 
         bool repeat;
         do
         {
             repeat = true;
 
-            Console.Write("Operation (msg/run/pwsh/logoff/lock/rdm-run/rdm-version/exit): ");
-            var operation = Console.ReadLine()?.Trim().ToLowerInvariant() ?? string.Empty;
+            Console.Write("Operation (msg/run/pwsh/logoff/lock/rdm-version/rdm-run/rdm-action/help/exit): ");
+            var operation = Console.ReadLine()?.Trim() ?? string.Empty;
 
-            switch (operation)
+            switch (operation.ToLowerInvariant())
             {
                 case "run":
                     Console.Write("ShellExecute command: ");
@@ -104,18 +110,25 @@ static class Program
                     await client.SessionLock();
                     Console.WriteLine("OK");
                     break;
-                case "rdm-run":
-                    await ExecuteRdmRunCommand(client);
-                    break;
                 case "rdm-version":
                     await ExecuteRdmVersionCommand(client);
+                    break;
+                case var cmd when cmd.StartsWith("rdm-run"):
+                    await ExecuteRdmRunCommand(client, operation);
+                    break;
+                case var cmd when cmd.StartsWith("rdm-action"):
+                    await ExecuteRdmActionCommand(client, operation);
                     break;
                 case "exit":
                     Console.WriteLine("Exiting...");
                     repeat = false;
                     break;
+                case "help":
+                case "?":
+                    ShowHelp();
+                    break;
                 default:
-                    Console.WriteLine("Unknown command.");
+                    Console.WriteLine("Unknown command. Type 'help' for available commands.");
                     break;
             }
         } while (repeat);
@@ -253,8 +266,9 @@ static class Program
 
     /// <summary>
     /// Executes the RDM run command - starts an RDM application.
+    /// Syntax: rdm-run <FLAGS> where FLAGS is any combination of the letters F, M, and/or J. F - fullscreen, M - maximized, J - jump mode.
     /// </summary>
-    private static async Task ExecuteRdmRunCommand(NowClient client)
+    private static async Task ExecuteRdmRunCommand(NowClient client, string commandLine)
     {
         try
         {
@@ -267,9 +281,33 @@ static class Program
                 return;
             }
 
+            // Parse flags from command line
+            var parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var flags = NowRdmLaunchFlags.None;
+
+            if (parts.Length > 1)
+            {
+                var flagString = parts[1].ToUpperInvariant();
+                if (flagString.Contains('F'))
+                    flags |= NowRdmLaunchFlags.Fullscreen;
+                if (flagString.Contains('M'))
+                    flags |= NowRdmLaunchFlags.Maximized;
+                if (flagString.Contains('J'))
+                    flags |= NowRdmLaunchFlags.JumpMode;
+
+                Console.WriteLine($"Using launch flags: {flags}");
+            }
+            else
+            {
+                Console.WriteLine("No flags specified, using default launch mode.");
+            }
+
             // Start RDM application
             Console.WriteLine("Starting RDM application...");
-            var startParams = new RdmStartParams();
+            var startParams = new RdmStartParams
+            {
+                LaunchFlags = flags
+            };
 
             await client.RdmStart(startParams);
             Console.WriteLine("RDM application started successfully.");
@@ -281,12 +319,18 @@ static class Program
     }
 
     /// <summary>
-    /// Executes the RDM version command - displays RDM version information.
+    /// Executes the RDM version command - syncs/negotiates RDM and displays version information.
     /// </summary>
     private static async Task ExecuteRdmVersionCommand(NowClient client)
     {
         try
         {
+            Console.WriteLine("Performing RDM capabilities negotiation...");
+
+            // Perform RDM sync/negotiation
+            await client.RdmSync();
+            Console.WriteLine("RDM capabilities negotiated successfully.");
+
             // Check if RDM is available
             var isAvailable = await client.IsRdmAppAvailable();
             if (!isAvailable)
@@ -316,5 +360,83 @@ static class Program
         {
             Console.Error.WriteLine($"Error executing RDM version command: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Executes the RDM action command.
+    /// Syntax: rdm-action <CLOSE|FOCUS> (case insensitive)
+    /// </summary>
+    private static async Task ExecuteRdmActionCommand(NowClient client, string commandLine)
+    {
+        try
+        {
+            // Parse action from command line
+            var parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                Console.WriteLine("Usage: rdm-action <CLOSE|FOCUS>");
+                return;
+            }
+
+            var actionString = parts[1].ToUpperInvariant();
+            NowRdmAppAction action;
+
+            switch (actionString)
+            {
+                case "CLOSE":
+                    action = NowRdmAppAction.Close;
+                    break;
+                case "FOCUS":
+                    // Focus is typically implemented as Restore action in RDM
+                    action = NowRdmAppAction.Restore;
+                    break;
+                default:
+                    Console.WriteLine($"Unknown action: {parts[1]}. Valid actions are: CLOSE, FOCUS");
+                    return;
+            }
+
+            Console.WriteLine($"Executing RDM action: {actionString}");
+            await client.RdmAction(action);
+            Console.WriteLine("RDM action executed successfully.");
+        }
+        catch (Exception ex)
+        {
+            // Rethrow critical exceptions
+            if (ex is OutOfMemoryException || ex is StackOverflowException || ex is ThreadAbortException)
+            {
+                throw;
+            }
+            Console.Error.WriteLine($"Error executing RDM action command: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Shows help information for available commands.
+    /// </summary>
+    private static void ShowHelp()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Available Commands:");
+        Console.WriteLine("==================");
+        Console.WriteLine("msg                    - Send a message box to the remote desktop");
+        Console.WriteLine("run                    - Execute a shell command on the remote desktop");
+        Console.WriteLine("pwsh                   - Execute a PowerShell command with IO redirection");
+        Console.WriteLine("logoff                 - Log off the current session");
+        Console.WriteLine("lock                   - Lock the remote desktop session");
+        Console.WriteLine();
+        Console.WriteLine("RDM Commands:");
+        Console.WriteLine("-------------");
+        Console.WriteLine("rdm-version            - Sync/negotiate RDM capabilities and show version");
+        Console.WriteLine("rdm-run [FLAGS]        - Start RDM application with optional flags");
+        Console.WriteLine("                         FLAGS: F=Fullscreen, M=Maximized, J=JumpMode");
+        Console.WriteLine("                         Example: 'rdm-run FM' (fullscreen + maximized)");
+        Console.WriteLine("rdm-action <ACTION>    - Send action to RDM application");
+        Console.WriteLine("                         ACTION: CLOSE or FOCUS (case insensitive)");
+        Console.WriteLine();
+        Console.WriteLine("Other:");
+        Console.WriteLine("-------");
+        Console.WriteLine("help, ?                - Show this help information");
+        Console.WriteLine("exit                   - Exit the CLI application");
+        Console.WriteLine();
     }
 }
