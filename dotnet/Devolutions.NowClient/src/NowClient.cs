@@ -368,12 +368,12 @@ namespace Devolutions.NowClient
                 ""
             ).Build();
 
-            var responseHandler = new TaskCompletionSource<NowMsgRdmCapabilities>();
+            using var responseHandler = new RdmCapabilitiesResponseHandler();
             var command = new CommandRdmCapabilities(message, responseHandler);
 
             await _commandWriter.WriteAsync(command);
 
-            var response = await responseHandler.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var response = await responseHandler.WaitForResponseAsync(TimeSpan.FromSeconds(10));
 
             _rdmCapabilities = new RdmCapabilityInfo
             {

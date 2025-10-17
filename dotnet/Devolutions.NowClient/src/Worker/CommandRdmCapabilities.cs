@@ -5,9 +5,9 @@ namespace Devolutions.NowClient.Worker
     internal class CommandRdmCapabilities : IClientCommand
     {
         private readonly NowMsgRdmCapabilities _message;
-        private readonly TaskCompletionSource<NowMsgRdmCapabilities> _responseHandler;
+        private readonly RdmCapabilitiesResponseHandler _responseHandler;
 
-        public CommandRdmCapabilities(NowMsgRdmCapabilities message, TaskCompletionSource<NowMsgRdmCapabilities> responseHandler)
+        public CommandRdmCapabilities(NowMsgRdmCapabilities message, RdmCapabilitiesResponseHandler responseHandler)
         {
             _message = message;
             _responseHandler = responseHandler;
