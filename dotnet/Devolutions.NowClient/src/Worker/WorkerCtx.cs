@@ -101,6 +101,9 @@ namespace Devolutions.NowClient.Worker
                     ctx.ExitRequested = true;
                 }
             }
+
+            // Cleanup any pending handlers before exiting
+            ctx.CleanupPendingHandlers();
         }
 
         private static void HandleChannelMessage(NowMessage.NowMessageView message, WorkerCtx ctx)
@@ -273,10 +276,10 @@ namespace Devolutions.NowClient.Worker
 
         // -- RDM State --
         public RdmAppNotifyHandler? RdmAppNotifyHandler;
-        public TaskCompletionSource<NowMsgRdmCapabilities>? RdmCapabilitiesResponseHandler;
+        public RdmCapabilitiesResponseHandler? RdmCapabilitiesResponseHandler;
         public Dictionary<Guid, RdmSession> RdmSessions = [];
 
-        public void RegisterRdmCapabilitiesHandler(TaskCompletionSource<NowMsgRdmCapabilities> handler)
+        public void RegisterRdmCapabilitiesHandler(RdmCapabilitiesResponseHandler handler)
         {
             RdmCapabilitiesResponseHandler = handler;
         }
@@ -285,7 +288,7 @@ namespace Devolutions.NowClient.Worker
         {
             if (RdmCapabilitiesResponseHandler != null)
             {
-                RdmCapabilitiesResponseHandler.SetResult(response);
+                RdmCapabilitiesResponseHandler.SetResponse(response);
                 RdmCapabilitiesResponseHandler = null;
             }
         }
@@ -307,6 +310,18 @@ namespace Devolutions.NowClient.Worker
                 {
                     RdmSessions.Remove(sessionNotify.SessionId);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Cleanup method to handle pending RDM capabilities handlers when worker exits
+        /// </summary>
+        public void CleanupPendingHandlers()
+        {
+            if (RdmCapabilitiesResponseHandler != null)
+            {
+                RdmCapabilitiesResponseHandler.SetException(new OperationCanceledException("Worker terminated"));
+                RdmCapabilitiesResponseHandler = null;
             }
         }
     }
