@@ -23,6 +23,7 @@ namespace Devolutions.NowProto.Messages
             (Parameters != null ? MsgFlags.ParametersSet : 0)
             | (Directory != null ? MsgFlags.DirectorySet : 0)
             | (IoRedirection ? MsgFlags.IoRedirection : 0)
+            | (Detached ? MsgFlags.Detached : 0)
         );
         uint INowSerialize.BodySize =>
             FixedPartSize
@@ -54,7 +55,8 @@ namespace Devolutions.NowProto.Messages
                 filename,
                 msgFlags.HasFlag(MsgFlags.ParametersSet) ? parameters : null,
                 msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
-                msgFlags.HasFlag(MsgFlags.IoRedirection)
+                msgFlags.HasFlag(MsgFlags.IoRedirection),
+                msgFlags.HasFlag(MsgFlags.Detached)
             );
         }
 
@@ -83,6 +85,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION
             /// </summary>
             IoRedirection = 0x1000,
+
+            /// <summary>
+            /// Detached mode: the process is started without tracking execution or sending back output.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DETACHED
+            /// </summary>
+            Detached = 0x8000,
         }
 
         private const uint FixedPartSize = 4; // u32 SessionId
@@ -107,9 +116,15 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
+            public Builder EnableDetached()
+            {
+                _detached = true;
+                return this;
+            }
+
             public NowMsgExecProcess Build()
             {
-                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory, _ioRedirection);
+                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory, _ioRedirection, _detached);
             }
 
             private readonly uint _sessionId = sessionId;
@@ -117,15 +132,17 @@ namespace Devolutions.NowProto.Messages
             private string? _parameters = null;
             private string? _directory = null;
             private bool _ioRedirection = false;
+            private bool _detached = false;
         }
 
-        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory, bool ioRedirection)
+        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory, bool ioRedirection, bool detached)
         {
             SessionId = sessionId;
             Filename = filename;
             Parameters = parameters;
             Directory = directory;
             IoRedirection = ioRedirection;
+            Detached = detached;
         }
 
         public uint SessionId { get; }
@@ -133,5 +150,6 @@ namespace Devolutions.NowProto.Messages
         public string? Parameters { get; }
         public string? Directory { get; }
         public bool IoRedirection { get; }
+        public bool Detached { get; }
     }
 }

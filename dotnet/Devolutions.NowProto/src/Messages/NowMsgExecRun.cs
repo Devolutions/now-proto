@@ -46,6 +46,7 @@ namespace Devolutions.NowProto.Messages
         )
         {
             cursor.EnsureEnoughBytes(FixedPartSize);
+            var msgFlags = (MsgFlags)flags;
             var sessionId = cursor.ReadUInt32Le();
             var command = cursor.ReadVarStr();
 

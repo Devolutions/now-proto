@@ -27,6 +27,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enables detached mode: the batch is started without tracking execution or sending back output.
+        /// </summary>
+        public ExecBatchParams Detached(bool enable = true)
+        {
+            _detached = enable;
+            return this;
+        }
+
         internal NowMsgExecBatch ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecBatch.Builder(sessionId, command);
@@ -41,10 +50,16 @@ namespace Devolutions.NowClient
                 builder.EnableIoRedirection();
             }
 
+            if (_detached)
+            {
+                builder.EnableDetached();
+            }
+
             return builder.Build();
         }
 
         private string? _directory = null;
         private bool _ioRedirection = false;
+        private bool _detached = false;
     }
 }

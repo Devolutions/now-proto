@@ -3,7 +3,7 @@
 TOC is generated in [Obsidian](obsidian.md) via
 [TOC plugin](https://github.com/hipstersmoothie/obsidian-plugin-toc)
 -->
-# NOW-PROTO 1.3
+# NOW-PROTO 1.4
 - [Messages](#messages)
 	- [Transport](#transport)
 	- [Message Syntax](#message-syntax)
@@ -893,6 +893,7 @@ packet-beta
 | NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x0001 | `parameters` field contains non-default value. |
 | NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value.|
 | NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_PROCESS_DETACHED<br>0x8000 | Detached mode: the process is started without tracking execution or sending back output. |
 
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
@@ -932,6 +933,7 @@ packet-beta
 | NOW_EXEC_FLAG_SHELL_SHELL_SET<br>0x0001 | `shell` field contains non-default value. |
 | NOW_EXEC_FLAG_SHELL_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value. |
 | NOW_EXEC_FLAG_SHELL_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_SHELL_DETACHED<br>0x8000 | Detached mode: the shell is started without tracking execution or sending back output. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -969,8 +971,9 @@ packet-beta
 
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
-| NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x00001 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x0001 | `directory` field contains non-default value. |
 | NOW_EXEC_FLAG_BATCH_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
+| NOW_EXEC_FLAG_BATCH_DETACHED<br>0x8000 | Detached mode: the batch is started without tracking execution or sending back output. |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1017,6 +1020,7 @@ packet-beta
 | NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x0100      | `directory` field contains non-default value and specifies command working directory                           |
 | NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                              |
 | NOW_EXEC_FLAG_PS_SERVER_MODE<br>0x2000        | Run PowerShell in server mode.                                                                                 |
+| NOW_EXEC_FLAG_PS_DETACHED<br>0x8000           | Detached mode: PowerShell is started without tracking execution or sending back output.                        |
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1345,3 +1349,5 @@ packet-beta
     - Add PowerShell server mode support.
 - 1.3
 	- Add RDM Jump protocol extension.
+- 1.4
+	- Add detached mode for process, shell, batch, winps, and pwsh exec messages.

@@ -78,7 +78,11 @@ static class Program
                         continue;
                     }
 
-                    await ExecutePowerShellCommand(client, psCommand);
+                    Console.Write("Detached mode? (Y/N) [N]: ");
+                    var detachedInput = Console.ReadLine()?.Trim().ToUpperInvariant() ?? string.Empty;
+                    var isDetached = detachedInput == "Y" || detachedInput == "YES";
+
+                    await ExecutePowerShellCommand(client, psCommand, isDetached);
                     break;
                 case "msg":
                     Console.Write("Message box text: ");
@@ -126,10 +130,26 @@ static class Program
     }
 
     /// <summary>
-    /// Executes a PowerShell command with IO redirection and prints output to console.
+    /// Executes a PowerShell command with optional IO redirection and prints output to console.
     /// </summary>
-    private static async Task ExecutePowerShellCommand(NowClient client, string command)
+    private static async Task ExecutePowerShellCommand(NowClient client, string command, bool isDetached)
     {
+        // If detached mode, just execute and return immediately
+        if (isDetached)
+        {
+            Console.WriteLine($"Executing PowerShell command in detached mode: {command}");
+
+            var detachedParams = new ExecPwshParams(command)
+                .Detached(true)
+                .NonInteractive(true)
+                .NoLogo(true);
+
+            await client.ExecPwsh(detachedParams);
+            Console.WriteLine($"PowerShell command started in detached mode (no output tracking).");
+            return;
+        }
+
+        // Normal mode with IO redirection
         const int NoOutputLimit = 1024 * 100; // 100KB
         const int DisplayProgressInterval = 1024 * 1024; // 1MB
 

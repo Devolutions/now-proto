@@ -26,6 +26,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION
         const IO_REDIRECTION = 0x1000;
+
+        /// Detached mode: the process is started without tracking execution or sending back output.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DETACHED
+        const DETACHED = 0x8000;
     }
 }
 
@@ -101,6 +106,16 @@ impl<'a> NowExecProcessMsg<'a> {
 
     pub fn is_with_io_redirection(&self) -> bool {
         self.flags.contains(NowExecProcessFlags::IO_REDIRECTION)
+    }
+
+    #[must_use]
+    pub fn with_detached(mut self) -> Self {
+        self.flags |= NowExecProcessFlags::DETACHED;
+        self
+    }
+
+    pub fn is_detached(&self) -> bool {
+        self.flags.contains(NowExecProcessFlags::DETACHED)
     }
 
     fn ensure_message_size(&self) -> EncodeResult<()> {

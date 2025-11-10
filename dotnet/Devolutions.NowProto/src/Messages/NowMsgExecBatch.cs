@@ -21,7 +21,8 @@ namespace Devolutions.NowProto.Messages
 
         ushort INowSerialize.Flags => (ushort)(
             (Directory != null ? MsgFlags.DirectorySet : 0) |
-            (IoRedirection ? MsgFlags.IoRedirection : 0)
+            (IoRedirection ? MsgFlags.IoRedirection : 0) |
+            (Detached ? MsgFlags.Detached : 0)
         );
         uint INowSerialize.BodySize =>
             FixedPartSize
@@ -49,7 +50,8 @@ namespace Devolutions.NowProto.Messages
                 sessionId,
                 filename,
                 msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
-                msgFlags.HasFlag(MsgFlags.IoRedirection)
+                msgFlags.HasFlag(MsgFlags.IoRedirection),
+                msgFlags.HasFlag(MsgFlags.Detached)
             );
         }
 
@@ -71,6 +73,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_IO_REDIRECTION
             /// </summary>
             IoRedirection = 0x1000,
+
+            /// <summary>
+            /// Detached mode: the batch is started without tracking execution or sending back output.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DETACHED
+            /// </summary>
+            Detached = 0x8000,
         }
 
         private const uint FixedPartSize = 4; // u32 SessionId
@@ -88,28 +97,37 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
+            public Builder EnableDetached()
+            {
+                _detached = true;
+                return this;
+            }
+
             public NowMsgExecBatch Build()
             {
-                return new NowMsgExecBatch(_sessionId, _filename, _directory, _ioRedirection);
+                return new NowMsgExecBatch(_sessionId, _filename, _directory, _ioRedirection, _detached);
             }
 
             private readonly uint _sessionId = sessionId;
             private readonly string _filename = filename;
             private string? _directory = null;
             private bool _ioRedirection = false;
+            private bool _detached = false;
         }
 
-        internal NowMsgExecBatch(uint sessionId, string filename, string? directory, bool ioRedirection)
+        internal NowMsgExecBatch(uint sessionId, string filename, string? directory, bool ioRedirection, bool detached)
         {
             SessionId = sessionId;
             Filename = filename;
             Directory = directory;
             IoRedirection = ioRedirection;
+            Detached = detached;
         }
 
         public uint SessionId { get; }
         public string Filename { get; }
         public string? Directory { get; }
         public bool IoRedirection { get; }
+        public bool Detached { get; }
     }
 }
