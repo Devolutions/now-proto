@@ -39,7 +39,7 @@ namespace Devolutions.NowClient
         /// <summary>
         /// Enables detached mode: the process is started without tracking execution or sending back output.
         /// </summary>
-        public ExecProcessParams Detached(bool enable)
+        public ExecProcessParams Detached(bool enable = true)
         {
             _detached = enable;
             return this;
