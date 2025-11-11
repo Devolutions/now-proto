@@ -9,9 +9,27 @@ namespace Devolutions.NowClient
     /// <param name="command">Command to execute.</param>
     public class ExecRunParams(string command) : AExecParams
     {
+        /// <summary>
+        /// Set the working directory for the command.
+        /// </summary>
+        public ExecRunParams Directory(string directory)
+        {
+            _directory = directory;
+            return this;
+        }
+
         internal NowMsgExecRun ToNowMessage(uint sessionId)
         {
-            return new NowMsgExecRun(sessionId, command);
+            var builder = new NowMsgExecRun.Builder(sessionId, command);
+
+            if (_directory != null)
+            {
+                builder.Directory(_directory);
+            }
+
+            return builder.Build();
         }
+
+        private string? _directory = null;
     }
 }

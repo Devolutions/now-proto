@@ -169,6 +169,16 @@ impl<'a> NowExecPwshMsg<'a> {
         self.flags.contains(NowExecWinPsFlags::IO_REDIRECTION)
     }
 
+    #[must_use]
+    pub fn with_detached(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::DETACHED;
+        self
+    }
+
+    pub fn is_detached(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::DETACHED)
+    }
+
     pub fn is_no_logo(&self) -> bool {
         self.flags.contains(NowExecWinPsFlags::NO_LOGO)
     }

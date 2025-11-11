@@ -61,6 +61,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PS_SERVER_MODE
         const SERVER_MODE = 0x2000;
+
+        /// Detached mode: PowerShell is started without tracking execution or sending back output.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PS_DETACHED
+        const DETACHED = 0x8000;
     }
 }
 
@@ -256,6 +261,16 @@ impl<'a> NowExecWinPsMsg<'a> {
 
     pub fn is_with_io_redirection(&self) -> bool {
         self.flags.contains(NowExecWinPsFlags::IO_REDIRECTION)
+    }
+
+    #[must_use]
+    pub fn with_detached(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::DETACHED;
+        self
+    }
+
+    pub fn is_detached(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::DETACHED)
     }
 
     pub fn is_no_logo(&self) -> bool {

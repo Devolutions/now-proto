@@ -89,7 +89,7 @@ namespace Devolutions.NowProto.Messages
             /// <summary>
             /// Enable stdio (stdout, stderr, stdin) redirection.
             ///
-            /// NOW-PROTO: NOW_EXEC_FLAG_WINPS_IO_REDIRECTION
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
             /// </summary>
             IoRedirection = 0x1000,
 
@@ -99,6 +99,13 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_PS_SERVER_MODE
             /// </summary>
             ServerMode = 0x2000,
+
+            /// <summary>
+            /// Detached mode: PowerShell is started without tracking execution or sending back output.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_DETACHED
+            /// </summary>
+            Detached = 0x8000,
         }
 
         public enum ApartmentStateKind : ushort
@@ -180,6 +187,12 @@ namespace Devolutions.NowProto.Messages
             public Builder EnableIoRedirection()
             {
                 _flags |= MsgFlags.IoRedirection;
+                return this;
+            }
+
+            public Builder EnableDetached()
+            {
+                _flags |= MsgFlags.Detached;
                 return this;
             }
 
@@ -287,6 +300,7 @@ namespace Devolutions.NowProto.Messages
 
         public bool IoRedirection => _flags.HasFlag(MsgFlags.IoRedirection);
         public bool ServerMode => _flags.HasFlag(MsgFlags.ServerMode);
+        public bool Detached => _flags.HasFlag(MsgFlags.Detached);
 
         private MsgFlags _flags = MsgFlags.None;
         private string _directory = "";

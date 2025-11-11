@@ -101,6 +101,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enables detached mode: PowerShell is started without tracking execution or sending back output.
+        /// </summary>
+        public ExecWinPsParams Detached(bool enable = true)
+        {
+            _detached = enable;
+            return this;
+        }
+
         internal NowMsgExecWinPs ToNowMessage(uint sessionId)
         {
             var builder = _serverMode
@@ -152,6 +161,11 @@ namespace Devolutions.NowClient
                 builder.EnableIoRedirection();
             }
 
+            if (_detached)
+            {
+                builder.EnableDetached();
+            }
+
             return builder.Build();
         }
 
@@ -165,6 +179,7 @@ namespace Devolutions.NowClient
         private bool _noProfile = false;
         private bool _nonInteractive = false;
         private bool _ioRedirection = false;
+        private bool _detached = false;
         private bool _serverMode = false;
     }
 }
