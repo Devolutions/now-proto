@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [[0.4.1](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.4.0...now-proto-pdu-v0.4.1)] - 2025-11-18
+
+### <!-- 1 -->Features
+
+- Add detached exec mode (ARC-411) ([#48](https://github.com/Devolutions/now-proto/issues/48)) ([a4ce1b2d16](https://github.com/Devolutions/now-proto/commit/a4ce1b2d163b023e4268b6bb6a0afeaf851e23f5)) 
+
+
+
 ## [[0.4.0](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.3.2...now-proto-pdu-v0.4.0)] - 2025-09-24
 
 ### <!-- 1 -->Features
