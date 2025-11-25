@@ -57,7 +57,7 @@ static class Program
         {
             repeat = true;
 
-            Console.Write("Operation (msg/run/pwsh/logoff/lock/rdm-version/rdm-run/rdm-action/help/exit): ");
+            Console.Write("Operation (msg/run/pwsh/logoff/lock/winrec-start/winrec-stop/rdm-version/rdm-run/rdm-action/help/exit): ");
             var operation = Console.ReadLine()?.Trim() ?? string.Empty;
 
             switch (operation.ToLowerInvariant())
@@ -113,6 +113,13 @@ static class Program
                 case "lock":
                     await client.SessionLock();
                     Console.WriteLine("OK");
+                    break;
+                case "winrec-start":
+                    await ExecuteWindowRecStartCommand(client);
+                    break;
+                case "winrec-stop":
+                    await client.SessionWindowRecStop();
+                    Console.WriteLine("Window recording stopped");
                     break;
                 case "rdm-version":
                     await ExecuteRdmVersionCommand(client);
@@ -422,11 +429,73 @@ static class Program
         catch (Exception ex)
         {
             // Rethrow critical exceptions
-            if (ex is OutOfMemoryException || ex is StackOverflowException || ex is ThreadAbortException)
+            if (ex is OutOfMemoryException || ex is StackOverflowException)
             {
                 throw;
             }
             Console.Error.WriteLine($"Error executing RDM action command: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Executes window recording start command with event handler.
+    /// </summary>
+    private static async Task ExecuteWindowRecStartCommand(NowClient client)
+    {
+        try
+        {
+            // Set up event handler
+            await client.SetWindowRecEventHandler(new WindowRecordingHandler());
+
+            // Start window recording
+            await client.SessionWindowRecStart(pollInterval: 0, trackTitleChange: true);
+            Console.WriteLine($"Window recording started.");
+            Console.WriteLine("Events will be displayed as they arrive. Use 'winrec-stop' to stop recording.");
+        }
+        catch (Exception ex)
+        {
+            // Rethrow critical exceptions
+            if (ex is OutOfMemoryException || ex is StackOverflowException)
+            {
+                throw;
+            }
+            Console.Error.WriteLine($"Error starting window recording: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Simple window recording event handler that prints events to console.
+    /// </summary>
+    private class WindowRecordingHandler : IWindowRecEventHandler
+    {
+        public void HandleWindowRecEvent(NowMsgSessionWindowRecEvent eventMsg)
+        {
+            var timestamp = DateTimeOffset.FromUnixTimeSeconds((long)eventMsg.Timestamp);
+            var timeStr = timestamp.ToLocalTime().ToString("HH:mm:ss");
+
+            switch (eventMsg.Kind)
+            {
+                case WindowRecEventKind.ActiveWindow:
+                    {
+                        var data = eventMsg.GetActiveWindowData();
+                        Console.WriteLine($"[{timeStr}] ACTIVE WINDOW: {data.Title}");
+                        Console.WriteLine($"             Process ID: {data.ProcessId}");
+                        Console.WriteLine($"             Executable: {data.ExecutablePath}");
+                        break;
+                    }
+                case WindowRecEventKind.TitleChanged:
+                    {
+                        var data = eventMsg.GetTitleChangedData();
+                        Console.WriteLine($"[{timeStr}] TITLE CHANGED: {data.Title}");
+                        break;
+                    }
+                case WindowRecEventKind.NoActiveWindow:
+                    Console.WriteLine($"[{timeStr}] NO ACTIVE WINDOW");
+                    break;
+                default:
+                    Console.WriteLine($"[{timeStr}] UNKNOWN EVENT: {eventMsg.Kind}");
+                    break;
+            }
         }
     }
 
@@ -443,6 +512,11 @@ static class Program
         Console.WriteLine("pwsh                   - Execute a PowerShell command with IO redirection");
         Console.WriteLine("logoff                 - Log off the current session");
         Console.WriteLine("lock                   - Lock the remote desktop session");
+        Console.WriteLine();
+        Console.WriteLine("Window Recording Commands:");
+        Console.WriteLine("--------------------------");
+        Console.WriteLine("winrec-start           - Start window recording (tracks active window changes)");
+        Console.WriteLine("winrec-stop            - Stop window recording");
         Console.WriteLine();
         Console.WriteLine("RDM Commands:");
         Console.WriteLine("-------------");

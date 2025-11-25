@@ -86,8 +86,8 @@ namespace Devolutions.NowProto.Messages
         internal NowMsgRdmCapabilities() { }
 
         /// <summary>
-        /// The system UTC time, in seconds since the Unix epoch, encoded as signed 64-bit integer.
-        /// This is the equivalent of [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() in .NET or `date +%s` in Linux.
+        /// The system UTC time, in seconds since the Unix epoch, encoded as unsigned 64-bit integer.
+        /// This is the equivalent of (ulong)[DateTimeOffset]::UtcNow.ToUnixTimeSeconds() in .NET or `date +%s` in Linux.
         /// </summary>
         public ulong Timestamp { get; private init; } = 0;
 
