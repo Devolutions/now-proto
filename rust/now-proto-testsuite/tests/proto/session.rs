@@ -160,3 +160,142 @@ fn roundtrip_session_set_kbd_layout_prev() {
 
     assert_eq!(actual.layout(), SetKbdLayoutOption::Prev);
 }
+
+#[test]
+fn roundtrip_session_window_rec_start_simple() {
+    let msg = NowSessionWindowRecStartMsg::new(1000, WindowRecStartFlags::empty());
+
+    let decoded = now_msg_roundtrip(msg, expect!["[04, 00, 00, 00, 12, 06, 00, 00, E8, 03, 00, 00]"]);
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecStart(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecStartMsg"),
+    };
+
+    assert_eq!(actual.poll_interval, 1000);
+    assert!(!actual.flags.contains(WindowRecStartFlags::TRACK_TITLE_CHANGE));
+}
+
+#[test]
+fn roundtrip_session_window_rec_start_with_flags() {
+    let msg = NowSessionWindowRecStartMsg::new(2000, WindowRecStartFlags::TRACK_TITLE_CHANGE);
+
+    let decoded = now_msg_roundtrip(msg, expect!["[04, 00, 00, 00, 12, 06, 01, 00, D0, 07, 00, 00]"]);
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecStart(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecStartMsg"),
+    };
+
+    assert_eq!(actual.poll_interval, 2000);
+    assert!(actual.flags.contains(WindowRecStartFlags::TRACK_TITLE_CHANGE));
+}
+
+#[test]
+fn roundtrip_session_window_rec_stop() {
+    now_msg_roundtrip(
+        NowSessionWindowRecStopMsg::default(),
+        expect!["[00, 00, 00, 00, 12, 07, 00, 00]"],
+    );
+}
+
+#[test]
+fn roundtrip_session_window_rec_event_active_window() {
+    let msg = NowSessionWindowRecEventMsg::active_window(
+        1732550400, // Unix timestamp: 2024-11-25 12:00:00 UTC
+        1234,
+        "Notepad",
+        "C:\\Windows\\System32\\notepad.exe",
+    )
+    .unwrap();
+
+    let decoded = now_msg_roundtrip(
+        msg,
+        expect!["[36, 00, 00, 00, 12, 08, 01, 00, 00, 9F, 44, 67, 00, 00, 00, 00, D2, 04, 00, 00, 07, 4E, 6F, 74, 65, 70, 61, 64, 00, 1F, 43, 3A, 5C, 57, 69, 6E, 64, 6F, 77, 73, 5C, 53, 79, 73, 74, 65, 6D, 33, 32, 5C, 6E, 6F, 74, 65, 70, 61, 64, 2E, 65, 78, 65, 00]"],
+    );
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecEvent(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecEventMsg"),
+    };
+
+    assert_eq!(actual.timestamp(), 1732550400);
+
+    if let WindowRecEventKind::ActiveWindow(data) = actual.kind() {
+        assert_eq!(data.process_id(), 1234);
+        assert_eq!(data.title(), "Notepad");
+        assert_eq!(data.executable_path(), "C:\\Windows\\System32\\notepad.exe");
+    } else {
+        panic!("Expected ActiveWindow event kind");
+    }
+}
+
+#[test]
+fn roundtrip_session_window_rec_event_title_changed() {
+    let msg = NowSessionWindowRecEventMsg::title_changed(
+        1732550460, // Unix timestamp: 2024-11-25 12:01:00 UTC
+        "Notepad - Document.txt",
+    )
+    .unwrap();
+
+    let decoded = now_msg_roundtrip(
+        msg,
+        expect!["[26, 00, 00, 00, 12, 08, 02, 00, 3C, 9F, 44, 67, 00, 00, 00, 00, 00, 00, 00, 00, 16, 4E, 6F, 74, 65, 70, 61, 64, 20, 2D, 20, 44, 6F, 63, 75, 6D, 65, 6E, 74, 2E, 74, 78, 74, 00, 00, 00]"],
+    );
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecEvent(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecEventMsg"),
+    };
+
+    assert_eq!(actual.timestamp(), 1732550460);
+
+    if let WindowRecEventKind::TitleChanged(data) = actual.kind() {
+        assert_eq!(data.title(), "Notepad - Document.txt");
+    } else {
+        panic!("Expected TitleChanged event kind");
+    }
+}
+
+#[test]
+fn roundtrip_session_window_rec_event_no_active_window() {
+    let msg = NowSessionWindowRecEventMsg::no_active_window(1732550520); // Unix timestamp: 2024-11-25 12:02:00 UTC
+
+    let decoded = now_msg_roundtrip(
+        msg,
+        expect!["[10, 00, 00, 00, 12, 08, 04, 00, 78, 9F, 44, 67, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]"],
+    );
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecEvent(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecEventMsg"),
+    };
+
+    assert_eq!(actual.timestamp(), 1732550520);
+    assert!(matches!(actual.kind(), WindowRecEventKind::NoActiveWindow));
+}
+
+#[test]
+fn roundtrip_session_window_rec_event_empty_strings() {
+    let msg = NowSessionWindowRecEventMsg::active_window(1732550400, 5678, "", "").unwrap();
+
+    let decoded = now_msg_roundtrip(
+        msg,
+        expect!["[10, 00, 00, 00, 12, 08, 01, 00, 00, 9F, 44, 67, 00, 00, 00, 00, 2E, 16, 00, 00, 00, 00, 00, 00]"],
+    );
+
+    let actual = match decoded {
+        NowMessage::Session(NowSessionMessage::WindowRecEvent(msg)) => msg,
+        _ => panic!("Expected NowSessionWindowRecEventMsg"),
+    };
+
+    assert_eq!(actual.timestamp(), 1732550400);
+
+    if let WindowRecEventKind::ActiveWindow(data) = actual.kind() {
+        assert_eq!(data.process_id(), 5678);
+        assert_eq!(data.title(), "");
+        assert_eq!(data.executable_path(), "");
+    } else {
+        panic!("Expected ActiveWindow event kind");
+    }
+}

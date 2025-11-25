@@ -3,7 +3,7 @@
 TOC is generated in [Obsidian](obsidian.md) via
 [TOC plugin](https://github.com/hipstersmoothie/obsidian-plugin-toc)
 -->
-# NOW-PROTO 1.4
+# NOW-PROTO 1.5
 - [Messages](#messages)
 	- [Transport](#transport)
 	- [Message Syntax](#message-syntax)
@@ -462,6 +462,9 @@ packet-beta
 | NOW_SESSION_MESSAGE_BOX_MSG_REQ_ID<br>0x03 | NOW_SESSION_MESSAGE_BOX_MSG |
 | NOW_SESSION_MESSAGE_BOX_RSP_MSG_ID<br>0x04 | NOW_SESSION_MESSAGE_RSP_MSG |
 | NOW_SESSION_SWITCH_KBD_LAYOUT_MSG_ID<br>0x05 | NOW_SESSION_SWITCH_KBD_LAYOUT_MSG |
+| NOW_SESSION_WINDOW_REC_START_MSG_ID<br>0x06 | NOW_SESSION_WINDOW_REC_START_MSG |
+| NOW_SESSION_WINDOW_REC_STOP_MSG_ID<br>0x07 | NOW_SESSION_WINDOW_REC_STOP_MSG |
+| NOW_SESSION_WINDOW_REC_EVENT_MSG_ID<br>0x08 | NOW_SESSION_WINDOW_REC_EVENT_MSG |
 
 **msgFlags (2 bytes)**: The message flags.
 
@@ -621,6 +624,102 @@ packet-beta
 | NOW_SET_KBD_LAYOUT_FLAG_PREV<br>0x0002 | Switches to previous keyboard layout. kbdLayoutId field should contain empty string. Conflicts with NOW_SET_KBD_LAYOUT_FLAG_NEXT. |
 
 **kbdLayoutId (variable)**: NOW_STRING structure containing the keyboard layout identifier usually represented as [Windows Keyboard Layout Identifier](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-language-pack-default-values) (HKL).
+
+#### NOW_SESSION_WINDOW_REC_START_MSG
+
+The NOW_SESSION_WINDOW_REC_START_MSG message is used to start window recording, which tracks
+active window changes and title updates.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-95: "pollInterval"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_SESSION_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_SESSION_WINDOW_REC_START_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+| Flag                                | Meaning                                 |
+|-------------------------------------|-----------------------------------------|
+| NOW_WINDOW_REC_FLAG_TRACK_TITLE_CHANGE<br>0x0001 | Enable window title change tracking. If not set, only active window changes will be reported. |
+
+**pollInterval (4 bytes)**: A 32-bit unsigned integer specifying the interval in milliseconds
+for polling window changes. Set to 0 to use the host's default poll interval. Note that on some
+systems, certain events may be detected without polling using platform-specific APIs (e.g., Windows
+SetWinEventHook), allowing the server to send notifications more frequently or immediately when
+changes occur, regardless of the specified poll interval.
+
+#### NOW_SESSION_WINDOW_REC_STOP_MSG
+
+The NOW_SESSION_WINDOW_REC_STOP_MSG message is used to stop window recording.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_SESSION_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_SESSION_WINDOW_REC_STOP_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags.
+
+#### NOW_SESSION_WINDOW_REC_EVENT_MSG
+
+The NOW_SESSION_WINDOW_REC_EVENT_MSG message is sent by the server to notify of window recording
+events such as active window changes, title changes, or when no window is active.
+
+```mermaid
+packet-beta
+  0-31: "msgSize"
+  32-39: "msgClass"
+  40-47: "msgType"
+  48-63: "msgFlags"
+  64-127: "timestamp"
+  128-159: "processId"
+  160-191: "title (variable)"
+  192-223: "executablePath (variable)"
+```
+
+**msgSize (4 bytes)**: The message size, excluding the header size (8 bytes).
+
+**msgClass (1 byte)**: The message class (NOW_SESSION_MSG_CLASS_ID).
+
+**msgType (1 byte)**: The message type (NOW_SESSION_WINDOW_REC_EVENT_MSG_ID).
+
+**msgFlags (2 bytes)**: The message flags, indicating the event kind.
+
+| Flag                                | Meaning                                 |
+|-------------------------------------|-----------------------------------------|
+| NOW_WINDOW_REC_EVENT_ACTIVE_WINDOW<br>0x0001 | Active window changed. The `title`, `processId`, and `executablePath` fields contain non-empty values. |
+| NOW_WINDOW_REC_EVENT_TITLE_CHANGED<br>0x0002 | Window title changed for the current active window. Only the `title` field contains a value; `processId` and `executablePath` are set to 0/empty. Can only be sent after an active window event. |
+| NOW_WINDOW_REC_EVENT_NO_ACTIVE_WINDOW<br>0x0004 | No active window. The `processId`, `title`, and `executablePath` fields should be set to default/empty values. |
+
+**timestamp (8 bytes)**: The system UTC time, in seconds since the Unix epoch, encoded as unsigned
+64-bit integer. This is the equivalent of `(ulong)[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()` in .NET
+or `date +%s` in Linux.
+
+**processId (4 bytes)**: A 32-bit unsigned integer containing the process ID of the window. Set to
+0 for NOW_WINDOW_REC_EVENT_TITLE_CHANGED and NOW_WINDOW_REC_EVENT_NO_ACTIVE_WINDOW events.
+
+**title (variable)**: A NOW_VARSTR structure containing the window title. Empty for
+NOW_WINDOW_REC_EVENT_NO_ACTIVE_WINDOW events.
+
+**executablePath (variable)**: A NOW_VARSTR structure containing the full path to the executable.
+Empty for NOW_WINDOW_REC_EVENT_TITLE_CHANGED and NOW_WINDOW_REC_EVENT_NO_ACTIVE_WINDOW events.
 
 ### Execution Messages
 
@@ -1125,7 +1224,7 @@ packet-beta
 
 **msgFlags (2 bytes)**: The message flags.
 
-**timestamp (8 bytes)**: The system UTC time, in seconds since the Unix epoch, encoded as signed 64-bit integer. This is the equivalent of `[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()` in .NET or `date +%s` in Linux.
+**timestamp (8 bytes)**: The system UTC time, in seconds since the Unix epoch, encoded as unsigned 64-bit integer. This is the equivalent of `(ulong)[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()` in .NET or `date +%s` in Linux.
 
 **syncFlags (4 bytes)**: The synchronization flags.
 
@@ -1351,3 +1450,6 @@ packet-beta
 	- Add RDM Jump protocol extension.
 - 1.4
 	- Add detached mode for process, shell, batch, winps, and pwsh exec messages.
+- 1.5
+	- Add window recording capability and session messages for tracking active window changes and title updates.
+  - Fix invalid timestamp representation (signed -> unsigned).
