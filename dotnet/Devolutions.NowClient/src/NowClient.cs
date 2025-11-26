@@ -197,6 +197,52 @@ namespace Devolutions.NowClient
         }
 
         /// <summary>
+        /// Sets the callback for window recording events.
+        /// </summary>
+        public async Task SetWindowRecEventHandler(IWindowRecEventHandler? handler)
+        {
+            ThrowIfWorkerTerminated();
+
+            await _commandWriter.WriteAsync(new CommandSetWindowRecEventHandler(handler));
+        }
+
+        /// <summary>
+        /// Start window recording to track active window changes and title updates.
+        /// </summary>
+        /// <param name="pollInterval">Interval in milliseconds for polling window changes. Set to 0 to use the host's default.</param>
+        /// <param name="trackTitleChange">Enable window title change tracking.</param>
+        public async Task SessionWindowRecStart(uint pollInterval, bool trackTitleChange = false)
+        {
+            ThrowIfWorkerTerminated();
+
+            if (!Capabilities.SessionCapset.HasFlag(NowCapabilitySession.WindowRecording))
+            {
+                ThrowCapabilitiesError("Window recording");
+            }
+
+            var message = new NowMsgSessionWindowRecStart(pollInterval, trackTitleChange);
+            var command = new CommandSessionWindowRecStart(message);
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
+        /// Stop window recording.
+        /// </summary>
+        public async Task SessionWindowRecStop()
+        {
+            ThrowIfWorkerTerminated();
+
+            if (!Capabilities.SessionCapset.HasFlag(NowCapabilitySession.WindowRecording))
+            {
+                ThrowCapabilitiesError("Window recording");
+            }
+
+            var message = new NowMsgSessionWindowRecStop();
+            var command = new CommandSessionWindowRecStop(message);
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
         /// Start a new simple remote execution session.
         /// (see <see cref="ExecRunParams"/> for more details).
         /// </summary>

@@ -156,6 +156,19 @@ namespace Devolutions.NowClient.Worker
                     }
 
                     break;
+                case SessionMessageKind.WindowRecEvent:
+                    var windowRecEvent = message.Deserialize<NowMsgSessionWindowRecEvent>();
+
+                    if (ctx.WindowRecEventHandler != null)
+                    {
+                        ctx.WindowRecEventHandler.HandleWindowRecEvent(windowRecEvent);
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Received window recording event but no handler is registered");
+                    }
+
+                    break;
                 default:
                     Debug.WriteLine($"Unhandled session message kind: {message.MessageKind}");
                     break;
@@ -273,6 +286,9 @@ namespace Devolutions.NowClient.Worker
 
         public Dictionary<uint, IMessageBoxRspHandler> MessageBoxHandlers = [];
         public Dictionary<uint, IExecSessionHandler> ExecSessionHandlers = [];
+
+        // -- Session State --
+        public IWindowRecEventHandler? WindowRecEventHandler;
 
         // -- RDM State --
         public RdmAppNotifyHandler? RdmAppNotifyHandler;

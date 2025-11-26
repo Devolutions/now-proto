@@ -21,6 +21,7 @@ namespace Devolutions.NowProto.Exceptions
             InvalidDataStreamFlags,
             InvalidApartmentStateFlags,
             InvalidKbdLayoutFlags,
+            InvalidWindowRecEventFlags,
         }
 
         private static string KindToMessage(ErrorKind kind)
@@ -33,6 +34,7 @@ namespace Devolutions.NowProto.Exceptions
                 ErrorKind.InvalidDataStreamFlags => "Invalid data stream flags.",
                 ErrorKind.InvalidApartmentStateFlags => "Invalid apartment state flags.",
                 ErrorKind.InvalidKbdLayoutFlags => "Invalid keyboard layout flags.",
+                ErrorKind.InvalidWindowRecEventFlags => "Invalid window recording event flags.",
                 _ => throw new UnreachableException("Should not be constructed with invalid kind."),
             };
         }

@@ -34,7 +34,13 @@
         /// NOW-PROTO: NOW_CAP_SESSION_SET_KBD_LAYOUT
         /// </summary>
         SetKbdLayout = 0x0008,
+        /// <summary>
+        /// Window recording command support.
+        ///
+        /// NOW-PROTO: NOW_CAP_SESSION_WINDOW_RECORDING
+        /// </summary>
+        WindowRecording = 0x0010,
 
-        All = Lock | Logoff | Msgbox | SetKbdLayout,
+        All = Lock | Logoff | Msgbox | SetKbdLayout | WindowRecording,
     }
 }
