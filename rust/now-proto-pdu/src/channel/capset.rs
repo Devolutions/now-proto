@@ -49,6 +49,10 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_CAP_SESSION_SET_KBD_LAYOUT
         const SET_KBD_LAYOUT = 0x0008;
+        /// Window recording command support.
+        ///
+        /// NOW-PROTO: NOW_CAP_SESSION_WINDOW_RECORDING
+        const WINDOW_RECORDING = 0x0010;
     }
 }
 
@@ -97,7 +101,7 @@ pub struct NowProtoVersion {
 
 impl NowProtoVersion {
     /// Represents the current version of the NOW protocol implemented by the library.
-    pub const CURRENT: Self = Self { major: 1, minor: 4 };
+    pub const CURRENT: Self = Self { major: 1, minor: 5 };
 }
 
 /// This message is first set by the client side, to advertise capabilities.
