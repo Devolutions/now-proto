@@ -429,7 +429,7 @@ static class Program
         catch (Exception ex)
         {
             // Rethrow critical exceptions
-            if (ex is OutOfMemoryException || ex is StackOverflowException || ex is ThreadAbortException)
+            if (ex is OutOfMemoryException || ex is StackOverflowException)
             {
                 throw;
             }
@@ -455,7 +455,7 @@ static class Program
         catch (Exception ex)
         {
             // Rethrow critical exceptions
-            if (ex is OutOfMemoryException || ex is StackOverflowException || ex is ThreadAbortException)
+            if (ex is OutOfMemoryException || ex is StackOverflowException)
             {
                 throw;
             }
