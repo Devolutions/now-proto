@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [[0.4.2](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.4.1...now-proto-pdu-v0.4.2)] - 2025-12-02
+
+### <!-- 1 -->Features
+
+- Add window recording support to protocol and libraries ([#52](https://github.com/Devolutions/now-proto/issues/52)) ([e455c4c6e3](https://github.com/Devolutions/now-proto/commit/e455c4c6e3c06e54fc585c8d6f14c315177dd7cf)) 
+
+  This PR adds new messages for the current active windows tracking.
+
+
+
 ## [[0.4.1](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.4.0...now-proto-pdu-v0.4.1)] - 2025-11-18
 
 ### <!-- 1 -->Features
