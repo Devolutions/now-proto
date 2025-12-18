@@ -22,6 +22,20 @@ namespace Devolutions.NowClient
         {
             var channel = new NowChannelTransport(transportImpl);
 
+            try
+            {
+                return await ConnectImpl(channel);
+            }
+            catch
+            {
+                // Dispose channel if connection fails before transferring to WorkerCtx
+                channel.Dispose();
+                throw;
+            }
+        }
+
+        private static async Task<NowClient> ConnectImpl(NowChannelTransport channel)
+        {
             // Support all capabilities by default on client side.
             var clientCapabilities = new NowMsgChannelCapset.Builder()
                 .HeartbeatInterval(TimeSpan.FromSeconds(60))
@@ -397,6 +411,16 @@ namespace Devolutions.NowClient
             await _commandWriter.WriteAsync(new CommandSetRdmAppNotifyHandler(handler));
         }
 
+        /// <summary>
+        /// Sets the callback for RDM session notifications.
+        /// </summary>
+        public async Task SetRdmSessionNotifyHandler(RdmSessionNotifyHandler? handler)
+        {
+            ThrowIfWorkerTerminated();
+
+            await _commandWriter.WriteAsync(new CommandSetRdmSessionNotifyHandler(handler));
+        }
+
         private bool _rdmCapabilitiesSent = false;
         private RdmCapabilityInfo? _rdmCapabilities = null;
 
@@ -421,13 +445,12 @@ namespace Devolutions.NowClient
 
             var response = await responseHandler.WaitForResponseAsync(TimeSpan.FromSeconds(10));
 
-            _rdmCapabilities = new RdmCapabilityInfo
-            {
-                IsAppAvailable = response.IsAppAvailable,
-                RdmVersion = response.RdmVersion,
-                VersionExtra = response.VersionExtra,
-                ServerTimestamp = DateTimeOffset.FromUnixTimeSeconds((long)response.Timestamp),
-            };
+            _rdmCapabilities = new RdmCapabilityInfo(
+                response.IsAppAvailable,
+                response.RdmVersion,
+                response.VersionExtra,
+                DateTimeOffset.FromUnixTimeSeconds((long)response.Timestamp)
+            );
 
             _rdmCapabilitiesSent = true;
         }
@@ -468,14 +491,16 @@ namespace Devolutions.NowClient
             await EnsureRdmCapabilitiesSent();
 
             var parameters = startParams ?? new RdmStartParams();
+            var launchFlags = parameters.GetLaunchFlags();
+            var timeout = parameters.GetTimeout();
             var builder = new NowMsgRdmAppStart.Builder()
-                .Timeout((uint)parameters.Timeout.TotalSeconds);
+                .Timeout((uint)timeout.TotalSeconds);
 
-            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.JumpMode))
+            if (launchFlags.HasFlag(NowRdmLaunchFlags.JumpMode))
                 builder = builder.WithJumpMode();
-            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.Maximized))
+            if (launchFlags.HasFlag(NowRdmLaunchFlags.Maximized))
                 builder = builder.WithMaximized();
-            if (parameters.LaunchFlags.HasFlag(NowRdmLaunchFlags.Fullscreen))
+            if (launchFlags.HasFlag(NowRdmLaunchFlags.Fullscreen))
                 builder = builder.WithFullscreen();
 
             var message = builder.Build();
@@ -503,18 +528,49 @@ namespace Devolutions.NowClient
         /// Starts a new RDM session.
         /// Automatically performs capabilities exchange if not already done.
         /// </summary>
-        public async Task<RdmSession> RdmSessionStart(RdmSessionStartParams sessionParams)
+        public async Task RdmSessionStart(RdmSessionStartParams sessionParams)
         {
             ThrowIfWorkerTerminated();
             await EnsureRdmCapabilitiesSent();
 
-            var message = new NowMsgRdmSessionStart(sessionParams.SessionId, sessionParams.ConnectionId, sessionParams.ConnectionData);
-            var session = new RdmSession(sessionParams.SessionId, _commandWriter, sessionParams.NotifyHandler);
-            var command = new CommandRdmSessionStart(message, session);
+            var message = new NowMsgRdmSessionStart(
+                sessionParams.GetSessionId(),
+                sessionParams.GetConnectionId(),
+                sessionParams.GetConnectionData()
+            );
+            var command = new CommandRdmSessionStart(message);
 
             await _commandWriter.WriteAsync(command);
+        }
 
-            return session;
+        /// <summary>
+        /// Sends a focus action to an RDM session.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task RdmSessionFocus(Guid sessionId)
+        {
+            ThrowIfWorkerTerminated();
+            await EnsureRdmCapabilitiesSent();
+
+            var message = new NowMsgRdmSessionAction(NowRdmSessionAction.Focus, sessionId);
+            var command = new CommandRdmSessionAction(message);
+
+            await _commandWriter.WriteAsync(command);
+        }
+
+        /// <summary>
+        /// Sends a close action to an RDM session.
+        /// Automatically performs capabilities exchange if not already done.
+        /// </summary>
+        public async Task RdmSessionClose(Guid sessionId)
+        {
+            ThrowIfWorkerTerminated();
+            await EnsureRdmCapabilitiesSent();
+
+            var message = new NowMsgRdmSessionAction(NowRdmSessionAction.Close, sessionId);
+            var command = new CommandRdmSessionAction(message);
+
+            await _commandWriter.WriteAsync(command);
         }
 
         /// <summary>

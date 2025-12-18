@@ -331,10 +331,8 @@ static class Program
 
             // Start RDM application
             Console.WriteLine("Starting RDM application...");
-            var startParams = new RdmStartParams
-            {
-                LaunchFlags = flags
-            };
+            var startParams = new RdmStartParams()
+                .LaunchFlags(flags);
 
             await client.RdmStart(startParams);
             Console.WriteLine("RDM application started successfully.");
