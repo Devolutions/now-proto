@@ -14,6 +14,22 @@ namespace Devolutions.NowClient.Worker
     {
         public static async Task Run(WorkerCtx ctx)
         {
+            try
+            {
+                await RunImpl(ctx);
+            }
+            finally
+            {
+                // Cleanup any pending handlers before exiting
+                ctx.CleanupPendingHandlers();
+
+                // Dispose the channel transport
+                ctx.NowChannel.Dispose();
+            }
+        }
+
+        private static async Task RunImpl(WorkerCtx ctx)
+        {
             Task<IClientCommand>? clientReadTask = null;
             Task<NowMessage.NowMessageView>? serverReadTask = null;
             Task? heartbeatCheckTask = null;
@@ -101,9 +117,6 @@ namespace Devolutions.NowClient.Worker
                     ctx.ExitRequested = true;
                 }
             }
-
-            // Cleanup any pending handlers before exiting
-            ctx.CleanupPendingHandlers();
         }
 
         private static void HandleChannelMessage(NowMessage.NowMessageView message, WorkerCtx ctx)
@@ -292,8 +305,8 @@ namespace Devolutions.NowClient.Worker
 
         // -- RDM State --
         public RdmAppNotifyHandler? RdmAppNotifyHandler;
+        public RdmSessionNotifyHandler? RdmSessionNotifyHandler;
         public RdmCapabilitiesResponseHandler? RdmCapabilitiesResponseHandler;
-        public Dictionary<Guid, RdmSession> RdmSessions = [];
 
         public void RegisterRdmCapabilitiesHandler(RdmCapabilitiesResponseHandler handler)
         {
@@ -309,24 +322,10 @@ namespace Devolutions.NowClient.Worker
             }
         }
 
-        public void RegisterRdmSession(RdmSession session)
-        {
-            RdmSessions[session.SessionId] = session;
-        }
-
         public void HandleRdmSessionNotify(NowMsgRdmSessionNotify sessionNotify)
         {
-            // Handle session notifications through the session object if it exists
-            if (RdmSessions.TryGetValue(sessionNotify.SessionId, out RdmSession? session))
-            {
-                session.HandleNotification(sessionNotify.SessionNotifyKind, sessionNotify.LogData);
-
-                // Remove from sessions if closed
-                if (sessionNotify.SessionNotifyKind == NowRdmSessionNotifyKind.Close)
-                {
-                    RdmSessions.Remove(sessionNotify.SessionId);
-                }
-            }
+            // Invoke the global notify handler if registered
+            RdmSessionNotifyHandler?.Invoke(sessionNotify.SessionId, sessionNotify.SessionNotifyKind, sessionNotify.LogData);
         }
 
         /// <summary>

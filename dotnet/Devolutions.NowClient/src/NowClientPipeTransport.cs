@@ -51,9 +51,9 @@ public class NowClientPipeTransport : INowTransport
         await _pipe.FlushAsync();
     }
 
-    async Task<byte[]> INowTransport.Read()
+    async Task<byte[]> INowTransport.Read(CancellationToken cancellationToken)
     {
-        var bytesRead = await _pipe.ReadAsync(_buffer);
+        var bytesRead = await _pipe.ReadAsync(_buffer, cancellationToken);
 
         if (bytesRead == 0)
         {
@@ -61,6 +61,11 @@ public class NowClientPipeTransport : INowTransport
         }
 
         return _buffer[..bytesRead];
+    }
+
+    public void Dispose()
+    {
+        _pipe.Dispose();
     }
 
     private readonly byte[] _buffer = new byte[64 * 1024];

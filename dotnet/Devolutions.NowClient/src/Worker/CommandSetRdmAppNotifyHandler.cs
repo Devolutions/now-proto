@@ -9,10 +9,10 @@ namespace Devolutions.NowClient.Worker
             _handler = handler;
         }
 
-        async Task IClientCommand.Execute(WorkerCtx ctx)
+        Task IClientCommand.Execute(WorkerCtx ctx)
         {
             ctx.RdmAppNotifyHandler = _handler;
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
     }
 }
