@@ -15,7 +15,7 @@ using Devolutions.NowProto.Messages;
 /// to wait until the pipe is available to connect to. OnPipeReady/OnPipeDisconnected
 /// events could be used to assist with the pipe readiness signaling.
 /// </summary>
-public class NowRdmHost
+public class NowRdmHost : IDisposable
 {
     private readonly string _pipeName;
     private NowChannelTransport? _transport;
@@ -263,5 +263,14 @@ public class NowRdmHost
         {
             return _transport != null;
         }
+    }
+
+    /// <summary>
+    /// Disposes the NowRdmHost and releases all resources.
+    /// </summary>
+    public void Dispose()
+    {
+        _transport?.Dispose();
+        _transport = null;
     }
 }
