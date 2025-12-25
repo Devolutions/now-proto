@@ -99,26 +99,22 @@ public class NowRdmHost
     /// <param name="cancellationToken">Cancellation token to stop the server.</param>
     public async Task Run(CancellationToken cancellationToken)
     {
-        NamedPipeServerStream? pipeServer = null;
-        NowRdmHostPipeTransport? pipeTransport = null;
-        NowChannelTransport? channelTransport = null;
+        using var pipeServer = new NamedPipeServerStream(
+            _pipeName,
+            PipeDirection.InOut,
+            maxNumberOfServerInstances: 1,
+            PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous);
+
+        OnPipeReady?.Invoke();
+
+        await pipeServer.WaitForConnectionAsync(cancellationToken);
+
+        using var pipeTransport = new NowRdmHostPipeTransport(pipeServer);
+        using var channelTransport = new NowChannelTransport(pipeTransport);
 
         try
         {
-            pipeServer = new NamedPipeServerStream(
-                _pipeName,
-                PipeDirection.InOut,
-                maxNumberOfServerInstances: 1,
-                PipeTransmissionMode.Byte,
-                PipeOptions.Asynchronous);
-
-            OnPipeReady?.Invoke();
-
-            await pipeServer.WaitForConnectionAsync(cancellationToken);
-
-            pipeTransport = new NowRdmHostPipeTransport(pipeServer);
-            channelTransport = new NowChannelTransport(pipeTransport);
-
             await NegotiateCapabilities(channelTransport, cancellationToken);
 
             _transport = channelTransport;
@@ -137,10 +133,6 @@ public class NowRdmHost
 
             // Signal that pipe is disconnected
             OnPipeDisconnected?.Invoke();
-
-            // Clean up resources
-            pipeTransport?.Dispose();
-            pipeServer?.Dispose();
         }
     }
 
