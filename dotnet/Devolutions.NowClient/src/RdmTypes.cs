@@ -104,8 +104,19 @@ namespace Devolutions.NowClient
     /// <param name="connectionData">The serialized RDM XML connection object.</param>
     public class RdmSessionStartParams(Guid sessionId, Guid connectionId, string connectionData)
     {
-        public Guid GetSessionId() => sessionId;
-        public Guid GetConnectionId() => connectionId;
-        public string GetConnectionData() => connectionData;
+        /// <summary>
+        /// Gets the unique session identifier.
+        /// </summary>
+        public Guid SessionId { get; } = sessionId;
+
+        /// <summary>
+        /// Gets the connection identifier.
+        /// </summary>
+        public Guid ConnectionId { get; } = connectionId;
+
+        /// <summary>
+        /// Gets the serialized RDM XML connection object.
+        /// </summary>
+        public string ConnectionData { get; } = connectionData;
     }
 }

@@ -534,9 +534,9 @@ namespace Devolutions.NowClient
             await EnsureRdmCapabilitiesSent();
 
             var message = new NowMsgRdmSessionStart(
-                sessionParams.GetSessionId(),
-                sessionParams.GetConnectionId(),
-                sessionParams.GetConnectionData()
+                sessionParams.SessionId,
+                sessionParams.ConnectionId,
+                sessionParams.ConnectionData
             );
             var command = new CommandRdmSessionStart(message);
 
