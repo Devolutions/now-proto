@@ -9,9 +9,9 @@ internal class CommandSetRdmSessionNotifyHandler : IClientCommand
         _handler = handler;
     }
 
-    async Task IClientCommand.Execute(WorkerCtx ctx)
+    Task IClientCommand.Execute(WorkerCtx ctx)
     {
         ctx.RdmSessionNotifyHandler = _handler;
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

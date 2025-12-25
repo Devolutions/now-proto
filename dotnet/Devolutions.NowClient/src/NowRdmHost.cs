@@ -18,6 +18,7 @@ using Devolutions.NowProto.Messages;
 public class NowRdmHost : IDisposable
 {
     private readonly string _pipeName;
+    private readonly object _transportLock = new object();
     private NowChannelTransport? _transport;
 
     /// <summary>
@@ -45,7 +46,7 @@ public class NowRdmHost : IDisposable
 
     /// <summary>
     /// Event raised when RDM application action message is received. Message is fire-and-forget and
-    /// does not expect any response. This message if always sent by DevolutionsAgent automatically
+    /// does not expect any response. This message is always sent by DevolutionsAgent automatically
     /// after negotiation is complete (passthrough of original message which initiated RDM
     /// application start).
     /// </summary>
@@ -71,7 +72,7 @@ public class NowRdmHost : IDisposable
     /// <summary>
     /// Creates a new RDM server for the specified OS session id (For each RDM instance running
     /// on the machine)
-    /// Call RunServerLoop() to start listening for connections.
+    /// Call Run() to start listening for connections.
     /// </summary>
     /// <param name="sessionId">OS session ID to create the pipe for.</param>
     public NowRdmHost(string sessionId)
@@ -99,29 +100,28 @@ public class NowRdmHost : IDisposable
     /// <param name="cancellationToken">Cancellation token to stop the server.</param>
     public async Task Run(CancellationToken cancellationToken)
     {
-        NamedPipeServerStream? pipeServer = null;
-        NowRdmHostPipeTransport? pipeTransport = null;
-        NowChannelTransport? channelTransport = null;
+        using var pipeServer = new NamedPipeServerStream(
+            _pipeName,
+            PipeDirection.InOut,
+            maxNumberOfServerInstances: 1,
+            PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous);
+
+        OnPipeReady?.Invoke();
+
+        await pipeServer.WaitForConnectionAsync(cancellationToken);
+
+        using var pipeTransport = new NowRdmHostPipeTransport(pipeServer);
+        using var channelTransport = new NowChannelTransport(pipeTransport);
 
         try
         {
-            pipeServer = new NamedPipeServerStream(
-                _pipeName,
-                PipeDirection.InOut,
-                maxNumberOfServerInstances: 1,
-                PipeTransmissionMode.Byte,
-                PipeOptions.Asynchronous);
-
-            OnPipeReady?.Invoke();
-
-            await pipeServer.WaitForConnectionAsync(cancellationToken);
-
-            pipeTransport = new NowRdmHostPipeTransport(pipeServer);
-            channelTransport = new NowChannelTransport(pipeTransport);
-
             await NegotiateCapabilities(channelTransport, cancellationToken);
 
-            _transport = channelTransport;
+            lock (_transportLock)
+            {
+                _transport = channelTransport;
+            }
 
             // Negotiation complete - send READY notification to client
             await SendAppNotify(NowRdmAppState.Ready, NowRdmReason.NotSpecified, string.Empty);
@@ -131,16 +131,14 @@ public class NowRdmHost : IDisposable
         }
         finally
         {
-            // Clear active transport
-            _transport?.Dispose();
-            _transport = null;
+            // Clear active transport reference
+            lock (_transportLock)
+            {
+                _transport = null;
+            }
 
             // Signal that pipe is disconnected
             OnPipeDisconnected?.Invoke();
-
-            // Clean up resources
-            pipeTransport?.Dispose();
-            pipeServer?.Dispose();
         }
     }
 
@@ -160,22 +158,50 @@ public class NowRdmHost : IDisposable
                 {
                     case RdmMessageKind.AppStart:
                         var appStart = message.Deserialize<NowMsgRdmAppStart>();
-                        OnAppStart?.Invoke(appStart);
+                        try
+                        {
+                            OnAppStart?.Invoke(appStart);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"Unhandled exception in OnAppStart handler: {ex}");
+                        }
                         break;
 
                     case RdmMessageKind.AppAction:
                         var appAction = message.Deserialize<NowMsgRdmAppAction>();
-                        OnAppAction?.Invoke(appAction);
+                        try
+                        {
+                            OnAppAction?.Invoke(appAction);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"Unhandled exception in OnAppAction handler: {ex}");
+                        }
                         break;
 
                     case RdmMessageKind.SessionStart:
                         var sessionStart = message.Deserialize<NowMsgRdmSessionStart>();
-                        OnSessionStart?.Invoke(sessionStart);
+                        try
+                        {
+                            OnSessionStart?.Invoke(sessionStart);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"Unhandled exception in OnSessionStart handler: {ex}");
+                        }
                         break;
 
                     case RdmMessageKind.SessionAction:
                         var sessionAction = message.Deserialize<NowMsgRdmSessionAction>();
-                        OnSessionAction?.Invoke(sessionAction);
+                        try
+                        {
+                            OnSessionAction?.Invoke(sessionAction);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"Unhandled exception in OnSessionAction handler: {ex}");
+                        }
                         break;
                 }
             }
@@ -209,7 +235,11 @@ public class NowRdmHost : IDisposable
     /// <exception cref="NowRdmHostException">Thrown when not connected or send fails.</exception>
     public async Task SendAppNotify(NowRdmAppState appState, NowRdmReason reasonCode, string notifyData = "")
     {
-        var transport = _transport;
+        NowChannelTransport? transport;
+        lock (_transportLock)
+        {
+            transport = _transport;
+        }
 
         if (transport == null)
         {
@@ -236,7 +266,11 @@ public class NowRdmHost : IDisposable
     /// <exception cref="NowRdmHostException">Thrown when not connected or send fails.</exception>
     public async Task SendSessionNotify(NowRdmSessionNotifyKind sessionNotify, Guid sessionId, string logData = "")
     {
-        var transport = _transport;
+        NowChannelTransport? transport;
+        lock (_transportLock)
+        {
+            transport = _transport;
+        }
 
         if (transport == null)
         {
@@ -261,7 +295,10 @@ public class NowRdmHost : IDisposable
     {
         get
         {
-            return _transport != null;
+            lock (_transportLock)
+            {
+                return _transport != null;
+            }
         }
     }
 
