@@ -21,49 +21,49 @@ namespace Devolutions.NowClient
     /// <summary>
     /// RDM version information.
     /// </summary>
-    public class RdmVersion
+    /// <param name="version">The RDM version string (e.g., "2025.1.0.0").</param>
+    /// <param name="extra">Extra version information.</param>
+    public class RdmVersion(string version, string? extra)
     {
         /// <summary>
         /// Gets the RDM version string (e.g., "2025.1.0.0").
         /// </summary>
-        public string Version { get; internal set; } = "";
+        public string Version { get; } = version;
 
         /// <summary>
         /// Gets extra version information.
         /// </summary>
-        public string? Extra { get; internal set; }
-
-        internal RdmVersion(string version, string? extra)
-        {
-            Version = version;
-            Extra = extra;
-        }
+        public string? Extra { get; } = extra;
     }
 
     /// <summary>
     /// Contains information about RDM capabilities and version.
     /// </summary>
-    internal class RdmCapabilityInfo
+    /// <param name="isAppAvailable">A value indicating whether RDM application is available.</param>
+    /// <param name="rdmVersion">The RDM version string (e.g., "2025.1.0.0").</param>
+    /// <param name="versionExtra">Extra version information.</param>
+    /// <param name="serverTimestamp">The server timestamp from the capabilities exchange.</param>
+    internal class RdmCapabilityInfo(bool isAppAvailable, string rdmVersion, string versionExtra, DateTimeOffset serverTimestamp)
     {
         /// <summary>
         /// Gets a value indicating whether RDM application is available.
         /// </summary>
-        public bool IsAppAvailable { get; internal set; }
+        public bool IsAppAvailable { get; } = isAppAvailable;
 
         /// <summary>
         /// Gets the RDM version string (e.g., "2025.1.0.0").
         /// </summary>
-        public string RdmVersion { get; internal set; } = "";
+        public string RdmVersion { get; } = rdmVersion;
 
         /// <summary>
         /// Gets extra version information.
         /// </summary>
-        public string VersionExtra { get; internal set; } = "";
+        public string VersionExtra { get; } = versionExtra;
 
         /// <summary>
         /// Gets the server timestamp from the capabilities exchange.
         /// </summary>
-        public DateTimeOffset ServerTimestamp { get; internal set; }
+        public DateTimeOffset ServerTimestamp { get; } = serverTimestamp;
     }
 
     /// <summary>
@@ -72,39 +72,51 @@ namespace Devolutions.NowClient
     public class RdmStartParams
     {
         /// <summary>
-        /// Gets or sets the launch flags for the RDM application.
+        /// Sets the launch flags for the RDM application.
         /// </summary>
-        public NowRdmLaunchFlags LaunchFlags { get; set; } = NowRdmLaunchFlags.None;
+        public RdmStartParams LaunchFlags(NowRdmLaunchFlags flags)
+        {
+            _launchFlags = flags;
+            return this;
+        }
 
         /// <summary>
-        /// Gets or sets the timeout for RDM to launch and become ready.
+        /// Sets the timeout for RDM to launch and become ready.
         /// </summary>
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(45);
+        public RdmStartParams Timeout(TimeSpan timeout)
+        {
+            _timeout = timeout;
+            return this;
+        }
+
+        internal NowRdmLaunchFlags GetLaunchFlags() => _launchFlags;
+        internal TimeSpan GetTimeout() => _timeout;
+
+        private NowRdmLaunchFlags _launchFlags = NowRdmLaunchFlags.None;
+        private TimeSpan _timeout = TimeSpan.FromSeconds(45);
     }
 
     /// <summary>
     /// Parameters for starting an RDM session.
     /// </summary>
-    public class RdmSessionStartParams
+    /// <param name="sessionId">The unique session identifier.</param>
+    /// <param name="connectionId">The connection identifier.</param>
+    /// <param name="connectionData">The serialized RDM XML connection object.</param>
+    public class RdmSessionStartParams(Guid sessionId, Guid connectionId, string connectionData)
     {
         /// <summary>
-        /// Gets or sets the unique session identifier. If not provided, a new GUID will be generated.
+        /// Gets the unique session identifier.
         /// </summary>
-        public Guid SessionId { get; set; } = Guid.NewGuid();
+        public Guid SessionId { get; } = sessionId;
 
         /// <summary>
-        /// Gets or sets the connection identifier. Reserved for future use.
+        /// Gets the connection identifier.
         /// </summary>
-        public Guid ConnectionId { get; set; } = Guid.Empty;
+        public Guid ConnectionId { get; } = connectionId;
 
         /// <summary>
-        /// Gets or sets the serialized RDM XML connection object.
+        /// Gets the serialized RDM XML connection object.
         /// </summary>
-        public string ConnectionData { get; set; } = "";
-
-        /// <summary>
-        /// Gets or sets the callback to handle session notifications.
-        /// </summary>
-        public RdmSessionNotifyHandler? NotifyHandler { get; set; }
+        public string ConnectionData { get; } = connectionData;
     }
 }
