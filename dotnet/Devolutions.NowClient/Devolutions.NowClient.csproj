@@ -14,7 +14,6 @@
     <RepositoryType>git</RepositoryType>
 
     <OutputType>Library</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
     <Platforms>x86;x64;ARM64</Platforms>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
