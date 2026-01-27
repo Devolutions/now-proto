@@ -9,7 +9,6 @@
     <RepositoryUrl>https://github.com/Devolutions/now-proto.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
-    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x86;x64;ARM64</Platforms>
