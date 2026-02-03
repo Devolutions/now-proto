@@ -70,19 +70,18 @@ public class NowRdmHost : IDisposable
     public string PipeName => _pipeName;
 
     /// <summary>
-    /// Creates a new RDM server for the specified OS session id (For each RDM instance running
-    /// on the machine)
+    /// Creates a new RDM server for the specified pipe name.
     /// Call Run() to start listening for connections.
     /// </summary>
-    /// <param name="sessionId">OS session ID to create the pipe for.</param>
-    public NowRdmHost(string sessionId)
+    /// <param name="pipeName">Named pipe name (without \\.\\pipe\ prefix) to create the pipe for.</param>
+    public NowRdmHost(string pipeName)
     {
-        if (string.IsNullOrEmpty(sessionId))
+        if (string.IsNullOrEmpty(pipeName))
         {
-            throw new NowRdmHostException("Session ID cannot be null or empty");
+            throw new NowRdmHostException("Pipe name cannot be null or empty");
         }
 
-        _pipeName = $"devolutions-session-{sessionId}";
+        _pipeName = pipeName;
     }
 
     /// <summary>
