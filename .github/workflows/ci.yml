@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check formatting (Rust)
         run: cargo xtask rust fmt -v
@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./.cargo/local_root/bin
           key: ${{ runner.os }}-bin-${{ github.job }}-${{ hashFiles('xtask/src/bin_version.rs') }}
@@ -75,13 +75,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2.7.3
 
       - name: Binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./.cargo/local_root/bin
           key: ${{ runner.os }}-bin-${{ github.job }}-${{ hashFiles('xtask/src/bin_version.rs') }}
@@ -116,7 +116,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Tests
         run: cargo xtask dotnet tests -v
