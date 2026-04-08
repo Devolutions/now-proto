@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Check out ${{ github.repository }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set package version
         shell: pwsh
@@ -91,7 +91,7 @@ jobs:
           Get-ChildItem -Path $Path -Recurse -Include '*.snupkg' | ForEach { Copy-Item $_ "./nuget-packages" }
 
       - name: Upload packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nupkg-${{matrix.library}}
           path: |
@@ -105,7 +105,7 @@ jobs:
 
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: nupkg
           pattern: nupkg-*
@@ -124,7 +124,7 @@ jobs:
 
     steps:
       - name: Download NuGet packages artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: nupkg
           path: nuget-packages
