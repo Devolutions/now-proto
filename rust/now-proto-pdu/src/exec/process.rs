@@ -22,6 +22,14 @@ bitflags! {
         /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET
         const DIRECTORY_SET = 0x0002;
 
+        /// Enables OEM-to-UTF-8 transcoding for stdin, stdout, and stderr.
+        /// Without this flag, data streams are passed through as raw bytes.
+        /// Does NOT guarantee UTF-8 character boundaries are preserved in data messages;
+        /// the client must manage incomplete multi-byte sequences across message boundaries.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8
+        const ENCODING_UTF8 = 0x0004;
+
         /// Enable stdio (stdout, stderr, stdin) redirection.
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION
@@ -106,6 +114,16 @@ impl<'a> NowExecProcessMsg<'a> {
 
     pub fn is_with_io_redirection(&self) -> bool {
         self.flags.contains(NowExecProcessFlags::IO_REDIRECTION)
+    }
+
+    #[must_use]
+    pub fn with_encoding_utf8(mut self) -> Self {
+        self.flags |= NowExecProcessFlags::ENCODING_UTF8;
+        self
+    }
+
+    pub fn is_encoding_utf8(&self) -> bool {
+        self.flags.contains(NowExecProcessFlags::ENCODING_UTF8)
     }
 
     #[must_use]

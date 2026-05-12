@@ -36,6 +36,24 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Disable default OEM-to-UTF-8 transcoding: pass raw bytes without encoding conversion.
+        /// </summary>
+        public ExecBatchParams RawEncoding(bool enable = true)
+        {
+            _rawEncoding = enable;
+            return this;
+        }
+
+        /// <summary>
+        /// Enable or disable Unicode console mode.
+        /// </summary>
+        public ExecBatchParams UnicodeConsole(bool enable = true)
+        {
+            _unicodeConsole = enable;
+            return this;
+        }
+
         internal NowMsgExecBatch ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecBatch.Builder(sessionId, command);
@@ -55,11 +73,23 @@ namespace Devolutions.NowClient
                 builder.EnableDetached();
             }
 
+            if (_rawEncoding)
+            {
+                builder.EnableRawEncoding();
+            }
+
+            if (_unicodeConsole)
+            {
+                builder.EnableUnicodeConsole();
+            }
+
             return builder.Build();
         }
 
         private string? _directory = null;
         private bool _ioRedirection = false;
         private bool _detached = false;
+        private bool _rawEncoding = false;
+        private bool _unicodeConsole = false;
     }
 }

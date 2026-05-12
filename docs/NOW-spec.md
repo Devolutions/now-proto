@@ -3,7 +3,7 @@
 TOC is generated in [Obsidian](obsidian.md) via
 [TOC plugin](https://github.com/hipstersmoothie/obsidian-plugin-toc)
 -->
-# NOW-PROTO 1.5
+# NOW-PROTO 1.6
 - [Messages](#messages)
 	- [Transport](#transport)
 	- [Message Syntax](#message-syntax)
@@ -326,6 +326,7 @@ increment major version; Protocol implementations with different major version a
 | NOW_CAP_EXEC_STYLE_BATCH<br>0x0008 | Windows batch file (.bat) execution style. |
 | NOW_CAP_EXEC_STYLE_WINPS<br>0x0010 | Windows PowerShell (.ps1) execution style. |
 | NOW_CAP_EXEC_STYLE_PWSH<br>0x0020 | PowerShell 7 (.ps1) execution style. |
+| NOW_CAP_EXEC_UNICODE_CONSOLE<br>0x0040 | Host supports encoding control flags (RAW_ENCODING, UNICODE_CONSOLE, and ENCODING_UTF8). |
 | NOW_CAP_EXEC_IO_REDIRECTION<br>0x1000 | Set if host implements exec session IO redirection. |
 
 <!-- TODO: add AppleScript command -->
@@ -991,9 +992,12 @@ packet-beta
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_PROCESS_PARAMETERS_SET<br>0x0001 | `parameters` field contains non-default value. |
 | NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET<br>0x0002 | `directory` field contains non-default value.|
+| NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8<br>0x0004 | Enables OEM-to-UTF-8 transcoding for stdin, stdout, and stderr. Without this flag, data streams are passed through as raw bytes without encoding conversion. |
 | NOW_EXEC_FLAG_PROCESS_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 | NOW_EXEC_FLAG_PROCESS_DETACHED<br>0x8000 | Detached mode: the process is started without tracking execution or sending back output. |
 
+**Encoding behavior:** By default, process data streams are passed through as raw bytes without any encoding conversion, since no assumptions can be made about the encoding of an arbitrary process.
+Set `NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8` to enable OEM-to-UTF-8 transcoding when the process is known to use the system OEM code page.
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1071,8 +1075,14 @@ packet-beta
 | Flag                                   | Meaning                   |
 |----------------------------------------|---------------------------|
 | NOW_EXEC_FLAG_BATCH_DIRECTORY_SET<br>0x0001 | `directory` field contains non-default value. |
+| NOW_EXEC_FLAG_BATCH_RAW_ENCODING<br>0x0002 | Disables the default OEM-to-UTF-8 transcoding: data streams are passed through as raw bytes without any encoding conversion. |
+| NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE<br>0x0004 | Enables Unicode console: agent injects `@chcp 65001 > nul` and writes the script in BOM-less UTF-8. Implies UTF-8 stdout/stderr streams. |
 | NOW_EXEC_FLAG_BATCH_IO_REDIRECTION<br>0x1000 | Enable stdio (stdout, stderr, stdin) redirection. |
 | NOW_EXEC_FLAG_BATCH_DETACHED<br>0x8000 | Detached mode: the batch is started without tracking execution or sending back output. |
+
+**Encoding behavior:** By default, batch (cmd.exe) output is transcoded from OEM encoding to UTF-8, since cmd.exe uses the system OEM code page.
+Set `NOW_EXEC_FLAG_BATCH_RAW_ENCODING` to disable transcoding and pass raw bytes through unchanged.
+Set `NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE` to inject `@chcp 65001 > nul` and pass UTF-8 streams directly without transcoding.
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1117,9 +1127,19 @@ packet-beta
 | NOW_EXEC_FLAG_PS_EXECUTION_POLICY<br>0x0040   | `executionPolicy` field contains non-default value and specifies the PowerShell -ExecutionPolicy parameter     |
 | NOW_EXEC_FLAG_PS_CONFIGURATION_NAME<br>0x0080 | `configurationName` field contains non-default value and specifies the PowerShell -ConfigurationName parameter |
 | NOW_EXEC_FLAG_PS_DIRECTORY_SET<br>0x0100      | `directory` field contains non-default value and specifies command working directory                           |
+| NOW_EXEC_FLAG_PS_RAW_ENCODING<br>0x0200     | Disables the default OEM-to-UTF-8 transcoding: data streams are passed through as raw bytes without any encoding conversion. |
+| NOW_EXEC_FLAG_PS_UNICODE_CONSOLE<br>0x0400    | Enables Unicode console: agent injects `$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()` at script start. Implies stdin/stdout/stderr streams are UTF-8. |
 | NOW_EXEC_FLAG_PS_IO_REDIRECTION<br>0x1000     | Enable stdio (stdout, stderr, stdin) redirection.                                                              |
 | NOW_EXEC_FLAG_PS_SERVER_MODE<br>0x2000        | Run PowerShell in server mode.                                                                                 |
 | NOW_EXEC_FLAG_PS_DETACHED<br>0x8000           | Detached mode: PowerShell is started without tracking execution or sending back output.                        |
+
+**Encoding behavior (WinPs):** By default, Windows PowerShell (powershell.exe) output is transcoded from OEM encoding to UTF-8, since Windows PowerShell uses the system OEM code page for console output.
+Set `NOW_EXEC_FLAG_PS_RAW_ENCODING` to disable transcoding and pass raw bytes through unchanged.
+Set `NOW_EXEC_FLAG_PS_UNICODE_CONSOLE` to inject a UTF-8 encoding setup snippet and pass UTF-8 streams directly without transcoding.
+
+**Encoding behavior (Pwsh):** PowerShell 7 (pwsh) defaults to UTF-8 output natively, so no OEM transcoding is performed by default.
+`NOW_EXEC_FLAG_PS_RAW_ENCODING` has no additional effect since pwsh already outputs UTF-8.
+Set `NOW_EXEC_FLAG_PS_UNICODE_CONSOLE` to inject the encoding setup snippet for explicit UTF-8 console configuration.
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1453,3 +1473,8 @@ packet-beta
 - 1.5
 	- Add window recording capability and session messages for tracking active window changes and title updates.
 	- Fix invalid timestamp representation (signed -> unsigned).
+- 1.6
+	- Add `NOW_EXEC_FLAG_BATCH_RAW_ENCODING` and `NOW_EXEC_FLAG_PS_RAW_ENCODING` flags for batch, winps, and pwsh exec commands.
+	- Add `NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8` flag for process exec commands.
+	- Add `NOW_EXEC_FLAG_*_UNICODE_CONSOLE` flags for batch (cmd), winps, and pwsh exec commands.
+	- Add `NOW_CAP_EXEC_UNICODE_CONSOLE` capability flag.

@@ -45,6 +45,15 @@ namespace Devolutions.NowClient
             return this;
         }
 
+        /// <summary>
+        /// Enable OEM-to-UTF-8 transcoding for stdin/stdout/stderr. Without this, data is passed through as raw bytes.
+        /// </summary>
+        public ExecProcessParams EncodingUtf8(bool enable = true)
+        {
+            _encodingUtf8 = enable;
+            return this;
+        }
+
         internal NowMsgExecProcess ToNowMessage(uint sessionId)
         {
             var builder = new NowMsgExecProcess.Builder(sessionId, filename);
@@ -69,12 +78,18 @@ namespace Devolutions.NowClient
                 builder.EnableDetached();
             }
 
+            if (_encodingUtf8)
+            {
+                builder.EnableEncodingUtf8();
+            }
+
             return builder.Build();
         }
 
 
         private bool _ioRedirection = false;
         private bool _detached = false;
+        private bool _encodingUtf8 = false;
         private string? _parameters = null;
         private string? _directory = null;
     }

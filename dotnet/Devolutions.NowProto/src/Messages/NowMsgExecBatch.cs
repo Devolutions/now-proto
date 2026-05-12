@@ -21,6 +21,8 @@ namespace Devolutions.NowProto.Messages
 
         ushort INowSerialize.Flags => (ushort)(
             (Directory != null ? MsgFlags.DirectorySet : 0) |
+            (RawEncoding ? MsgFlags.RawEncoding : 0) |
+            (UnicodeConsole ? MsgFlags.UnicodeConsole : 0) |
             (IoRedirection ? MsgFlags.IoRedirection : 0) |
             (Detached ? MsgFlags.Detached : 0)
         );
@@ -50,6 +52,8 @@ namespace Devolutions.NowProto.Messages
                 sessionId,
                 filename,
                 msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
+                msgFlags.HasFlag(MsgFlags.RawEncoding),
+                msgFlags.HasFlag(MsgFlags.UnicodeConsole),
                 msgFlags.HasFlag(MsgFlags.IoRedirection),
                 msgFlags.HasFlag(MsgFlags.Detached)
             );
@@ -66,6 +70,22 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DIRECTORY_SET
             /// </summary>
             DirectorySet = 0x0001,
+
+            /// <summary>
+            /// Disables default OEM-to-UTF-8 transcoding: data streams are passed through
+            /// as raw bytes without any encoding conversion.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_RAW_ENCODING
+            /// </summary>
+            RawEncoding = 0x0002,
+
+            /// <summary>
+            /// Enables Unicode (UTF-8) console mode: agent injects `@chcp 65001 > nul`
+            /// and writes the script in BOM-less UTF-8 encoding.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE
+            /// </summary>
+            UnicodeConsole = 0x0004,
 
             /// <summary>
             /// Enable stdio (stdout, stderr, stdin) redirection.
@@ -97,6 +117,18 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
+            public Builder EnableRawEncoding()
+            {
+                _rawEncoding = true;
+                return this;
+            }
+
+            public Builder EnableUnicodeConsole()
+            {
+                _unicodeConsole = true;
+                return this;
+            }
+
             public Builder EnableDetached()
             {
                 _detached = true;
@@ -105,21 +137,25 @@ namespace Devolutions.NowProto.Messages
 
             public NowMsgExecBatch Build()
             {
-                return new NowMsgExecBatch(_sessionId, _filename, _directory, _ioRedirection, _detached);
+                return new NowMsgExecBatch(_sessionId, _filename, _directory, _rawEncoding, _unicodeConsole, _ioRedirection, _detached);
             }
 
             private readonly uint _sessionId = sessionId;
             private readonly string _filename = filename;
             private string? _directory = null;
+            private bool _rawEncoding = false;
+            private bool _unicodeConsole = false;
             private bool _ioRedirection = false;
             private bool _detached = false;
         }
 
-        internal NowMsgExecBatch(uint sessionId, string filename, string? directory, bool ioRedirection, bool detached)
+        internal NowMsgExecBatch(uint sessionId, string filename, string? directory, bool rawEncoding, bool unicodeConsole, bool ioRedirection, bool detached)
         {
             SessionId = sessionId;
             Filename = filename;
             Directory = directory;
+            RawEncoding = rawEncoding;
+            UnicodeConsole = unicodeConsole;
             IoRedirection = ioRedirection;
             Detached = detached;
         }
@@ -127,6 +163,8 @@ namespace Devolutions.NowProto.Messages
         public uint SessionId { get; }
         public string Filename { get; }
         public string? Directory { get; }
+        public bool RawEncoding { get; }
+        public bool UnicodeConsole { get; }
         public bool IoRedirection { get; }
         public bool Detached { get; }
     }

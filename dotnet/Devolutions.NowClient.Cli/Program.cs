@@ -1,6 +1,7 @@
 ﻿// Simple CLI test app for NowProto DVC
 
 using System.CommandLine;
+using System.Text;
 
 using Devolutions.NowProto.Messages;
 
@@ -8,8 +9,13 @@ namespace Devolutions.NowClient.Cli;
 
 static class Program
 {
+    private static bool _unicodeConsole = false;
+    private static bool _rawEncoding = false;
+
     static async Task<int> Main(params string[] args)
     {
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
         var rootCommand = new RootCommand("CLI test app for NowProto DVC");
 
         var pipeNameOption = new Option<string>("--pipe")
@@ -57,7 +63,7 @@ static class Program
         {
             repeat = true;
 
-            Console.Write("Operation (msg/run/pwsh/logoff/lock/winrec-start/winrec-stop/rdm-version/rdm-run/rdm-action/help/exit): ");
+            Console.Write("Operation (msg/run/cmd/ps/pwsh/logoff/lock/winrec-start/winrec-stop/rdm-version/rdm-run/rdm-action/+unicode/-unicode/+raw/-raw/help/exit): ");
             var operation = Console.ReadLine()?.Trim() ?? string.Empty;
 
             switch (operation.ToLowerInvariant())
@@ -74,6 +80,36 @@ static class Program
                     var runParams = new ExecRunParams(command);
                     await client.ExecRun(runParams);
                     Console.WriteLine("OK");
+                    break;
+                case "cmd":
+                    Console.Write("Batch command: ");
+                    var batchCommand = Console.ReadLine()?.Trim() ?? string.Empty;
+                    if (string.IsNullOrEmpty(batchCommand))
+                    {
+                        Console.WriteLine("Batch command cannot be empty.");
+                        continue;
+                    }
+
+                    Console.Write("Detached mode? (Y/N) [N]: ");
+                    var batchDetachedInput = Console.ReadLine()?.Trim().ToUpperInvariant() ?? string.Empty;
+                    var isBatchDetached = batchDetachedInput == "Y" || batchDetachedInput == "YES";
+
+                    await ExecuteBatchCommand(client, batchCommand, isBatchDetached);
+                    break;
+                case "ps":
+                    Console.Write("Windows PowerShell command: ");
+                    var winPsCommand = Console.ReadLine()?.Trim() ?? string.Empty;
+                    if (string.IsNullOrEmpty(winPsCommand))
+                    {
+                        Console.WriteLine("PowerShell command cannot be empty.");
+                        continue;
+                    }
+
+                    Console.Write("Detached mode? (Y/N) [N]: ");
+                    var winPsDetachedInput = Console.ReadLine()?.Trim().ToUpperInvariant() ?? string.Empty;
+                    var isWinPsDetached = winPsDetachedInput == "Y" || winPsDetachedInput == "YES";
+
+                    await ExecuteWinPowerShellCommand(client, winPsCommand, isWinPsDetached);
                     break;
                 case "pwsh":
                     Console.Write("PowerShell command: ");
@@ -130,6 +166,22 @@ static class Program
                 case var cmd when cmd.StartsWith("rdm-action"):
                     await ExecuteRdmActionCommand(client, operation);
                     break;
+                case "+unicode":
+                    _unicodeConsole = true;
+                    Console.WriteLine("UNICODE_CONSOLE flag ENABLED");
+                    break;
+                case "-unicode":
+                    _unicodeConsole = false;
+                    Console.WriteLine("UNICODE_CONSOLE flag DISABLED");
+                    break;
+                case "+raw":
+                    _rawEncoding = true;
+                    Console.WriteLine("RAW_ENCODING flag ENABLED");
+                    break;
+                case "-raw":
+                    _rawEncoding = false;
+                    Console.WriteLine("RAW_ENCODING flag DISABLED");
+                    break;
                 case "exit":
                     Console.WriteLine("Exiting...");
                     repeat = false;
@@ -150,7 +202,157 @@ static class Program
     }
 
     /// <summary>
-    /// Executes a PowerShell command with optional IO redirection and prints output to console.
+    /// Executes a batch command with optional IO redirection and prints output to console and out.txt.
+    /// </summary>
+    private static async Task ExecuteBatchCommand(NowClient client, string command, bool isDetached)
+    {
+        // If detached mode, just execute and return immediately
+        if (isDetached)
+        {
+            Console.WriteLine($"Executing batch command in detached mode: {command}");
+
+            var detachedParams = new ExecBatchParams(command)
+                .Detached(true);
+
+            await client.ExecBatch(detachedParams);
+            Console.WriteLine($"Batch command started in detached mode (no output tracking).");
+            return;
+        }
+
+        // Normal mode with IO redirection
+        const int NoOutputLimit = 1024 * 100; // 100KB
+        const int DisplayProgressInterval = 1024 * 1024; // 1MB
+        const string OutputFilePath = "out.txt";
+
+        var stdoutSize = 0;
+        var lastStdoutPrintSize = 0;
+        var stderrSize = 0;
+        var lastStderrPrintSize = 0;
+        using var stdoutBuffer = new MemoryStream();
+        using var stderrBuffer = new MemoryStream();
+
+        var startTime = DateTime.UtcNow;
+
+        // Create batch execution parameters with IO redirection.
+        var batchParams = new ExecBatchParams(command)
+            .IoRedirection(true)
+            .UnicodeConsole(_unicodeConsole)
+            .RawEncoding(_rawEncoding);
+
+        // Set stdout handler - accumulate bytes and show progress.
+        batchParams.OnStdout = (sessionId, data, isLast) =>
+        {
+            if (data.Count > 0)
+            {
+                if (stdoutSize < NoOutputLimit)
+                {
+                    stdoutBuffer.Write(data.Array!, data.Offset, data.Count);
+                }
+                stdoutSize += data.Count;
+
+                if ((stdoutSize - lastStdoutPrintSize) > DisplayProgressInterval)
+                {
+                    lastStdoutPrintSize = stdoutSize;
+                    Console.WriteLine($"[STDOUT] Received {stdoutSize} bytes so far...");
+                }
+            }
+        };
+
+        // Set stderr handler - accumulate bytes and show progress.
+        batchParams.OnStderr = (sessionId, data, isLast) =>
+        {
+            if (data.Count > 0)
+            {
+                if (stderrSize < NoOutputLimit)
+                {
+                    stderrBuffer.Write(data.Array!, data.Offset, data.Count);
+                }
+                stderrSize += data.Count;
+
+                if (stderrSize - lastStderrPrintSize > DisplayProgressInterval)
+                {
+                    lastStderrPrintSize = stderrSize;
+                    Console.WriteLine($"[STDERR] Received {stderrSize} bytes so far...");
+                }
+            }
+        };
+
+        try
+        {
+            Console.WriteLine($"Executing batch command: {command}");
+
+            var session = await client.ExecBatch(batchParams);
+
+            // Wait for the session to complete.
+            var exitCode = await session.GetResult();
+
+            using var fileWriter = new StreamWriter(OutputFilePath, false, System.Text.Encoding.UTF8);
+
+            // Convert accumulated output to UTF8 and print.
+            if (stdoutBuffer.Length > 0 && stdoutSize <= NoOutputLimit)
+            {
+                Console.WriteLine($"\n--- STDOUT Output ({stdoutBuffer.Length} bytes) ---");
+                try
+                {
+                    var stdoutBytes = stdoutBuffer.ToArray();
+                    var stdoutText = System.Text.Encoding.UTF8.GetString(stdoutBytes);
+                    Console.Write(stdoutText);
+
+                    await fileWriter.WriteLineAsync("--- STDOUT ---");
+                    await fileWriter.WriteAsync(stdoutText);
+                    await fileWriter.WriteLineAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting stdout to UTF8: {ex.Message}");
+                    var stdoutBytes = stdoutBuffer.ToArray();
+                    Console.WriteLine($"Raw bytes (first 100): {string.Join(" ", stdoutBytes.Take(100).Select(b => b.ToString("X2")))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"\n--- STDOUT Output skipped (total size {stdoutSize} bytes) ---");
+            }
+
+            if (stderrBuffer.Length > 0 && stderrSize <= 1024 * 10)
+            {
+                Console.WriteLine($"\n--- STDERR Output ({stderrBuffer.Length} bytes) ---");
+                try
+                {
+                    var stderrBytes = stderrBuffer.ToArray();
+                    var stderrText = System.Text.Encoding.UTF8.GetString(stderrBytes);
+                    Console.Error.Write(stderrText);
+
+                    await fileWriter.WriteLineAsync("--- STDERR ---");
+                    await fileWriter.WriteAsync(stderrText);
+                    await fileWriter.WriteLineAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error converting stderr to UTF8: {ex.Message}");
+                    var stderrBytes = stderrBuffer.ToArray();
+                    Console.Error.WriteLine($"Raw bytes (first 100): {string.Join(" ", stderrBytes.Take(100).Select(b => b.ToString("X2")))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"\n--- STDERR Output skipped (total size {stderrSize} bytes) ---");
+            }
+
+            Console.WriteLine($"\nExit code: {exitCode}");
+            var executionTime = DateTime.UtcNow - startTime;
+            Console.WriteLine($"Execution time: {executionTime.TotalSeconds:F2} seconds");
+            Console.WriteLine($"Output saved to {Path.GetFullPath(OutputFilePath)}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error executing batch command: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Executes a PowerShell (pwsh) command with optional IO redirection and prints output to console and out.txt.
     /// </summary>
     private static async Task ExecutePowerShellCommand(NowClient client, string command, bool isDetached)
     {
@@ -172,8 +374,8 @@ static class Program
         // Normal mode with IO redirection
         const int NoOutputLimit = 1024 * 100; // 100KB
         const int DisplayProgressInterval = 1024 * 1024; // 1MB
+        const string OutputFilePath = "out.txt";
 
-        var completionSource = new TaskCompletionSource<int>();
         var stdoutSize = 0;
         var lastStdoutPrintSize = 0;
         var stderrSize = 0;
@@ -187,7 +389,9 @@ static class Program
         var psParams = new ExecPwshParams(command)
             .IoRedirection(true)
             .NonInteractive(true)
-            .NoLogo(true);
+            .NoLogo(true)
+            .UnicodeConsole(_unicodeConsole)
+            .RawEncoding(_rawEncoding);
 
         // Set stdout handler - accumulate bytes and show progress.
         psParams.OnStdout = (sessionId, data, isLast) =>
@@ -237,6 +441,8 @@ static class Program
             // Wait for the session to complete.
             var exitCode = await session.GetResult();
 
+            using var fileWriter = new StreamWriter(OutputFilePath, false, System.Text.Encoding.UTF8);
+
             // Convert accumulated output to UTF8 and print.
             if (stdoutBuffer.Length > 0 && stdoutSize <= NoOutputLimit)
             {
@@ -246,6 +452,10 @@ static class Program
                     var stdoutBytes = stdoutBuffer.ToArray();
                     var stdoutText = System.Text.Encoding.UTF8.GetString(stdoutBytes);
                     Console.Write(stdoutText);
+
+                    await fileWriter.WriteLineAsync("--- STDOUT ---");
+                    await fileWriter.WriteAsync(stdoutText);
+                    await fileWriter.WriteLineAsync();
                 }
                 catch (Exception ex)
                 {
@@ -267,6 +477,10 @@ static class Program
                     var stderrBytes = stderrBuffer.ToArray();
                     var stderrText = System.Text.Encoding.UTF8.GetString(stderrBytes);
                     Console.Error.Write(stderrText);
+
+                    await fileWriter.WriteLineAsync("--- STDERR ---");
+                    await fileWriter.WriteAsync(stderrText);
+                    await fileWriter.WriteLineAsync();
                 }
                 catch (Exception ex)
                 {
@@ -283,10 +497,165 @@ static class Program
             Console.WriteLine($"\nExit code: {exitCode}");
             var executionTime = DateTime.UtcNow - startTime;
             Console.WriteLine($"Execution time: {executionTime.TotalSeconds:F2} seconds");
+            Console.WriteLine($"Output saved to {Path.GetFullPath(OutputFilePath)}");
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error executing PowerShell command: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Executes a Windows PowerShell (powershell.exe) command with optional IO redirection and prints output to console and out.txt.
+    /// </summary>
+    private static async Task ExecuteWinPowerShellCommand(NowClient client, string command, bool isDetached)
+    {
+        // If detached mode, just execute and return immediately
+        if (isDetached)
+        {
+            Console.WriteLine($"Executing Windows PowerShell command in detached mode: {command}");
+
+            var detachedParams = new ExecWinPsParams(command)
+                .Detached(true)
+                .NonInteractive(true)
+                .NoLogo(true);
+
+            await client.ExecWinPs(detachedParams);
+            Console.WriteLine($"Windows PowerShell command started in detached mode (no output tracking).");
+            return;
+        }
+
+        // Normal mode with IO redirection
+        const int NoOutputLimit = 1024 * 100; // 100KB
+        const int DisplayProgressInterval = 1024 * 1024; // 1MB
+        const string OutputFilePath = "out.txt";
+
+        var stdoutSize = 0;
+        var lastStdoutPrintSize = 0;
+        var stderrSize = 0;
+        var lastStderrPrintSize = 0;
+        using var stdoutBuffer = new MemoryStream();
+        using var stderrBuffer = new MemoryStream();
+
+        var startTime = DateTime.UtcNow;
+
+        // Create Windows PowerShell execution parameters with IO redirection.
+        var psParams = new ExecWinPsParams(command)
+            .IoRedirection(true)
+            .NonInteractive(true)
+            .NoLogo(true)
+            .UnicodeConsole(_unicodeConsole)
+            .RawEncoding(_rawEncoding);
+
+        // Set stdout handler - accumulate bytes and show progress.
+        psParams.OnStdout = (sessionId, data, isLast) =>
+        {
+            if (data.Count > 0)
+            {
+                if (stdoutSize < NoOutputLimit)
+                {
+                    stdoutBuffer.Write(data.Array!, data.Offset, data.Count);
+                }
+                stdoutSize += data.Count;
+
+                if ((stdoutSize - lastStdoutPrintSize) > DisplayProgressInterval)
+                {
+                    lastStdoutPrintSize = stdoutSize;
+                    Console.WriteLine($"[STDOUT] Received {stdoutSize} bytes so far...");
+                }
+            }
+        };
+
+        // Set stderr handler - accumulate bytes and show progress.
+        psParams.OnStderr = (sessionId, data, isLast) =>
+        {
+            if (data.Count > 0)
+            {
+                if (stderrSize < NoOutputLimit)
+                {
+                    stderrBuffer.Write(data.Array!, data.Offset, data.Count);
+                }
+                stderrSize += data.Count;
+
+                if (stderrSize - lastStderrPrintSize > DisplayProgressInterval)
+                {
+                    lastStderrPrintSize = stderrSize;
+                    Console.WriteLine($"[STDERR] Received {stderrSize} bytes so far...");
+                }
+            }
+        };
+
+        try
+        {
+            Console.WriteLine($"Executing Windows PowerShell command: {command}");
+
+            var session = await client.ExecWinPs(psParams);
+
+            // Wait for the session to complete.
+            var exitCode = await session.GetResult();
+
+            using var fileWriter = new StreamWriter(OutputFilePath, false, System.Text.Encoding.UTF8);
+
+            // Convert accumulated output to UTF8 and print.
+            if (stdoutBuffer.Length > 0 && stdoutSize <= NoOutputLimit)
+            {
+                Console.WriteLine($"\n--- STDOUT Output ({stdoutBuffer.Length} bytes) ---");
+                try
+                {
+                    var stdoutBytes = stdoutBuffer.ToArray();
+                    var stdoutText = System.Text.Encoding.UTF8.GetString(stdoutBytes);
+                    Console.Write(stdoutText);
+
+                    await fileWriter.WriteLineAsync("--- STDOUT ---");
+                    await fileWriter.WriteAsync(stdoutText);
+                    await fileWriter.WriteLineAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting stdout to UTF8: {ex.Message}");
+                    var stdoutBytes = stdoutBuffer.ToArray();
+                    Console.WriteLine($"Raw bytes (first 100): {string.Join(" ", stdoutBytes.Take(100).Select(b => b.ToString("X2")))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"\n--- STDOUT Output skipped (total size {stdoutSize} bytes) ---");
+            }
+
+            if (stderrBuffer.Length > 0 && stderrSize <= 1024 * 10)
+            {
+                Console.WriteLine($"\n--- STDERR Output ({stderrBuffer.Length} bytes) ---");
+                try
+                {
+                    var stderrBytes = stderrBuffer.ToArray();
+                    var stderrText = System.Text.Encoding.UTF8.GetString(stderrBytes);
+                    Console.Error.Write(stderrText);
+
+                    await fileWriter.WriteLineAsync("--- STDERR ---");
+                    await fileWriter.WriteAsync(stderrText);
+                    await fileWriter.WriteLineAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error converting stderr to UTF8: {ex.Message}");
+                    var stderrBytes = stderrBuffer.ToArray();
+                    Console.Error.WriteLine($"Raw bytes (first 100): {string.Join(" ", stderrBytes.Take(100).Select(b => b.ToString("X2")))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"\n--- STDERR Output skipped (total size {stderrSize} bytes) ---");
+            }
+
+            Console.WriteLine($"\nExit code: {exitCode}");
+            var executionTime = DateTime.UtcNow - startTime;
+            Console.WriteLine($"Execution time: {executionTime.TotalSeconds:F2} seconds");
+            Console.WriteLine($"Output saved to {Path.GetFullPath(OutputFilePath)}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error executing Windows PowerShell command: {ex.Message}");
             throw;
         }
     }
@@ -507,7 +876,9 @@ static class Program
         Console.WriteLine("==================");
         Console.WriteLine("msg                    - Send a message box to the remote desktop");
         Console.WriteLine("run                    - Execute a shell command on the remote desktop");
-        Console.WriteLine("pwsh                   - Execute a PowerShell command with IO redirection");
+        Console.WriteLine("cmd                    - Execute a batch command with IO redirection");
+        Console.WriteLine("ps                     - Execute a Windows PowerShell (5.x) command with IO redirection");
+        Console.WriteLine("pwsh                   - Execute a PowerShell (7+) command with IO redirection");
         Console.WriteLine("logoff                 - Log off the current session");
         Console.WriteLine("lock                   - Lock the remote desktop session");
         Console.WriteLine();
@@ -527,6 +898,10 @@ static class Program
         Console.WriteLine();
         Console.WriteLine("Other:");
         Console.WriteLine("-------");
+        Console.WriteLine("+unicode               - Enable UNICODE_CONSOLE flag for cmd/ps/pwsh");
+        Console.WriteLine("-unicode               - Disable UNICODE_CONSOLE flag");
+        Console.WriteLine("+raw                   - Enable RAW_ENCODING flag for cmd/ps/pwsh");
+        Console.WriteLine("-raw                   - Disable RAW_ENCODING flag");
         Console.WriteLine("help, ?                - Show this help information");
         Console.WriteLine("exit                   - Exit the CLI application");
         Console.WriteLine();
