@@ -1083,7 +1083,9 @@ packet-beta
 **Encoding behavior:** By default, batch (cmd.exe) output is transcoded from OEM encoding to UTF-8, since cmd.exe uses the system OEM code page.
 Set `NOW_EXEC_FLAG_BATCH_RAW_ENCODING` to disable transcoding and pass raw bytes through unchanged.
 Set `NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE` to inject `@chcp 65001 > nul` and pass UTF-8 streams directly without transcoding.
-If both flags are set, `NOW_EXEC_FLAG_BATCH_RAW_ENCODING` takes precedence and the streams are passed as raw bytes (no transcoding).
+If both `NOW_EXEC_FLAG_BATCH_RAW_ENCODING` and `NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE` are set, the agent **MUST** apply both behaviors:
+it **MUST** enable Unicode console mode for process startup, and it **MUST NOT** perform stdout/stderr transcoding.
+Returned output is raw process output bytes, and clients **MUST NOT** assume any specific output encoding.
 
 **sessionId (4 bytes)**: A 32-bit unsigned integer containing a unique remote execution session id.
 
@@ -1137,7 +1139,9 @@ packet-beta
 **Encoding behavior (WinPs):** By default, Windows PowerShell (powershell.exe) output is transcoded from OEM encoding to UTF-8, since Windows PowerShell uses the system OEM code page for console output.
 Set `NOW_EXEC_FLAG_PS_RAW_ENCODING` to disable transcoding and pass raw bytes through unchanged.
 Set `NOW_EXEC_FLAG_PS_UNICODE_CONSOLE` to inject a UTF-8 encoding setup snippet and pass UTF-8 streams directly without transcoding.
-If both flags are set, `NOW_EXEC_FLAG_PS_RAW_ENCODING` takes precedence and the streams are passed as raw bytes (no transcoding).
+If both `NOW_EXEC_FLAG_PS_RAW_ENCODING` and `NOW_EXEC_FLAG_PS_UNICODE_CONSOLE` are set, the agent **MUST** apply both behaviors:
+it **MUST** enable Unicode console mode for process startup, and it **MUST NOT** perform stdout/stderr transcoding.
+Returned output is raw process output bytes, and clients **MUST NOT** assume any specific output encoding.
 
 **Encoding behavior (Pwsh):** PowerShell 7 (pwsh) defaults to UTF-8 output natively, so no OEM transcoding is performed by default.
 `NOW_EXEC_FLAG_PS_RAW_ENCODING` has no additional effect since pwsh already outputs UTF-8.
