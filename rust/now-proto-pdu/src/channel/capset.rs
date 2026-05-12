@@ -88,7 +88,8 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_CAP_EXEC_IO_REDIRECTION
         const IO_REDIRECTION = 0x1000;
-        /// Set if host supports encoding control flags for exec commands\n        /// (RAW_ENCODING, UNICODE_CONSOLE, and ENCODING_UTF8 flags).
+        /// Set if host supports encoding control flags for exec commands
+        /// (RAW_ENCODING, UNICODE_CONSOLE, and ENCODING_UTF8 flags).
         ///
         /// NOW-PROTO: NOW_CAP_EXEC_UNICODE_CONSOLE
         const UNICODE_CONSOLE = 0x0040;
