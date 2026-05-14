@@ -4,8 +4,6 @@
     {
         public static NowProtoVersion Current => new(1, 6);
 
-
-
         // -- IComparable<NowProtoVersion> --
         public int CompareTo(NowProtoVersion other)
         {
