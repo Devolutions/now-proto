@@ -87,6 +87,22 @@ namespace Devolutions.NowProto.Messages
             DirectorySet = 0x0100,
 
             /// <summary>
+            /// Disables default OEM-to-UTF-8 transcoding: data streams are passed through
+            /// as raw bytes without any encoding conversion.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_RAW_ENCODING
+            /// </summary>
+            RawEncoding = 0x0200,
+
+            /// <summary>
+            /// Enables Unicode (UTF-8) console mode: agent injects a UTF-8 encoding setup snippet
+            /// at the beginning of the script, ensuring stdin/stdout/stderr use UTF-8.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PS_UNICODE_CONSOLE
+            /// </summary>
+            UnicodeConsole = 0x0400,
+
+            /// <summary>
             /// Enable stdio (stdout, stderr, stdin) redirection.
             ///
             /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
@@ -189,6 +205,18 @@ namespace Devolutions.NowProto.Messages
             public Builder EnableIoRedirection()
             {
                 _flags |= MsgFlags.IoRedirection;
+                return this;
+            }
+
+            public Builder EnableRawEncoding()
+            {
+                _flags |= MsgFlags.RawEncoding;
+                return this;
+            }
+
+            public Builder EnableUnicodeConsole()
+            {
+                _flags |= MsgFlags.UnicodeConsole;
                 return this;
             }
 
@@ -301,6 +329,8 @@ namespace Devolutions.NowProto.Messages
         public string Command { get; private init; } = "";
 
         public bool IoRedirection => _flags.HasFlag(MsgFlags.IoRedirection);
+        public bool RawEncoding => _flags.HasFlag(MsgFlags.RawEncoding);
+        public bool UnicodeConsole => _flags.HasFlag(MsgFlags.UnicodeConsole);
         public bool ServerMode => _flags.HasFlag(MsgFlags.ServerMode);
         public bool Detached => _flags.HasFlag(MsgFlags.Detached);
 

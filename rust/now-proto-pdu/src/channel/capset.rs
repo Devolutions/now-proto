@@ -88,6 +88,11 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_CAP_EXEC_IO_REDIRECTION
         const IO_REDIRECTION = 0x1000;
+        /// Set if host supports encoding control flags for exec commands
+        /// (RAW_ENCODING, UNICODE_CONSOLE, and ENCODING_UTF8 flags).
+        ///
+        /// NOW-PROTO: NOW_CAP_EXEC_UNICODE_CONSOLE
+        const UNICODE_CONSOLE = 0x0040;
     }
 }
 
@@ -101,7 +106,13 @@ pub struct NowProtoVersion {
 
 impl NowProtoVersion {
     /// Represents the current version of the NOW protocol implemented by the library.
-    pub const CURRENT: Self = Self { major: 1, minor: 5 };
+    pub const CURRENT: Self = Self { major: 1, minor: 6 };
+
+    /// Returns `true` if this version supports the encoding control exec flags
+    /// (`NOW_EXEC_FLAG_*_RAW_ENCODING`, `NOW_EXEC_FLAG_*_UNICODE_CONSOLE`, and `NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8`).
+    pub fn supports_exec_unicode_console(self) -> bool {
+        self >= Self { major: 1, minor: 6 }
+    }
 }
 
 /// This message is first set by the client side, to advertise capabilities.

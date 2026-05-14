@@ -16,6 +16,17 @@ bitflags! {
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_DIRECTORY_SET
         const DIRECTORY_SET = 0x0001;
+        /// Disables the default OEM-to-UTF-8 transcoding: data streams are passed through
+        /// as raw bytes without any encoding conversion.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_RAW_ENCODING
+        const RAW_ENCODING = 0x0002;
+        /// Enables Unicode (UTF-8) console mode: agent injects `@chcp 65001 > nul` at the top
+        /// of the batch file and writes the script in BOM-less UTF-8 encoding.
+        /// Implies that stdout/stderr streams are UTF-8 encoded.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_UNICODE_CONSOLE
+        const UNICODE_CONSOLE = 0x0004;
         /// Enable stdio (stdout, stderr, stdin) redirection.
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_BATCH_IO_REDIRECTION
@@ -77,6 +88,26 @@ impl<'a> NowExecBatchMsg<'a> {
         self.ensure_message_size()?;
 
         Ok(self)
+    }
+
+    #[must_use]
+    pub fn with_raw_encoding(mut self) -> Self {
+        self.flags |= NowExecBatchFlags::RAW_ENCODING;
+        self
+    }
+
+    pub fn is_raw_encoding(&self) -> bool {
+        self.flags.contains(NowExecBatchFlags::RAW_ENCODING)
+    }
+
+    #[must_use]
+    pub fn with_unicode_console(mut self) -> Self {
+        self.flags |= NowExecBatchFlags::UNICODE_CONSOLE;
+        self
+    }
+
+    pub fn is_unicode_console(&self) -> bool {
+        self.flags.contains(NowExecBatchFlags::UNICODE_CONSOLE)
     }
 
     #[must_use]

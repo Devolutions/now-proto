@@ -54,6 +54,14 @@
         /// </summary>
         IoRedirection = 0x1000,
 
-        All = Run | Process | Shell | Batch | WinPs | Pwsh | IoRedirection,
+        /// <summary>
+        /// Set if host supports encoding control flags for exec commands
+        /// (RAW_ENCODING, UNICODE_CONSOLE, and ENCODING_UTF8 flags).
+        ///
+        /// NOW-PROTO: NOW_CAP_EXEC_UNICODE_CONSOLE
+        /// </summary>
+        UnicodeConsole = 0x0040,
+
+        All = Run | Process | Shell | Batch | WinPs | Pwsh | IoRedirection | UnicodeConsole,
     }
 }

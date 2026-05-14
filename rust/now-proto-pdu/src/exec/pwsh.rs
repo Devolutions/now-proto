@@ -170,6 +170,26 @@ impl<'a> NowExecPwshMsg<'a> {
     }
 
     #[must_use]
+    pub fn with_raw_encoding(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::RAW_ENCODING;
+        self
+    }
+
+    pub fn is_raw_encoding(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::RAW_ENCODING)
+    }
+
+    #[must_use]
+    pub fn with_unicode_console(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::UNICODE_CONSOLE;
+        self
+    }
+
+    pub fn is_unicode_console(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::UNICODE_CONSOLE)
+    }
+
+    #[must_use]
     pub fn with_detached(mut self) -> Self {
         self.flags |= NowExecWinPsFlags::DETACHED;
         self

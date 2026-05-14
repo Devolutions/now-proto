@@ -22,6 +22,7 @@ namespace Devolutions.NowProto.Messages
         ushort INowSerialize.Flags => (ushort)(
             (Parameters != null ? MsgFlags.ParametersSet : 0)
             | (Directory != null ? MsgFlags.DirectorySet : 0)
+            | (EncodingUtf8 ? MsgFlags.EncodingUtf8 : 0)
             | (IoRedirection ? MsgFlags.IoRedirection : 0)
             | (Detached ? MsgFlags.Detached : 0)
         );
@@ -55,6 +56,7 @@ namespace Devolutions.NowProto.Messages
                 filename,
                 msgFlags.HasFlag(MsgFlags.ParametersSet) ? parameters : null,
                 msgFlags.HasFlag(MsgFlags.DirectorySet) ? directory : null,
+                msgFlags.HasFlag(MsgFlags.EncodingUtf8),
                 msgFlags.HasFlag(MsgFlags.IoRedirection),
                 msgFlags.HasFlag(MsgFlags.Detached)
             );
@@ -78,6 +80,14 @@ namespace Devolutions.NowProto.Messages
             /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_DIRECTORY_SET
             /// </summary>
             DirectorySet = 0x0002,
+
+            /// <summary>
+            /// Enables OEM-to-UTF-8 transcoding for stdin, stdout, and stderr.
+            /// Without this flag, data streams are passed through as raw bytes.
+            ///
+            /// NOW-PROTO: NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8
+            /// </summary>
+            EncodingUtf8 = 0x0004,
 
             /// <summary>
             /// Enable stdio (stdout, stderr, stdin) redirection.
@@ -116,6 +126,12 @@ namespace Devolutions.NowProto.Messages
                 return this;
             }
 
+            public Builder EnableEncodingUtf8()
+            {
+                _encodingUtf8 = true;
+                return this;
+            }
+
             public Builder EnableDetached()
             {
                 _detached = true;
@@ -124,23 +140,25 @@ namespace Devolutions.NowProto.Messages
 
             public NowMsgExecProcess Build()
             {
-                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory, _ioRedirection, _detached);
+                return new NowMsgExecProcess(_sessionId, _filename, _parameters, _directory, _encodingUtf8, _ioRedirection, _detached);
             }
 
             private readonly uint _sessionId = sessionId;
             private readonly string _filename = filename;
             private string? _parameters = null;
             private string? _directory = null;
+            private bool _encodingUtf8 = false;
             private bool _ioRedirection = false;
             private bool _detached = false;
         }
 
-        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory, bool ioRedirection, bool detached)
+        internal NowMsgExecProcess(uint sessionId, string filename, string? parameters, string? directory, bool encodingUtf8, bool ioRedirection, bool detached)
         {
             SessionId = sessionId;
             Filename = filename;
             Parameters = parameters;
             Directory = directory;
+            EncodingUtf8 = encodingUtf8;
             IoRedirection = ioRedirection;
             Detached = detached;
         }
@@ -149,6 +167,7 @@ namespace Devolutions.NowProto.Messages
         public string Filename { get; }
         public string? Parameters { get; }
         public string? Directory { get; }
+        public bool EncodingUtf8 { get; }
         public bool IoRedirection { get; }
         public bool Detached { get; }
     }

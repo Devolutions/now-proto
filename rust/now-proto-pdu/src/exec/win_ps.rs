@@ -52,6 +52,19 @@ bitflags! {
         /// NOW-PROTO: NOW_EXEC_FLAG_PS_DIRECTORY_SET
         const DIRECTORY_SET = 0x0100;
 
+        /// Disables the default OEM-to-UTF-8 transcoding: data streams are passed through
+        /// as raw bytes without any encoding conversion.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PS_RAW_ENCODING
+        const RAW_ENCODING = 0x0200;
+
+        /// Enables Unicode (UTF-8) console mode: agent injects a UTF-8 encoding setup snippet
+        /// at the beginning of the script, ensuring stdin/stdout/stderr use UTF-8.
+        /// Implies that stdout/stderr streams are UTF-8 encoded.
+        ///
+        /// NOW-PROTO: NOW_EXEC_FLAG_PS_UNICODE_CONSOLE
+        const UNICODE_CONSOLE = 0x0400;
+
         /// Enable stdio (stdout, stderr, stdin) redirection.
         ///
         /// NOW-PROTO: NOW_EXEC_FLAG_PS_IO_REDIRECTION
@@ -261,6 +274,26 @@ impl<'a> NowExecWinPsMsg<'a> {
 
     pub fn is_with_io_redirection(&self) -> bool {
         self.flags.contains(NowExecWinPsFlags::IO_REDIRECTION)
+    }
+
+    #[must_use]
+    pub fn with_raw_encoding(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::RAW_ENCODING;
+        self
+    }
+
+    pub fn is_raw_encoding(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::RAW_ENCODING)
+    }
+
+    #[must_use]
+    pub fn with_unicode_console(mut self) -> Self {
+        self.flags |= NowExecWinPsFlags::UNICODE_CONSOLE;
+        self
+    }
+
+    pub fn is_unicode_console(&self) -> bool {
+        self.flags.contains(NowExecWinPsFlags::UNICODE_CONSOLE)
     }
 
     #[must_use]
