@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [[0.4.3](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.4.2...now-proto-pdu-v0.4.3)] - 2026-05-15
+
+### <!-- 1 -->Features
+
+- Add support for utf-8 transcoding and unicode console mode for exec commands ([#62](https://github.com/Devolutions/now-proto/issues/62)) ([1e41deee6a](https://github.com/Devolutions/now-proto/commit/1e41deee6aaad4f2b43e3e1ba6ca6c551b43d622)) 
+
+  This PR updates now proto to v1.6, adding the following:
+  
+  - `now-proto` now requires agent to implement server-side OEM code page
+  transcoding to UTF-8.
+  - By default redirected IO for cmd, PowerShell5 and PowerShell7 now
+  automatically transcoded to UTF-8. Current RDM implementation already
+  expects UTF-8, so when new agent version will be installed, "garbaged
+  input" issue [DGW-370](https://devolutions.atlassian.net/browse/DGW-370)
+  will be automatically fixed.
+  - Note that for `process` execution mode, raw (no-transcoding) is still
+  default, but transcoding could be enabled by
+  `NOW_EXEC_FLAG_PROCESS_ENCODING_UTF8` flag instead, as `process`
+  execution is more advanced use case usually needed for bit-bit output,
+  so no explicit transcoding is provided.
+  - Added `NOW_CAP_EXEC_UNICODE_CONSOLE` capability to signify that new
+  flags are supported and the redirected streams are indeed correct utf-8.
+  - [testing] Updated CLI test app for encoding testing purposes
+
+
+
 ## [[0.4.2](https://github.com/Devolutions/now-proto/compare/now-proto-pdu-v0.4.1...now-proto-pdu-v0.4.2)] - 2025-12-02
 
 ### <!-- 1 -->Features
