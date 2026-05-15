@@ -34,7 +34,6 @@ impl<'a> NowVarStr<'a> {
         // IMPORTANT: we need to check for encoded UTF-8 size, not the string length.
 
         let _: u32 = value
-            .as_bytes()
             .len()
             .try_into()
             .ok()
